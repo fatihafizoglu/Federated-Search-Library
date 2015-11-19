@@ -22,7 +22,6 @@ urls_file = open("urls.txt","w")
 
 for directory_name in os.listdir(ARGV_INPUT_DIRECTORY):
 	for file_name in os.listdir(os.path.join(ARGV_INPUT_DIRECTORY,directory_name)):
-		print file_name
 		if ".gz" in file_name: # For skipping zipped files
 			continue
 		
