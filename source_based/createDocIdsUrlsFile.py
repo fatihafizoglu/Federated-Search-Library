@@ -22,6 +22,7 @@ urls_file = open("urls.txt","w")
 
 for directory_name in os.listdir(ARGV_INPUT_DIRECTORY):
 	for file_name in os.listdir(os.path.join(ARGV_INPUT_DIRECTORY,directory_name)):
+		print file_name
 		if ".gz" in file_name: # For skipping zipped files
 			continue
 		
@@ -32,9 +33,8 @@ for directory_name in os.listdir(ARGV_INPUT_DIRECTORY):
 		documents = re.findall("<DOC>.*?</DOC>[^\<]",gov_dat_partition_read,re.S)
 
 		for document in documents:
-			
 			doc_id = re.findall("<DOCNO>(.*?)<\/DOCNO>",document)[0]
-			doc_url = re.findall("<DOCHDR>\n.*?([\w]*?\.gov.*)",document)[0]
+			doc_url = re.findall("<DOCHDR>\n([\w].*?)\n",document)[0]
 
 			urls_file.write(doc_url + " " + doc_id + "\n")
 
