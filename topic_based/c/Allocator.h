@@ -20,27 +20,27 @@ typedef struct Document {
 #ifdef DEBUG
     int doc_id;
 #endif
-    /* Raw document id between <DOCNO> and </DOCNO> */
-    char *doc_no;
     /* Number of unique terms. */
     int uterm_count;
     /* Number of total terms. */
     int term_count;
     /* Beginning of a document's TermVectors inside the file. */
     int offset;
+    /* Raw document id between <DOCNO> and </DOCNO> */
+    char *doc_no;
 } Document, *Documents;
 
 typedef struct Term {
+    /* CFS Weight? */
+    double cfc_weight;
+    /* Number of occurences of a Term in whole Collection. */
+    int total_count;
 #ifdef DEBUG
     /* Starts with 1. */
     int term_id;
     /* Raw term text. */
     char *token;
 #endif
-    /* Number of occurences of a Term in whole Collection. */
-    int total_count;
-    /* CFS Weight? */
-    double cfc_weight;
 } Term, *Terms;
 
 typedef struct TermVector {

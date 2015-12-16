@@ -10,15 +10,18 @@ DEBUG = -g -DDEBUG
 all: main.o Allocator.o messages.o
 	$(CC) $(CFLAGS) -o main main.o Allocator.o messages.o
 
+debug: CFLAGS += $(DEBUG)
+debug: all
+
 main.o: main.c Allocator.h
 	$(CC) $(CFLAGS) -c main.c
 
 Allocator.o: Allocator.c Allocator.h
 	$(CC) $(CFLAGS) -c Allocator.c
-	
+
 messages.o: messages.c messages.h
-	$(CC) $(CFLAGS) -c messages.c 
-	
+	$(CC) $(CFLAGS) -c messages.c
+
 clean:
 	rm *.o
 	rm main
