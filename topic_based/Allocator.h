@@ -1,11 +1,9 @@
-#ifndef ALLOCATOR_H
-#define ALLOCATOR_H
+#ifndef _ALLOCATOR_H
+#define _ALLOCATOR_H
 
 #include <stdio.h>
 #include <stdlib.h>
-
-#define handle_error_en(en, msg) \
-        do { errno = en; perror(msg); exit(EXIT_FAILURE); } while (0);
+#include "messages.h"
 
 /* Configurable program elements. */
 typedef struct AllocatorConfiguration {
@@ -34,7 +32,7 @@ typedef struct Document {
 
 typedef struct Term {
 #ifdef DEBUG
-	/* Starts with 1. */
+    /* Starts with 1. */
     int term_id;
     /* Raw term text. */
     char *token;
@@ -51,24 +49,20 @@ typedef struct TermVector {
 } DocumentVector, *DocumentVectors;
 
 typedef enum {
-	SUCCESS,
-	FILE_NOT_FOUND,
-	EMPTY_CONFIG_DATA,
-	INIT_NULL_MALLOC
-} Error;
-
-static const char* error_messages[] = {
-	"Successful operation.",
-	"File not found.",
-	"Empty configuration data.",
-	"Malloc returns null at initialization."
-};
+    SUCCESS,
+    EMPTY_CONFIG_DATA,
+    COULD_NOT_ALLOCATE_TERMS,
+    COULD_NOT_ALLOCATE_DOCUMENTS,
+    COULD_NOT_OPEN_WORDLIST
+} State;
 
 int initAllocator (Conf*);
 int loadTerms ();
+void actstate ();
 
 Conf *config;
 Terms terms;
 Documents documents;
+State state;
 
-#endif
+#endif  /* not defined _ALLOCATOR_H */

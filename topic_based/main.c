@@ -16,16 +16,10 @@ int main (int argc, char *argv[]) {
         .number_of_terms = number_of_terms
     };
     
-    int ret;
-    
-    ret = initAllocator(&conf);
-    if (ret) {
-        printf("%s\n", error_messages[ret]);
-        exit(EXIT_FAILURE);
-    }
-    
-    ret = loadTerms();
-    printf("%d\n", ret);
+    initAllocator(&conf);
+    actstate();
+    loadTerms();
+    actstate();
 
 #ifdef DEBUG
     printf("id:%d token:%s\n", terms[5].term_id, terms[5].token);
