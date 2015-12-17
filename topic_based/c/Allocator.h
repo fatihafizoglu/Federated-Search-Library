@@ -5,6 +5,8 @@
 #include <stdlib.h>
 #include "messages.h"
 
+#define MAX_TOKEN_LENGTH 8
+
 /* Configurable program elements. */
 typedef struct AllocatorConfiguration {
     char *wordlist_path;
@@ -39,7 +41,7 @@ typedef struct Term {
     /* Starts with 1. */
     int term_id;
     /* Raw term text. */
-    char *token;
+    char token[MAX_TOKEN_LENGTH];
 #endif
 } Term, *Terms;
 

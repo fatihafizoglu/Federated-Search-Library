@@ -29,14 +29,13 @@ int loadTerms () {
         actstate();
     }
 
+    int flag = 0;
     while (!feof(fp)) {
-        char token[5];
-        /* Term *term = *terms + sizeof(Term) * terms_count; */
-        Term *term = &(terms[terms_count]);
-        fscanf (fp, "%s %d %lf\n", token, &(term->total_count), &(term->cfc_weight));
+        fscanf (fp, "%s %d %lf\n", (terms[terms_count].token),
+                                    &(terms[terms_count].total_count),
+                                    &(terms[terms_count].cfc_weight));
 #ifdef DEBUG
-        term->token = token;
-        term->term_id = terms_count + 1;
+        terms[terms_count].term_id = terms_count + 1;
 #endif
         terms_count++;
     }
@@ -58,17 +57,16 @@ int initAllocator (Conf *conf) {
 
     config = conf;
 
-    if (!(terms = malloc(config->number_of_terms * sizeof(Term)))) {
+    long term_alloc_size = config->number_of_terms * sizeof(Term);
+    long documents_alloc_size = config->number_of_documents * sizeof(Document);
+
+    if (!(terms = malloc(term_alloc_size))) {
         state = COULD_NOT_ALLOCATE_TERMS;
         return -1;
-    } else if (!(documents = malloc(config->number_of_documents * sizeof(Document)))) {
+    } else if (!(documents = malloc(documents_alloc_size))) {
         state = COULD_NOT_ALLOCATE_DOCUMENTS;
         return -1;
     }
-
-
-    printf("%d\n", sizeof(Term)); // 16 - 24
-    printf("%d\n", sizeof(Document)); // 24 - 24
 
     state = SUCCESS;
     return 0;

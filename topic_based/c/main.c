@@ -16,7 +16,6 @@ int main (int argc, char *argv[]) {
         .number_of_terms = number_of_terms
     };
 
-
     initAllocator(&conf);
     actstate();
     loadTerms();
