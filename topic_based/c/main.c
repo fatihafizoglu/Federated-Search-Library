@@ -18,13 +18,12 @@ int main (int argc, char *argv[]) {
 
     initAllocator(&conf);
     actstate();
-    loadTerms();
+    //int c = loadTerms();
+    int c = loadDocuments();
+    //printf("%d\n", c);
     actstate();
 
-#ifdef DEBUG
-    printf("id:%d token:%s\n", terms[5].term_id, terms[5].token);
-    printf("id:%d token:%s\n", terms[15].term_id, terms[15].token);
-#endif
-
+    printf("sleep\n");
+    sleep(100);
     return 0;
 }

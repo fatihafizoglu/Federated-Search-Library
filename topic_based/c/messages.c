@@ -5,5 +5,6 @@ char* const state_messages[] = {
     "Empty configuration data.",
     "Could not allocate Terms.",
     "Could not allocate Documents.",
-    "Could not open merged wordlist."
+    "Could not open merged wordlist.",
+    "Could not open documents info file."
 };

@@ -10,7 +10,8 @@ void actstate () {
     if (state == COULD_NOT_ALLOCATE_TERMS ||
         state == COULD_NOT_ALLOCATE_DOCUMENTS ||
         state == EMPTY_CONFIG_DATA ||
-        state == COULD_NOT_OPEN_WORDLIST) {
+        state == COULD_NOT_OPEN_WORDLIST ||
+        state == COULD_NOT_OPEN_DOCUMENT_INFO) {
 
         exit(EXIT_FAILURE);
     }
@@ -26,22 +27,50 @@ int loadTerms () {
 
     if (!(fp = fopen(config->wordlist_path,"r"))) {
         state = COULD_NOT_OPEN_WORDLIST;
-        actstate();
+        return 0;
     }
 
-    int flag = 0;
     while (!feof(fp)) {
-        fscanf (fp, "%s %d %lf\n", (terms[terms_count].token),
+        fscanf (fp, "%s %u %lf\n", (terms[terms_count].token),
                                     &(terms[terms_count].total_count),
                                     &(terms[terms_count].cfc_weight));
-#ifdef DEBUG
-        terms[terms_count].term_id = terms_count + 1;
-#endif
+        terms[terms_count].term_id = terms_count;
         terms_count++;
     }
 
     fclose(fp);
     return terms_count;
+}
+
+/*
+ * Reads documents info file and fills documents.
+ * Returns number of documents loaded.
+ */
+int loadDocuments () {
+    FILE *fp;
+    unsigned int documents_count = 0;
+    unsigned int inside_file_offset = 0;
+
+    if (!(fp = fopen(config->document_info_path,"r"))) {
+        state = COULD_NOT_OPEN_DOCUMENT_INFO;
+        return 0;
+    }
+
+    while (!feof(fp)) {
+        fscanf (fp, "%u %u %u\n", &(documents[documents_count].doc_id),
+                                  &(documents[documents_count].uterm_count),
+                                  &(documents[documents_count].term_count));
+
+        documents[documents_count].offset = inside_file_offset;
+        inside_file_offset += documents[documents_count].uterm_count;
+        if (documents_count % 5000000 == 4999998)
+                inside_file_offset = 0;
+
+        documents_count++;
+    }
+
+    fclose(fp);
+    return documents_count;
 }
 
 /*
@@ -73,6 +102,5 @@ int initAllocator (Conf *conf) {
 }
 
 /*
- * TODO: Error-lar ve error mesajlari nasil handle edilecek?
  * TODO: const char* header'da static olmadan neden tanimlanamiyor. (multiple definition)
  */

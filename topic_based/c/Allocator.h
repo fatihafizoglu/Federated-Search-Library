@@ -3,9 +3,13 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include "messages.h"
 
 #define MAX_TOKEN_LENGTH 8
+
+/* <term-id, tf> each field is int (4 byte) */
+#define TERM_ID_TF_PAIR_SIZE 8
 
 /* Configurable program elements. */
 typedef struct AllocatorConfiguration {
@@ -19,15 +23,14 @@ typedef struct AllocatorConfiguration {
 } Conf;
 
 typedef struct Document {
-#ifdef DEBUG
-    int doc_id;
-#endif
+    /* Doc id starts from 1. */
+    unsigned int doc_id;
     /* Number of unique terms. */
-    int uterm_count;
+    unsigned int uterm_count;
     /* Number of total terms. */
-    int term_count;
+    unsigned int term_count;
     /* Beginning of a document's TermVectors inside the file. */
-    int offset;
+    unsigned int offset;
     /* Raw document id between <DOCNO> and </DOCNO> */
     char *doc_no;
 } Document, *Documents;
@@ -36,13 +39,11 @@ typedef struct Term {
     /* CFS Weight? */
     double cfc_weight;
     /* Number of occurences of a Term in whole Collection. */
-    int total_count;
-#ifdef DEBUG
-    /* Starts with 1. */
-    int term_id;
+    unsigned int total_count;
+    /* Term id starts from 0. */
+    unsigned int term_id;
     /* Raw term text. */
     char token[MAX_TOKEN_LENGTH];
-#endif
 } Term, *Terms;
 
 typedef struct TermVector {
@@ -55,12 +56,14 @@ typedef enum {
     EMPTY_CONFIG_DATA,
     COULD_NOT_ALLOCATE_TERMS,
     COULD_NOT_ALLOCATE_DOCUMENTS,
-    COULD_NOT_OPEN_WORDLIST
+    COULD_NOT_OPEN_WORDLIST,
+    COULD_NOT_OPEN_DOCUMENT_INFO
 } State;
 
+void actstate ();
 int initAllocator (Conf*);
 int loadTerms ();
-void actstate ();
+int loadDocuments ();
 
 Conf *config;
 Terms terms;
