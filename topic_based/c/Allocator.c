@@ -1,116 +1,62 @@
 #include "Allocator.h"
 
-/*
- * Should be called after any operation ends.
- * Checks program state and act according to this state.
- */
-void actState () {
-    printf("%s\n", state_messages[state]);
+unsigned int rand_interval(unsigned int min, unsigned int max) {
+    int r;
+    const unsigned int range = 1 + max - min;
+    const unsigned int buckets = RAND_MAX / range;
+    const unsigned int limit = buckets * range;
 
-    switch (state) {
-        case SUCCESS:
-            break;
-        case EMPTY_CONFIG_DATA:
-        case COULD_NOT_ALLOCATE_TERMS:
-        case COULD_NOT_ALLOCATE_DOCUMENTS:
-        case COULD_NOT_OPEN_WORDLIST:
-        case COULD_NOT_OPEN_DOCUMENT_INFO:
-        case COULD_NOT_ALLOCATE_TERM_VECTORS:
-        default:
-            exit(EXIT_FAILURE);
+    /* Create equal size buckets all in a row, then fire randomly towards
+     * the buckets until you land in one of them. All buckets are equally
+     * likely. If you land off the end of the line of buckets, try again. */
+    do
+    {
+        r = rand();
+    } while (r >= limit);
+
+    return min + (r / buckets);
+}
+
+void randomSample (unsigned int *sample_indeces, unsigned int sample_count, unsigned int max) {
+
+    for (int i = 0; i < sample_count; i++) {
+        sample_indeces[i] = rand_interval(1, max);
     }
 }
 
-/*
- * Returns document vectors file path.
- */
-char *getDocumentVectorsFilepath (unsigned int doc_id) {
-    char *document_vectors_filepath;
-    short file_index;
+FILE* getDocumentVectorsFile (unsigned int doc_id) {
+    short file_index = doc_id / 5000000;
 
-    if ((1 <= doc_id) && (doc_id < 5000000))
-        file_index = 0;
-    else if ((5000000 <= doc_id) && (doc_id < 10000000))
-        file_index = 1;
-    else if ((10000000 <= doc_id) && (doc_id < 15000000))
-        file_index = 2;
-    else if ((15000000 <= doc_id) && (doc_id  < 20000000))
-        file_index = 3;
-    else if ((20000000 <= doc_id) && (doc_id < 25000000))
-        file_index = 4;
-    else if ((25000000 <= doc_id) && (doc_id  < 30000000))
-        file_index = 5;
-    else if ((30000000 <= doc_id) && (doc_id < 35000000))
-        file_index = 6;
-    else if ((35000000 <= doc_id) && (doc_id  < 40000000))
-        file_index = 7;
-    else if ((40000000 <= doc_id) && (doc_id  < 45000000))
-        file_index = 8;
-    else if ((45000000 <= doc_id) && (doc_id  < 50000000))
-        file_index = 9;
-    else if ((50000000 <= doc_id) && (doc_id  < 50220539))
-        file_index = 10;
-
-    size_t len1 = strlen(config->document_vectors_folder_path);
-    size_t len2 = strlen(document_vectors_files[file_index]);
-    document_vectors_filepath = malloc(len1+len2+1+1);
-    memcpy(document_vectors_filepath, config->document_vectors_folder_path, len1);
-    memcpy(document_vectors_filepath+len1, "/", 1);
-    memcpy(document_vectors_filepath+len1+1, document_vectors_files[file_index], len2+1);
-
-    return document_vectors_filepath;
+    return document_vectors_files[file_index];
 }
 
-/*
- * Returns term vectors of a given document.
- * Term vectors are lists of <term id, term frequency> pairs.
- */
 TermVectors getTermVectors (Document* document) {
     if (!document) {
         state = NULL_DOCUMENT;
         return NULL;
     }
 
-    FILE *fp;
     TermVectors term_vectors;
-    char *document_vectors_filepath = getDocumentVectorsFilepath(document->doc_id);
-    long term_vectors_alloc_size = (long)document->uterm_count * TERM_ID_TF_PAIR_SIZE;
+    FILE *fp = getDocumentVectorsFile(document->doc_id);
 
+    long term_vectors_alloc_size = (long)document->uterm_count * TERM_ID_TF_PAIR_SIZE;
     if (!(term_vectors = malloc(term_vectors_alloc_size))) {
         state = COULD_NOT_ALLOCATE_TERM_VECTORS;
         return NULL;
     }
-
-    // TODO: butun dosyalari basta bir kere acmak, her sey bitince kapamak daha
-    // dogru olabilir mi?
-    if (!(fp = fopen(document_vectors_filepath, "r"))) {
-        state = COULD_NOT_OPEN_DOCUMENT_VECTORS_FILE;
-        return NULL;
+    size_t read_length;
+    off_t address = (long)document->offset * TERM_ID_TF_PAIR_SIZE;
+    fseeko(fp, address, SEEK_SET);
+    read_length = fread(term_vectors, TERM_ID_TF_PAIR_SIZE, (size_t)document->uterm_count, fp);
+    if (read_length != (size_t)document->uterm_count) {
+        state = COULD_NOT_READ_TERM_VECTORS_PROPERLY;
+        return term_vectors;
     }
 
-    // ...
-
-
-
-
-    free(document_vectors_filepath);
     state = SUCCESS;
     return term_vectors;
 }
 
-/*
- * Reads documents info file and fills documents.
- * Returns number of documents loaded, calculate
- * offset wrt unique term counts.
- *
- * Note that: Document vectors seperated as: [#document id - #document id]
- * File 1 : [1          - 4 999 999]
- * File 2 : [5 000 000  - 9 999 999]
- * File 3 : [10 000 000 - 14 999 999]
- * ...
- * File 10 : [45 000 000 - 49 999 999]
- * File 11 : [50 000 000 - 50 220 538]
- */
 int loadDocuments () {
     FILE *fp;
     unsigned int documents_count = 0;
@@ -139,10 +85,6 @@ int loadDocuments () {
     return documents_count;
 }
 
-/*
- * Reads merged wordlist file and fills terms.
- * Returns number of terms loaded.
- */
 int loadTerms () {
     FILE *fp;
     unsigned int terms_count = 0;
@@ -165,11 +107,63 @@ int loadTerms () {
     return terms_count;
 }
 
-/*
- * Takes paths of a merged wordlist file, document info file and
- * folder containing document vectors files (i.e. dvec.bin).
- * Returns 0 if success, -1 otherwise and sets state.
- */
+void closeDocumentVectorsFiles () {
+    int i;
+    for (i = 0; i < NUMBER_OF_DOCUMENT_VECTORS_FILES; i++)
+        fclose(document_vectors_files[i]);
+
+    free(document_vectors_files);
+    state = SUCCESS;
+}
+
+char *getDocumentVectorsFilepath (unsigned int index) {
+    char *document_vectors_filepath;
+
+    size_t len1 = strlen(config->document_vectors_folder_path);
+    size_t len2 = strlen(document_vectors_file_names[index]);
+    document_vectors_filepath = malloc(len1+len2+1+1);
+    memcpy(document_vectors_filepath, config->document_vectors_folder_path, len1);
+    memcpy(document_vectors_filepath+len1, "/", 1);
+    memcpy(document_vectors_filepath+len1+1, document_vectors_file_names[index], len2+1);
+
+    return document_vectors_filepath;
+}
+
+int openDocumentVectorsFiles () {
+    int i;
+    document_vectors_files = malloc(sizeof(FILE *) * NUMBER_OF_DOCUMENT_VECTORS_FILES);
+
+    for (i = 0; i < NUMBER_OF_DOCUMENT_VECTORS_FILES; i++) {
+        char *document_vectors_filepath = getDocumentVectorsFilepath(i);
+        if (!(document_vectors_files[i] = fopen(document_vectors_filepath, "r"))) {
+            state = COULD_NOT_OPEN_DOCUMENT_VECTORS_FILE;
+            return -1;
+        }
+
+        free(document_vectors_filepath);
+    }
+
+    state = SUCCESS;
+    return 0;
+}
+
+void actState () {
+    printf("%s\n", state_messages[state]);
+
+    switch (state) {
+        case SUCCESS:
+            break;
+        case EMPTY_CONFIG_DATA:
+        case COULD_NOT_ALLOCATE_TERMS:
+        case COULD_NOT_ALLOCATE_DOCUMENTS:
+        case COULD_NOT_OPEN_WORDLIST:
+        case COULD_NOT_OPEN_DOCUMENT_INFO:
+        case COULD_NOT_ALLOCATE_TERM_VECTORS:
+        default:
+            exit(EXIT_FAILURE);
+    }
+}
+
 int initAllocator (Conf *conf) {
     if (!conf) {
         state = EMPTY_CONFIG_DATA;

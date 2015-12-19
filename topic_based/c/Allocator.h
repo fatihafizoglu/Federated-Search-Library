@@ -7,9 +7,12 @@
 #include "constants.h"
 
 #define FILEPATH_LENGTH 255
+#define NUMBER_OF_DOCUMENT_VECTORS_FILES 11
+
 #define MAX_TOKEN_LENGTH 8
 /* <term-id, tf> each field is int (4 byte) */
 #define TERM_ID_TF_PAIR_SIZE 8
+#define PERCENTAGE_OF_SAMPLES 0.01
 
 /* Configurable program elements. */
 typedef struct AllocatorConfiguration {
@@ -21,6 +24,12 @@ typedef struct AllocatorConfiguration {
     /* Total number of terms in the collection. */
     int number_of_terms;
 } Conf;
+
+typedef struct Cluster {
+    unsigned long term_count;
+    unsigned long uterm_count;
+
+} Cluster, *Clusters;
 
 typedef struct Document {
     /* Doc id starts from 1. */
@@ -51,28 +60,81 @@ typedef struct TermVector {
     unsigned int term_frequency;
 } TermVector, *TermVectors;
 
-typedef enum {
-    SUCCESS,
-    EMPTY_CONFIG_DATA,
-    COULD_NOT_ALLOCATE_TERMS,
-    COULD_NOT_ALLOCATE_DOCUMENTS,
-    COULD_NOT_OPEN_WORDLIST,
-    COULD_NOT_OPEN_DOCUMENT_INFO,
-    NULL_DOCUMENT,
-    COULD_NOT_ALLOCATE_TERM_VECTORS,
-    COULD_NOT_OPEN_DOCUMENT_VECTORS_FILE
-} State;
+/*
+ * Returns values in the range [min, max], where
+ * max >= min and 1+max-min < RAND_MAX
+ */
+unsigned int rand_interval(unsigned int min, unsigned int max);
 
-void actState ();
-char *getDocumentVectorsFilepath (unsigned int);
+/*
+ * Puts sample_count random integer to sample_indeces in range (1, max).
+ */
+void randomSample (unsigned int *, unsigned int, unsigned int);
+
+/*
+ * Returns document vectors file.
+ */
+FILE* getDocumentVectorsFile (unsigned int doc_id);
+
+/*
+ * Returns term vectors of a given document.
+ * Term vectors are lists of <term id, term frequency> pairs.
+ */
 TermVectors getTermVectors (Document*);
+
+/*
+ * Reads documents info file and fills documents.
+ * Returns number of documents loaded, calculate
+ * offset wrt unique term counts.
+ *
+ * Note that: Document vectors seperated as: [#document id - #document id]
+ * File 1 : [1          - 4 999 999]
+ * File 2 : [5 000 000  - 9 999 999]
+ * File 3 : [10 000 000 - 14 999 999]
+ * ...
+ * File 10 : [45 000 000 - 49 999 999]
+ * File 11 : [50 000 000 - 50 220 538]
+ */
 int loadDocuments ();
+
+/*
+ * Reads merged wordlist file and fills terms.
+ * Returns number of terms loaded.
+ */
 int loadTerms ();
+
+/*
+ * Closes all document vectors file.
+ */
+void closeDocumentVectorsFiles ();
+
+/*
+ * Returns document vectors file path as a string.
+ */
+char *getDocumentVectorsFilepath (unsigned int);
+
+/*
+ * Opens all document vectors files once.
+ */
+int openDocumentVectorsFiles ();
+
+/*
+ * Should be called after any operation ends.
+ * Checks program state and act according to this state.
+ */
+void actState ();
+
+/*
+ * Takes paths of a merged wordlist file, document info file and
+ * folder containing document vectors files (i.e. dvec.bin).
+ * Returns 0 if success, -1 otherwise and sets state.
+ */
 int initAllocator (Conf*);
 
 Conf *config;
 Terms terms;
 Documents documents;
 State state;
+FILE **document_vectors_files;
 
 #endif  /* not defined _ALLOCATOR_H_ */

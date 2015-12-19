@@ -9,10 +9,11 @@ char* const state_messages[] = {
     "Could not open documents info file.",
     "Null document was questioned.",
     "Could not allocate Term Vectors.",
-    "Could not open document vectors file."
+    "Could not open document vectors file.",
+    "Could not read term vectors properly."
 };
 
-char* const document_vectors_files[] = {
+char* const document_vectors_file_names[] = {
     "dvec.bin-1",
     "dvec.bin-2",
     "dvec.bin-3",
