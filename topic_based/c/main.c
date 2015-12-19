@@ -1,10 +1,11 @@
 #include "Allocator.h"
+#include <unistd.h>
 
 int main (int argc, char *argv[]) {
 
-    char wordlist_path[100] = "/media/eckucukoglu/1000/Dropbox/projects/ms-thesis/merged_wordlist.txt";
-    char document_info_path[100] = "/media/eckucukoglu/1000/Dropbox/projects/ms-thesis/merged_SMART-documents.txt";
-    char document_vectors_folder_path[100] = "/media/eckucukoglu/1000/Dropbox/projects/ms-thesis";
+    char wordlist_path[FILEPATH_LENGTH] = "/media/eckucukoglu/1000/Dropbox/projects/ms-thesis/merged_wordlist.txt";
+    char document_info_path[FILEPATH_LENGTH] = "/media/eckucukoglu/1000/Dropbox/projects/ms-thesis/merged_SMART-documents.txt";
+    char document_vectors_folder_path[FILEPATH_LENGTH] = "/media/eckucukoglu/1000/Dropbox/projects/ms-thesis";
     int number_of_documents = 50220538;
     int number_of_terms = 163629158;
 
@@ -17,11 +18,14 @@ int main (int argc, char *argv[]) {
     };
 
     initAllocator(&conf);
-    actstate();
+    actState();
     //int c = loadTerms();
+
+    printf("<%s>\n", getDocumentVectorsFilepath(50000000));
+
     int c = loadDocuments();
-    //printf("%d\n", c);
-    actstate();
+    printf("%d\n", c);
+    actState();
 
     printf("sleep\n");
     sleep(100);

@@ -1,13 +1,13 @@
-#ifndef _ALLOCATOR_H
-#define _ALLOCATOR_H
+#ifndef _ALLOCATOR_H_
+#define _ALLOCATOR_H_
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "messages.h"
+#include "constants.h"
 
+#define FILEPATH_LENGTH 255
 #define MAX_TOKEN_LENGTH 8
-
 /* <term-id, tf> each field is int (4 byte) */
 #define TERM_ID_TF_PAIR_SIZE 8
 
@@ -29,7 +29,7 @@ typedef struct Document {
     unsigned int uterm_count;
     /* Number of total terms. */
     unsigned int term_count;
-    /* Beginning of a document's TermVectors inside the file. */
+    /* Beginning of a document's term vectors inside the file. */
     unsigned int offset;
     /* Raw document id between <DOCNO> and </DOCNO> */
     char *doc_no;
@@ -38,7 +38,7 @@ typedef struct Document {
 typedef struct Term {
     /* CFS Weight? */
     double cfc_weight;
-    /* Number of occurences of a Term in whole Collection. */
+    /* Number of occurences of a term in whole collection. */
     unsigned int total_count;
     /* Term id starts from 0. */
     unsigned int term_id;
@@ -47,9 +47,9 @@ typedef struct Term {
 } Term, *Terms;
 
 typedef struct TermVector {
-    int term_id;
-    int term_frequency;
-} DocumentVector, *DocumentVectors;
+    unsigned int term_id;
+    unsigned int term_frequency;
+} TermVector, *TermVectors;
 
 typedef enum {
     SUCCESS,
@@ -57,17 +57,22 @@ typedef enum {
     COULD_NOT_ALLOCATE_TERMS,
     COULD_NOT_ALLOCATE_DOCUMENTS,
     COULD_NOT_OPEN_WORDLIST,
-    COULD_NOT_OPEN_DOCUMENT_INFO
+    COULD_NOT_OPEN_DOCUMENT_INFO,
+    NULL_DOCUMENT,
+    COULD_NOT_ALLOCATE_TERM_VECTORS,
+    COULD_NOT_OPEN_DOCUMENT_VECTORS_FILE
 } State;
 
-void actstate ();
-int initAllocator (Conf*);
-int loadTerms ();
+void actState ();
+char *getDocumentVectorsFilepath (unsigned int);
+TermVectors getTermVectors (Document*);
 int loadDocuments ();
+int loadTerms ();
+int initAllocator (Conf*);
 
 Conf *config;
 Terms terms;
 Documents documents;
 State state;
 
-#endif  /* not defined _ALLOCATOR_H */
+#endif  /* not defined _ALLOCATOR_H_ */
