@@ -1,5 +1,9 @@
 #include "Allocator.h"
 
+int cmpfunc (const void * a, const void * b) {
+   return ( *(int*)a - *(int*)b );
+}
+
 unsigned int rand_interval(unsigned int min, unsigned int max) {
     int r;
     const unsigned int range = 1 + max - min;
@@ -17,11 +21,29 @@ unsigned int rand_interval(unsigned int min, unsigned int max) {
     return min + (r / buckets);
 }
 
-void randomSample (unsigned int *sample_indeces, unsigned int sample_count, unsigned int max) {
-
+void randomSample (unsigned int *sample_doc_ids, unsigned int sample_count, unsigned int max) {
     for (int i = 0; i < sample_count; i++) {
-        sample_indeces[i] = rand_interval(1, max);
+        sample_doc_ids[i] = rand_interval(1, max);
     }
+}
+
+void initClusters (double percentage, int number_of_clusters) {
+    unsigned int sample_count = config->number_of_documents * percentage;
+    unsigned int sample_doc_ids[sample_count];
+
+    randomSample(&sample_doc_ids, sample_count, config->number_of_documents);
+    qsort(sample_doc_ids, sample_count, sizeof(int), cmpfunc);
+
+    for (size_t i = 0; i < sample_count; i++) {
+        //if (sample_doc_ids[i] >= 10000 && sample_doc_ids[i] <= 20000)
+        printf("%d-", sample_doc_ids[i]);
+    }
+
+    if (!(clusters = malloc(number_of_clusters * sizeof(Cluster)))) {
+        state = COULD_NOT_ALLOCATE_CLUSTERS;
+        return -1;
+    }
+
 }
 
 FILE* getDocumentVectorsFile (unsigned int doc_id) {

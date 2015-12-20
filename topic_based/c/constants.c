@@ -10,7 +10,8 @@ char* const state_messages[] = {
     "Null document was questioned.",
     "Could not allocate Term Vectors.",
     "Could not open document vectors file.",
-    "Could not read term vectors properly."
+    "Could not read term vectors properly.",
+    "Could not allocate Clusters."
 };
 
 char* const document_vectors_file_names[] = {

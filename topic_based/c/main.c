@@ -19,17 +19,6 @@ int main (int argc, char *argv[]) {
 
     initAllocator(&conf);
     actState();
-
-
-    unsigned int sample_count = conf.number_of_documents * PERCENTAGE_OF_SAMPLES;
-    unsigned int sample_indeces[sample_count];
-    randomSample(&sample_indeces, sample_count, config->number_of_terms);
-
-    for (size_t i = 0; i < sample_count; i++) {
-        if (sample_indeces[i] >= 10000 && sample_indeces[i] <= 20000)
-            printf("%d-", sample_indeces[i]);
-    }
-
     //openDocumentVectorsFiles();
     ///actState();
     //loadDocuments();

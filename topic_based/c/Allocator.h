@@ -13,6 +13,7 @@
 /* <term-id, tf> each field is int (4 byte) */
 #define TERM_ID_TF_PAIR_SIZE 8
 #define PERCENTAGE_OF_SAMPLES 0.01
+#define NUMBER_OF_CLUSTERS 50
 
 /* Configurable program elements. */
 typedef struct AllocatorConfiguration {
@@ -61,15 +62,25 @@ typedef struct TermVector {
 } TermVector, *TermVectors;
 
 /*
+ * Comparison function for quick sort.
+ */
+int cmpfunc (const void * a, const void * b);
+
+/*
  * Returns values in the range [min, max], where
  * max >= min and 1+max-min < RAND_MAX
  */
-unsigned int rand_interval(unsigned int min, unsigned int max);
+unsigned int rand_interval(unsigned int, unsigned int);
 
 /*
  * Puts sample_count random integer to sample_indeces in range (1, max).
  */
 void randomSample (unsigned int *, unsigned int, unsigned int);
+
+/*
+ *
+ */
+void initClusters ();
 
 /*
  * Returns document vectors file.
@@ -134,6 +145,7 @@ int initAllocator (Conf*);
 Conf *config;
 Terms terms;
 Documents documents;
+Clusters clusters;
 State state;
 FILE **document_vectors_files;
 
