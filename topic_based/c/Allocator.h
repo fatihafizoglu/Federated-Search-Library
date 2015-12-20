@@ -30,6 +30,7 @@ typedef struct Cluster {
     unsigned long term_count;
     unsigned long uterm_count;
 
+
 } Cluster, *Clusters;
 
 typedef struct Document {
@@ -50,6 +51,7 @@ typedef struct Term {
     double cfc_weight;
     /* Number of occurences of a term in whole collection. */
     unsigned int total_count;
+    // TODO: termvector'ler dvec.bin'lerde hangi termid baslangiciyla listeli.
     /* Term id starts from 0. */
     unsigned int term_id;
     /* Raw term text. */
@@ -60,6 +62,11 @@ typedef struct TermVector {
     unsigned int term_id;
     unsigned int term_frequency;
 } TermVector, *TermVectors;
+
+/*
+ * Returns the pointer to the document that has given document id.
+ */
+Document *getDocument(unsigned int);
 
 /*
  * Comparison function for quick sort.
@@ -78,9 +85,11 @@ unsigned int rand_interval(unsigned int, unsigned int);
 void randomSample (unsigned int *, unsigned int, unsigned int);
 
 /*
- *
+ * Calculates sample count and randomly generates sorted sample document ids.
+ * Creates n number of clusters and puts first n of sampled documents.
+ * Returns 0 if success, -1 in case of error and sets state.
  */
-void initClusters ();
+int initClusters (double, int);
 
 /*
  * Returns document vectors file.
@@ -148,5 +157,15 @@ Documents documents;
 Clusters clusters;
 State state;
 FILE **document_vectors_files;
+unsigned int *sample_doc_ids;
+
+/*
+ * TODO:
+ * on program exit free these:
+ * terms, documents, clusters, sample_doc_ids
+ *
+ * on function exits, free return values of these:
+ * getTermVectors
+ */
 
 #endif  /* not defined _ALLOCATOR_H_ */

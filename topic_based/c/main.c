@@ -19,10 +19,14 @@ int main (int argc, char *argv[]) {
 
     initAllocator(&conf);
     actState();
+    loadDocuments();
+    actState();
+
+    initClusters(PERCENTAGE_OF_SAMPLES, NUMBER_OF_CLUSTERS);
     //openDocumentVectorsFiles();
-    ///actState();
-    //loadDocuments();
-    //actState();
+    actState();
+    Document *doci = getDocument(4);
+    printf("%d\n", doci->doc_id);
 
     //for (size_t i = 14999999; i < 20000000; i++) {
         //TermVectors temp = getTermVectors(&documents[i]);
