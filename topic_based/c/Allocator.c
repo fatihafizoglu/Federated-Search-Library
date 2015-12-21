@@ -1,9 +1,61 @@
 #include "Allocator.h"
 
 /*
+ * Returns document vectors file.
+ */
+static FILE* getDocumentVectorsFile (unsigned int doc_id) {
+    short file_index = doc_id / 5000000;
+
+    return document_vectors_files[file_index];
+}
+
+/*
+ * Returns term vectors of a given document.
+ * Term vectors are lists of <term id, term frequency> pairs.
+ */
+TermVectors getTermVectors (Document* document) {
+    if (!document) {
+        state = NULL_DOCUMENT;
+        return NULL;
+    }
+
+    TermVectors term_vectors;
+    FILE *fp = getDocumentVectorsFile(document->doc_id);
+
+    long term_vectors_alloc_size = (long)document->uterm_count * TERM_ID_TF_PAIR_SIZE;
+    if (!(term_vectors = malloc(term_vectors_alloc_size))) {
+        state = COULD_NOT_ALLOCATE_TERM_VECTORS;
+        return NULL;
+    }
+    size_t read_length;
+    off_t address = (long)document->offset * TERM_ID_TF_PAIR_SIZE;
+    fseeko(fp, address, SEEK_SET);
+    read_length = fread(term_vectors, TERM_ID_TF_PAIR_SIZE, (size_t)document->uterm_count, fp);
+    if (read_length != (size_t)document->uterm_count) {
+        state = COULD_NOT_READ_TERM_VECTORS_PROPERLY;
+        return term_vectors;
+    }
+
+    state = SUCCESS;
+    return term_vectors;
+}
+
+/*
+ * Adds document to cluster's temporary dictionary.
+ */
+static void addDocumentToCluster(Cluster* cluster, Document* document) {
+    int i;
+    TermVectors document_term_vectors = getTermVectors(document);
+    for (i = 0; i < document->uterm_count; i++) {
+        DictIncreaseOrInsert(cluster->new_dictionary, document_term_vectors[i].term_id, document_term_vectors[i].term_frequency);
+        cluster->new_term_count += document_term_vectors[i].term_frequency;
+    }
+}
+
+/*
  * Returns the pointer to the document that has given document id.
  */
-static Document *getDocument(unsigned int doc_id) {
+Document *getDocument(unsigned int doc_id) {
     return &documents[doc_id-1];
 }
 
@@ -42,11 +94,77 @@ static void
 randomSample (unsigned int *samples, unsigned int sample_count, unsigned int max) {
     for (int i = 0; i < sample_count; i++) {
         samples[i] = rand_interval(1, max);
+        //samples[i] = rand_interval(15000000, 19999999);
     }
 }
 
-int sampleDocuments(double percentage) {
-    unsigned int sample_count = config->number_of_documents * percentage;
+void swapDictionary () {
+    int i;
+
+    for (i = 0; i < NUMBER_OF_CLUSTERS; i++) {
+        clusters[i].term_count = clusters[i].new_term_count;
+        clusters[i].new_term_count = 0;
+
+        DictDestroy(clusters[i].dictionary);
+        clusters[i].dictionary = clusters[i].new_dictionary;
+        clusters[i].new_dictionary = DictCreate();
+    }
+
+    merged_cluster.term_count = merged_cluster.new_term_count;
+    merged_cluster.new_term_count = 0;
+
+    DictDestroy(merged_cluster.dictionary);
+    merged_cluster.dictionary = merged_cluster.new_dictionary;
+    merged_cluster.new_dictionary = DictCreate();
+}
+
+void kMeans() {
+    int i, j, k;
+    unsigned int sample_count = config->number_of_documents * PERCENTAGE_OF_SAMPLES;
+
+    for (i = 0; i < sample_count; i++) {
+        Document *document = getDocument(sample_doc_ids[i]);
+        TermVectors document_term_vectors = getTermVectors(document);
+        double max_similarity_value = 0.0;
+        unsigned int most_similar_cluster_index = 0;
+
+        for (j = 0; j < NUMBER_OF_CLUSTERS; j++) {
+            Dict cluster_dictionary = clusters[j].dictionary;
+            double similarity_value = 0.0;
+
+            for (k = 0; k < document->uterm_count; k++) {
+                TermVector tv = document_term_vectors[k];
+                if (DictSearch(cluster_dictionary, tv.term_id) != 0) {
+                    double pciw = (double)DictSearch(cluster_dictionary, tv.term_id) / clusters[j].term_count;
+                    double pbw = (double)DictSearch(merged_cluster.dictionary, tv.term_id) / merged_cluster.term_count;
+                    double pdw = ((1.0 - LAMBDA) * (double)tv.term_frequency / document->term_count) + LAMBDA * pbw;
+                    similarity_value += (pciw * log10(pdw/(LAMBDA*pbw))) + (pdw * log10(pciw/(LAMBDA*pbw)));
+                }
+            }
+
+            if (similarity_value > max_similarity_value) {
+                max_similarity_value = similarity_value;
+                most_similar_cluster_index = j;
+            }
+        }
+
+        addDocumentToCluster(&clusters[most_similar_cluster_index], document);
+        addDocumentToCluster(&merged_cluster, document);
+    }
+}
+
+void initializeKMeans () {
+    int i;
+
+    // TODO: select first n documents randomly from sampled documents.
+    for (i = 0; i < NUMBER_OF_CLUSTERS; i++) {
+        addDocumentToCluster(&clusters[i], getDocument(sample_doc_ids[i]));
+        addDocumentToCluster(&merged_cluster, getDocument(sample_doc_ids[i]));
+    }
+}
+
+int sampleDocuments() {
+    unsigned int sample_count = config->number_of_documents * PERCENTAGE_OF_SAMPLES;
     if (!(sample_doc_ids = malloc(sample_count*sizeof(int)))) {
         state = COULD_NOT_ALLOCATE_DOCUMENT_IDS;
         return -1;
@@ -54,75 +172,43 @@ int sampleDocuments(double percentage) {
 
     randomSample(sample_doc_ids, sample_count, config->number_of_documents);
     qsort(sample_doc_ids, sample_count, sizeof(int), cmpfunc);
-    
+
     state = SUCCESS;
     return 0;
 }
 
-int initClusters (int number_of_clusters) {
-    if (!(clusters = malloc(number_of_clusters * sizeof(Cluster)))) {
+int initClusters () {
+    if (!(clusters = malloc(NUMBER_OF_CLUSTERS * sizeof(Cluster)))) {
         state = COULD_NOT_ALLOCATE_CLUSTERS;
         return -1;
     }
 
     /* Init merged cluster. */
     merged_cluster.term_count = 0;
-    merged_cluster.document_count = 0;
+    merged_cluster.new_term_count = 0;
     merged_cluster.dictionary = DictCreate();
+    merged_cluster.new_dictionary = DictCreate();
+    /*merged_cluster.document_count = 0;
     if (!(merged_cluster.document_ids = malloc(INITIAL_SIZE * sizeof(int)))) {
         state = COULD_NOT_ALLOCATE_CLUSTER_DOCUMENT_IDS;
         return -1;
-    }
+    }*/
 
     /* Init clusters. */
-    for (size_t i = 0; i < number_of_clusters; i++) {
+    for (size_t i = 0; i < NUMBER_OF_CLUSTERS; i++) {
         clusters[i].term_count = 0;
-        clusters[i].document_count = 0;
+        clusters[i].new_term_count = 0;
         clusters[i].dictionary = DictCreate();
+        clusters[i].new_dictionary = DictCreate();
+        /*clusters[i].document_count = 0;
         if (!(clusters[i].document_ids = malloc(INITIAL_SIZE * sizeof(int)))) {
             state = COULD_NOT_ALLOCATE_CLUSTER_DOCUMENT_IDS;
             return -1;
-        }
+        }*/
     }
 
     state = SUCCESS;
     return 0;
-}
-
-/*
- * Returns document vectors file.
- */
-static FILE* getDocumentVectorsFile (unsigned int doc_id) {
-    short file_index = doc_id / 5000000;
-
-    return document_vectors_files[file_index];
-}
-
-TermVectors getTermVectors (Document* document) {
-    if (!document) {
-        state = NULL_DOCUMENT;
-        return NULL;
-    }
-
-    TermVectors term_vectors;
-    FILE *fp = getDocumentVectorsFile(document->doc_id);
-
-    long term_vectors_alloc_size = (long)document->uterm_count * TERM_ID_TF_PAIR_SIZE;
-    if (!(term_vectors = malloc(term_vectors_alloc_size))) {
-        state = COULD_NOT_ALLOCATE_TERM_VECTORS;
-        return NULL;
-    }
-    size_t read_length;
-    off_t address = (long)document->offset * TERM_ID_TF_PAIR_SIZE;
-    fseeko(fp, address, SEEK_SET);
-    read_length = fread(term_vectors, TERM_ID_TF_PAIR_SIZE, (size_t)document->uterm_count, fp);
-    if (read_length != (size_t)document->uterm_count) {
-        state = COULD_NOT_READ_TERM_VECTORS_PROPERLY;
-        return term_vectors;
-    }
-
-    state = SUCCESS;
-    return term_vectors;
 }
 
 int loadDocuments () {

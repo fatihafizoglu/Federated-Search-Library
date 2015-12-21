@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <math.h>
 #include "constants.h"
 #include "dictionary.h"
 
@@ -13,8 +14,10 @@
 #define MAX_TOKEN_LENGTH 8
 /* <term-id, tf> each field is int (4 byte) */
 #define TERM_ID_TF_PAIR_SIZE 8
-#define PERCENTAGE_OF_SAMPLES 0.01
+
+#define PERCENTAGE_OF_SAMPLES 0.0001
 #define NUMBER_OF_CLUSTERS 50
+#define LAMBDA 0.1
 
 /* Configurable program elements. */
 typedef struct AllocatorConfiguration {
@@ -29,9 +32,12 @@ typedef struct AllocatorConfiguration {
 
 typedef struct Cluster {
     unsigned long term_count;
-    unsigned int *document_ids;
-    unsigned int document_count;
+    unsigned long new_term_count;
     Dict dictionary;
+    Dict new_dictionary;
+    // TODO:
+    //unsigned int *document_ids;
+    //unsigned int document_count;
 } Cluster, *Clusters;
 
 typedef struct Document {
@@ -64,23 +70,23 @@ typedef struct TermVector {
     unsigned int term_frequency;
 } TermVector, *TermVectors;
 
+Document *getDocument(unsigned int);
+TermVectors getTermVectors (Document*);
+void kMeans();
+void swapDictionary ();
+void initializeKMeans ();
+
 /*
  * Calculates sample count and randomly generates sorted sample document ids.
  * Returns 0 if success, -1 in case of error.
  */
-int sampleDocuments(double);
+int sampleDocuments();
 
 /*
  * Creates n number of clusters, also merged cluster.
  * Returns 0 if success, -1 in case of error and sets state.
  */
-int initClusters (int);
-
-/*
- * Returns term vectors of a given document.
- * Term vectors are lists of <term id, term frequency> pairs.
- */
-TermVectors getTermVectors (Document*);
+int initClusters ();
 
 /*
  * Reads documents info file and fills documents.
@@ -148,6 +154,8 @@ Cluster merged_cluster;
  * define infile functions as static in allocator.
  *
  * const char* header'da static olmadan neden tanimlanamiyor. (multiple definition)
+ *
+ * function return degerlerini ve state-leri dogru set et.
  */
 
 #endif  /* not defined _ALLOCATOR_H_ */

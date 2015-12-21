@@ -8,7 +8,7 @@ DEBUG = -g -DDEBUG
 # ****************************************************
 
 all: main.o Allocator.o constants.o dictionary.o
-	$(CC) $(CFLAGS) -o main main.o Allocator.o constants.o dictionary.o
+	$(CC) $(CFLAGS) -o main main.o Allocator.o constants.o dictionary.o -lm
 
 debug: CFLAGS += $(DEBUG)
 debug: all

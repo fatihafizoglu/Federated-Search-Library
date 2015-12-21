@@ -2,6 +2,7 @@
 #define _DICTIONARY_H_
 
 #include <stdlib.h>
+#include <stdio.h>
 #include <assert.h>
 #include <string.h>
 

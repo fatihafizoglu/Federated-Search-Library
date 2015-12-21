@@ -19,32 +19,32 @@ int main (int argc, char *argv[]) {
 
     initAllocator(&conf);
     actState();
-    //loadDocuments();
-    //actState();
 
-    //initClusters(NUMBER_OF_CLUSTERS);
-    //openDocumentVectorsFiles();
-    //actState();
+    openDocumentVectorsFiles();
+    actState();
 
-    // Test dictionary dynamic hash table
-    Dict d = DictCreate();
-    DictInsert(d, 2, 5);
-    printf("%d\n", DictSearch(d, 2));
+    loadDocuments();
+    actState();
 
-    for(int i = 0; i < 10000; i++) {
-        DictInsert(d, i, i+1);
+    initClusters();
+    actState();
+    sampleDocuments();
+    actState();
+
+    initializeKMeans();
+    swapDictionary();
+    actState();
+
+    for (int i = 0; i < 5; i++) {
+        kMeans();
+        swapDictionary();
+        actState();
+        printf(">> kmeans(%d) finished\n", i);
     }
 
-    DictIncreaseOrInsert(d, 2, 100);
-    printf("%d\n", DictSearch(d, 2));
+    closeDocumentVectorsFiles();
 
-    DictIncreaseOrInsert(d, 163000000, 100);
-    printf("%d\n", DictSearch(d, 163000000));
 
-    DictIncreaseOrInsert(d, 163000000, 50);
-    printf("%d\n", DictSearch(d, 163000000));
-
-    DictDestroy(d);
 
     // Test getDocument, first loadDocuments needed.
     /*Document *doci = getDocument(4);
@@ -74,6 +74,6 @@ int main (int argc, char *argv[]) {
 
 
     printf("sleep\n");
-    sleep(100);
+    sleep(3);
     return 0;
 }
