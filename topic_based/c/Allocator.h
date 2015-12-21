@@ -29,6 +29,8 @@ typedef struct AllocatorConfiguration {
 
 typedef struct Cluster {
     unsigned long term_count;
+    unsigned int *document_ids;
+    unsigned int document_count;
     Dict dictionary;
 } Cluster, *Clusters;
 
@@ -63,37 +65,16 @@ typedef struct TermVector {
 } TermVector, *TermVectors;
 
 /*
- * Returns the pointer to the document that has given document id.
- */
-Document *getDocument(unsigned int);
-
-/*
- * Comparison function for quick sort.
- */
-int cmpfunc (const void * a, const void * b);
-
-/*
- * Returns values in the range [min, max], where
- * max >= min and 1+max-min < RAND_MAX
- */
-unsigned int rand_interval(unsigned int, unsigned int);
-
-/*
- * Puts sample_count random integer to sample_indeces in range (1, max).
- */
-void randomSample (unsigned int *, unsigned int, unsigned int);
-
-/*
  * Calculates sample count and randomly generates sorted sample document ids.
- * Creates n number of clusters and puts first n of sampled documents.
+ * Returns 0 if success, -1 in case of error.
+ */
+int sampleDocuments(double);
+
+/*
+ * Creates n number of clusters, also merged cluster.
  * Returns 0 if success, -1 in case of error and sets state.
  */
-int initClusters (double, int);
-
-/*
- * Returns document vectors file.
- */
-FILE* getDocumentVectorsFile (unsigned int doc_id);
+int initClusters (int);
 
 /*
  * Returns term vectors of a given document.
@@ -126,11 +107,6 @@ int loadTerms ();
  * Closes all document vectors file.
  */
 void closeDocumentVectorsFiles ();
-
-/*
- * Returns document vectors file path as a string.
- */
-char *getDocumentVectorsFilepath (unsigned int);
 
 /*
  * Opens all document vectors files once.
@@ -166,6 +142,12 @@ Cluster merged_cluster;
  *
  * on function exits, free return values of these:
  * getTermVectors
+ *
+ * check all malloc statements, free all of them.
+ *
+ * define infile functions as static in allocator.
+ *
+ * const char* header'da static olmadan neden tanimlanamiyor. (multiple definition)
  */
 
 #endif  /* not defined _ALLOCATOR_H_ */

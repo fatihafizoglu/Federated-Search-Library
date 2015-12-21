@@ -1,14 +1,25 @@
 #include "Allocator.h"
 
-Document *getDocument(unsigned int doc_id) {
+/*
+ * Returns the pointer to the document that has given document id.
+ */
+static Document *getDocument(unsigned int doc_id) {
     return &documents[doc_id-1];
 }
 
-int cmpfunc (const void * a, const void * b) {
+/*
+ * Comparison function for quick sort.
+ */
+static int cmpfunc (const void * a, const void * b) {
    return ( *(int*)a - *(int*)b );
 }
 
-unsigned int rand_interval(unsigned int min, unsigned int max) {
+/*
+ * Returns values in the range [min, max], where
+ * max >= min and 1+max-min < RAND_MAX
+ */
+static unsigned int
+rand_interval(unsigned int min, unsigned int max) {
     int r;
     const unsigned int range = 1 + max - min;
     const unsigned int buckets = RAND_MAX / range;
@@ -17,21 +28,24 @@ unsigned int rand_interval(unsigned int min, unsigned int max) {
     /* Create equal size buckets all in a row, then fire randomly towards
      * the buckets until you land in one of them. All buckets are equally
      * likely. If you land off the end of the line of buckets, try again. */
-    do
-    {
+    do {
         r = rand();
     } while (r >= limit);
 
     return min + (r / buckets);
 }
 
-void randomSample (unsigned int *samples, unsigned int sample_count, unsigned int max) {
+/*
+ * Puts sample_count random integer to sample_indeces in range (1, max).
+ */
+static void
+randomSample (unsigned int *samples, unsigned int sample_count, unsigned int max) {
     for (int i = 0; i < sample_count; i++) {
         samples[i] = rand_interval(1, max);
     }
 }
 
-int initClusters (double percentage, int number_of_clusters) {
+int sampleDocuments(double percentage) {
     unsigned int sample_count = config->number_of_documents * percentage;
     if (!(sample_doc_ids = malloc(sample_count*sizeof(int)))) {
         state = COULD_NOT_ALLOCATE_DOCUMENT_IDS;
@@ -40,21 +54,45 @@ int initClusters (double percentage, int number_of_clusters) {
 
     randomSample(sample_doc_ids, sample_count, config->number_of_documents);
     qsort(sample_doc_ids, sample_count, sizeof(int), cmpfunc);
+    
+    state = SUCCESS;
+    return 0;
+}
 
+int initClusters (int number_of_clusters) {
     if (!(clusters = malloc(number_of_clusters * sizeof(Cluster)))) {
         state = COULD_NOT_ALLOCATE_CLUSTERS;
         return -1;
     }
 
+    /* Init merged cluster. */
+    merged_cluster.term_count = 0;
+    merged_cluster.document_count = 0;
+    merged_cluster.dictionary = DictCreate();
+    if (!(merged_cluster.document_ids = malloc(INITIAL_SIZE * sizeof(int)))) {
+        state = COULD_NOT_ALLOCATE_CLUSTER_DOCUMENT_IDS;
+        return -1;
+    }
+
+    /* Init clusters. */
     for (size_t i = 0; i < number_of_clusters; i++) {
-        // ...
+        clusters[i].term_count = 0;
+        clusters[i].document_count = 0;
+        clusters[i].dictionary = DictCreate();
+        if (!(clusters[i].document_ids = malloc(INITIAL_SIZE * sizeof(int)))) {
+            state = COULD_NOT_ALLOCATE_CLUSTER_DOCUMENT_IDS;
+            return -1;
+        }
     }
 
     state = SUCCESS;
     return 0;
 }
 
-FILE* getDocumentVectorsFile (unsigned int doc_id) {
+/*
+ * Returns document vectors file.
+ */
+static FILE* getDocumentVectorsFile (unsigned int doc_id) {
     short file_index = doc_id / 5000000;
 
     return document_vectors_files[file_index];
@@ -146,7 +184,10 @@ void closeDocumentVectorsFiles () {
     state = SUCCESS;
 }
 
-char *getDocumentVectorsFilepath (unsigned int index) {
+/*
+ * Returns document vectors file path as a string.
+ */
+static char *getDocumentVectorsFilepath (unsigned int index) {
     char *document_vectors_filepath;
 
     size_t len1 = strlen(config->document_vectors_folder_path);
@@ -216,7 +257,3 @@ int initAllocator (Conf *conf) {
     state = SUCCESS;
     return 0;
 }
-
-/*
- * TODO: const char* header'da static olmadan neden tanimlanamiyor. (multiple definition)
- */

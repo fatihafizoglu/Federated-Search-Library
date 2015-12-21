@@ -1,27 +1,61 @@
-typedef struct dict *Dict;
+#ifndef _DICTIONARY_H_
+#define _DICTIONARY_H_
 
-/* create a new empty dictionary */
+#include <stdlib.h>
+#include <assert.h>
+#include <string.h>
+
+#define INITIAL_SIZE (1024)
+#define GROWTH_FACTOR (2)
+#define MAX_LOAD_FACTOR (1)
+
+struct elt {
+    struct elt *next;
+    unsigned int key;
+    unsigned int value;
+};
+
+typedef struct dict {
+    int size;           /* size of the pointer table */
+    int n;              /* number of elements stored */
+    struct elt **table;
+} *Dict;
+
+/*
+ * Create a new empty dictionary.
+ */
 Dict DictCreate(void);
 
-/* destroy a dictionary */
+/*
+ * Destroy a dictionary.
+ */
 void DictDestroy(Dict);
 
-/* insert a new key-value pair into an existing dictionary */
+/*
+ * Insert a new key-value pair into an existing dictionary.
+ */
 void DictInsert(Dict d, const unsigned int key, const unsigned int value);
 
-/* update given key-value pairs if key exists, o/w insert it */
+/*
+ * Update given key-value pairs if key exists, o/w insert it.
+ */
 void DictUpdateOrInsert(Dict d, const unsigned int key, const unsigned int value);
 
-/* increase given key's value if key exists, o/w insert it */
+/*
+ * Increase given key's value if key exists, o/w insert it.
+ */
 void DictIncreaseOrInsert(Dict d, const unsigned int key, const unsigned int value);
 
-/* update given key-value pairs if key exists, o/w insert it */
-void DictInsertOrUpdate(Dict d, const unsigned int key, const unsigned int value);
-
-/* return the most recently inserted value associated with a key */
-/* or 0 if no matching key is present */
+/*
+ * Return the most recently inserted value associated with a key,
+ * or 0 if no matching key is present.
+ */
 const unsigned int DictSearch(Dict, const unsigned int key);
 
-/* delete the most recently inserted record with the given key */
-/* if there is no such record, has no effect */
+/*
+ * Delete the most recently inserted record with the given key
+ * if there is no such record, has no effect.
+ */
 void DictDelete(Dict, const unsigned int key);
+
+#endif  /* not defined _ALLOCATOR_H_ */

@@ -22,7 +22,7 @@ int main (int argc, char *argv[]) {
     //loadDocuments();
     //actState();
 
-    //initClusters(PERCENTAGE_OF_SAMPLES, NUMBER_OF_CLUSTERS);
+    //initClusters(NUMBER_OF_CLUSTERS);
     //openDocumentVectorsFiles();
     //actState();
 
