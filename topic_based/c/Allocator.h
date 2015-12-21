@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "constants.h"
+#include "dictionary.h"
 
 #define FILEPATH_LENGTH 255
 #define NUMBER_OF_DOCUMENT_VECTORS_FILES 11
@@ -28,9 +29,7 @@ typedef struct AllocatorConfiguration {
 
 typedef struct Cluster {
     unsigned long term_count;
-    unsigned long uterm_count;
-
-
+    Dict dictionary;
 } Cluster, *Clusters;
 
 typedef struct Document {
@@ -158,6 +157,7 @@ Clusters clusters;
 State state;
 FILE **document_vectors_files;
 unsigned int *sample_doc_ids;
+Cluster merged_cluster;
 
 /*
  * TODO:

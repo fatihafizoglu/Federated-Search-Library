@@ -7,8 +7,8 @@ DEBUG = -g -DDEBUG
 
 # ****************************************************
 
-all: main.o Allocator.o constants.o
-	$(CC) $(CFLAGS) -o main main.o Allocator.o constants.o
+all: main.o Allocator.o constants.o dictionary.o
+	$(CC) $(CFLAGS) -o main main.o Allocator.o constants.o dictionary.o
 
 debug: CFLAGS += $(DEBUG)
 debug: all
@@ -21,6 +21,10 @@ Allocator.o: Allocator.c Allocator.h
 
 constants.o: constants.c constants.h
 	$(CC) $(CFLAGS) -c constants.c
+
+dictionary.o: dictionary.c dictionary.h
+	$(CC) $(CFLAGS) -c dictionary.c
+
 
 clean:
 	rm *.o
