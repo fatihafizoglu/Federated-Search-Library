@@ -146,10 +146,10 @@ DictInsert(Dict d, const unsigned int key, const unsigned int value)
 
 /* update given key-value pairs if key exists, o/w insert it */
 void
-DictInsertOrUpdate(Dict d, const unsigned int key, const unsigned int value)
+DictUpdateOrInsert(Dict d, const unsigned int key, const unsigned int value)
 {
     struct elt *e;
-    
+
     assert(key >= 0);
     assert(value >= 0);
 
@@ -157,6 +157,26 @@ DictInsertOrUpdate(Dict d, const unsigned int key, const unsigned int value)
         if(e->key == key) {
             /* got it */
             e->value = value;
+            return;
+        }
+    }
+    /* Key does not exist, then insert it. */
+    DictInsert(d, key, value);
+}
+
+/* increase given key's value if key exists, o/w insert it */
+void
+DictIncreaseOrInsert(Dict d, const unsigned int key, const unsigned int value)
+{
+    struct elt *e;
+
+    assert(key >= 0);
+    assert(value >= 0);
+
+    for(e = d->table[hash_function_u(key) % d->size]; e != 0; e = e->next) {
+        if(e->key == key) {
+            /* got it */
+            e->value = e->value + value;
             return;
         }
     }

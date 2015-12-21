@@ -10,6 +10,12 @@ void DictDestroy(Dict);
 void DictInsert(Dict d, const unsigned int key, const unsigned int value);
 
 /* update given key-value pairs if key exists, o/w insert it */
+void DictUpdateOrInsert(Dict d, const unsigned int key, const unsigned int value);
+
+/* increase given key's value if key exists, o/w insert it */
+void DictIncreaseOrInsert(Dict d, const unsigned int key, const unsigned int value);
+
+/* update given key-value pairs if key exists, o/w insert it */
 void DictInsertOrUpdate(Dict d, const unsigned int key, const unsigned int value);
 
 /* return the most recently inserted value associated with a key */

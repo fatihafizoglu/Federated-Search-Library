@@ -35,13 +35,13 @@ int main (int argc, char *argv[]) {
         DictInsert(d, i, i+1);
     }
 
-    DictInsertOrUpdate(d, 2, 100);
+    DictIncreaseOrInsert(d, 2, 100);
     printf("%d\n", DictSearch(d, 2));
 
-    DictInsertOrUpdate(d, 163000000, 100);
+    DictIncreaseOrInsert(d, 163000000, 100);
     printf("%d\n", DictSearch(d, 163000000));
 
-    DictInsertOrUpdate(d, 163000000, 50);
+    DictIncreaseOrInsert(d, 163000000, 50);
     printf("%d\n", DictSearch(d, 163000000));
 
     DictDestroy(d);
