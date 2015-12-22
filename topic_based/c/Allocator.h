@@ -10,6 +10,7 @@
 
 #define FILEPATH_LENGTH 255
 #define NUMBER_OF_DOCUMENT_VECTORS_FILES 11
+#define CLUSTER_DOCUMENT_IDS_VECTOR_FILE_PREFIX "cluster"
 
 #define MAX_TOKEN_LENGTH 8
 /* <term-id, tf> each field is int (4 byte) */
@@ -87,7 +88,7 @@ void assignDocumentsToClusters ();
 /*
  * Writes document id to cluster's document ids vector file.
  */
-int writeDocumentIdToClusterVector (unsigned int, unsigned int);
+int writeDocumentIdToClusterFile (unsigned int, unsigned int);
 
 /*
  * Returns document vectors file.

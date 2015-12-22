@@ -23,12 +23,12 @@ int main (int argc, char *argv[]) {
     openClusterDocumentIdsFiles();
     actState();
 
-    writeDocumentIdToClusterVector(0, 50000212);
+    writeDocumentIdToClusterFile(0, 50000212);
     actState();
 
-    writeDocumentIdToClusterVector(1, 50000215);
+    writeDocumentIdToClusterFile(1, 50000215);
     actState();
-    writeDocumentIdToClusterVector(1, 40000);
+    writeDocumentIdToClusterFile(1, 40000);
     actState();
 
     closeClusterDocumentIdsFiles();

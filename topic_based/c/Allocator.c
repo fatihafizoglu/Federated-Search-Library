@@ -20,9 +20,6 @@ void assignDocumentsToClusters () {
 
     for (i = 0; i < config->number_of_documents; i++) {
         Document *document = &documents[i];
-        if (isDocumentSampled(document->doc_id))
-            continue;
-
         TermVectors document_term_vectors = getTermVectors(document);
         double max_similarity_value = 0.0;
         unsigned int most_similar_cluster_index = 0;
@@ -47,11 +44,11 @@ void assignDocumentsToClusters () {
             }
         }
 
-        writeDocumentIdToClusterVector (most_similar_cluster_index, document->doc_id);
+        writeDocumentIdToClusterFile (most_similar_cluster_index, document->doc_id);
     }
 }
 
-int writeDocumentIdToClusterVector (unsigned int cluster_index, unsigned int doc_id) {
+int writeDocumentIdToClusterFile (unsigned int cluster_index, unsigned int doc_id) {
     size_t write_length;
 
     write_length = fwrite(&doc_id, sizeof(int), 1, cluster_document_ids_files[cluster_index]);
@@ -340,7 +337,7 @@ char *getDocumentVectorsFilepath (unsigned int index) {
 
 char *getClusterDocumentIdsFilepath (unsigned int index) {
     char *cluster_document_ids_files;
-    char *cluster = "cluster";
+    char *cluster = CLUSTER_DOCUMENT_IDS_VECTOR_FILE_PREFIX;
     char str[3];
     sprintf(str, "%d", index);
 
