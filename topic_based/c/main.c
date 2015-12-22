@@ -20,6 +20,20 @@ int main (int argc, char *argv[]) {
     initAllocator(&conf);
     actState();
 
+    openClusterDocumentIdsFiles();
+    actState();
+
+    writeDocumentIdToClusterVector(0, 50000212);
+    actState();
+
+    writeDocumentIdToClusterVector(1, 50000215);
+    actState();
+    writeDocumentIdToClusterVector(1, 40000);
+    actState();
+
+    closeClusterDocumentIdsFiles();
+    actState();
+    /*
     openDocumentVectorsFiles();
     actState();
 
@@ -43,7 +57,7 @@ int main (int argc, char *argv[]) {
     }
 
     closeDocumentVectorsFiles();
-
+    */
 
 
     // Test getDocument, first loadDocuments needed.

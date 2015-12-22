@@ -1,18 +1,24 @@
 #include "Allocator.h"
 
-/*
- * Returns document vectors file.
- */
-static FILE* getDocumentVectorsFile (unsigned int doc_id) {
+int writeDocumentIdToClusterVector (unsigned int cluster_index, unsigned int doc_id) {
+    size_t write_length;
+
+    write_length = fwrite(&doc_id, sizeof(int), 1, cluster_document_ids_files[cluster_index]);
+    if (write_length != 1) {
+        state = COULD_NOT_WRITE_DOCUMENT_ID;
+        return -1;
+    }
+
+    state = SUCCESS;
+    return 0;;
+}
+
+FILE* getDocumentVectorsFile (unsigned int doc_id) {
     short file_index = doc_id / 5000000;
 
     return document_vectors_files[file_index];
 }
 
-/*
- * Returns term vectors of a given document.
- * Term vectors are lists of <term id, term frequency> pairs.
- */
 TermVectors getTermVectors (Document* document) {
     if (!document) {
         state = NULL_DOCUMENT;
@@ -40,10 +46,7 @@ TermVectors getTermVectors (Document* document) {
     return term_vectors;
 }
 
-/*
- * Adds document to cluster's temporary dictionary.
- */
-static void addDocumentToCluster(Cluster* cluster, Document* document) {
+void addDocumentToCluster(Cluster* cluster, Document* document) {
     int i;
     TermVectors document_term_vectors = getTermVectors(document);
     for (i = 0; i < document->uterm_count; i++) {
@@ -52,9 +55,6 @@ static void addDocumentToCluster(Cluster* cluster, Document* document) {
     }
 }
 
-/*
- * Returns the pointer to the document that has given document id.
- */
 Document *getDocument(unsigned int doc_id) {
     return &documents[doc_id-1];
 }
@@ -62,16 +62,11 @@ Document *getDocument(unsigned int doc_id) {
 /*
  * Comparison function for quick sort.
  */
-static int cmpfunc (const void * a, const void * b) {
+int cmpfunc (const void * a, const void * b) {
    return ( *(int*)a - *(int*)b );
 }
 
-/*
- * Returns values in the range [min, max], where
- * max >= min and 1+max-min < RAND_MAX
- */
-static unsigned int
-rand_interval(unsigned int min, unsigned int max) {
+unsigned int rand_interval(unsigned int min, unsigned int max) {
     int r;
     const unsigned int range = 1 + max - min;
     const unsigned int buckets = RAND_MAX / range;
@@ -87,14 +82,10 @@ rand_interval(unsigned int min, unsigned int max) {
     return min + (r / buckets);
 }
 
-/*
- * Puts sample_count random integer to sample_indeces in range (1, max).
- */
-static void
-randomSample (unsigned int *samples, unsigned int sample_count, unsigned int max) {
+void randomSample (unsigned int *samples, unsigned int sample_count, unsigned int max) {
     for (int i = 0; i < sample_count; i++) {
-        samples[i] = rand_interval(1, max);
-        //samples[i] = rand_interval(15000000, 19999999);
+        //samples[i] = rand_interval(1, max);
+        samples[i] = rand_interval(15000000, 19999999);
     }
 }
 
@@ -270,10 +261,16 @@ void closeDocumentVectorsFiles () {
     state = SUCCESS;
 }
 
-/*
- * Returns document vectors file path as a string.
- */
-static char *getDocumentVectorsFilepath (unsigned int index) {
+void closeClusterDocumentIdsFiles () {
+    int i;
+    for (i = 0; i < NUMBER_OF_CLUSTERS; i++)
+        fclose(cluster_document_ids_files[i]);
+
+    free(cluster_document_ids_files);
+    state = SUCCESS;
+}
+
+char *getDocumentVectorsFilepath (unsigned int index) {
     char *document_vectors_filepath;
 
     size_t len1 = strlen(config->document_vectors_folder_path);
@@ -284,6 +281,42 @@ static char *getDocumentVectorsFilepath (unsigned int index) {
     memcpy(document_vectors_filepath+len1+1, document_vectors_file_names[index], len2+1);
 
     return document_vectors_filepath;
+}
+
+char *getClusterDocumentIdsFilepath (unsigned int index) {
+    char *cluster_document_ids_files;
+    char *cluster = "cluster";
+    char str[3];
+    sprintf(str, "%d", index);
+
+    size_t len1 = strlen(config->document_vectors_folder_path);
+    size_t len2 = strlen(cluster);
+    size_t len3 = strlen(str);
+    cluster_document_ids_files = malloc(len1+len2+len3+1+1);
+    memcpy(cluster_document_ids_files, config->document_vectors_folder_path, len1);
+    memcpy(cluster_document_ids_files+len1, "/", 1);
+    memcpy(cluster_document_ids_files+len1+1, cluster, len2);
+    memcpy(cluster_document_ids_files+len1+1+len2, str, len3+1);
+
+    return cluster_document_ids_files;
+}
+
+int openClusterDocumentIdsFiles () {
+    int i;
+    cluster_document_ids_files = malloc(sizeof(FILE *) * NUMBER_OF_CLUSTERS);
+
+    for (i = 0; i < NUMBER_OF_CLUSTERS; i++) {
+        char *cluster_document_ids_filepath = getClusterDocumentIdsFilepath(i);
+        if (!(cluster_document_ids_files[i] = fopen(cluster_document_ids_filepath, "w"))) {
+            state = COULD_NOT_OPEN_CLUSTER_DOCUMENT_IDS_FILE;
+            return -1;
+        }
+
+        free(cluster_document_ids_filepath);
+    }
+
+    state = SUCCESS;
+    return 0;
 }
 
 int openDocumentVectorsFiles () {

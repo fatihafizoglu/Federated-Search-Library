@@ -13,7 +13,9 @@ char* const state_messages[] = {
     "Could not read term vectors properly.",
     "Could not allocate Clusters.",
     "Could not allocate document ids global array.",
-    "Could not allocate cluster document ids array."
+    "Could not allocate cluster document ids array.",
+    "Could not open cluster document ids file.",
+    "Could not write document id to cluster file."
 };
 
 char* const document_vectors_file_names[] = {
