@@ -38,9 +38,6 @@ typedef struct Cluster {
     unsigned long new_term_count;
     Dict dictionary;
     Dict new_dictionary;
-    // TODO: we are writing document ids to cluster document ids vector file.
-    //unsigned int *document_ids;
-    //unsigned int document_count;
 } Cluster, *Clusters;
 
 typedef struct Document {
@@ -72,6 +69,11 @@ typedef struct TermVector {
     unsigned int term_id;
     unsigned int term_frequency;
 } TermVector, *TermVectors;
+
+/*
+ * Frees all allocated memory blocks and closes opened files.
+ */
+void endProgram ();
 
 /*
  * Returns true if sampled document ids array contains given document id.
@@ -228,24 +230,5 @@ FILE **document_vectors_files;
 FILE **cluster_document_ids_files;
 unsigned int *sample_doc_ids;
 Cluster merged_cluster;
-
-/*
- * TODO:
- * on program exit free these:
- * terms, documents, clusters, sample_doc_ids
- *
- * on function exits, free return values of these:
- * getTermVectors
- *
- * check all malloc statements, free all of them.
- *
- * define infile functions as static in allocator.
- *
- * const char* header'da static olmadan neden tanimlanamiyor. (multiple definition)
- *
- * function return degerlerini ve state-leri dogru set et.
- *
- * gerekli yerlerde int degil unsigned int kullan.
- */
 
 #endif  /* not defined _ALLOCATOR_H_ */

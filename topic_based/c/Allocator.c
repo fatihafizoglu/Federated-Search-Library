@@ -1,5 +1,30 @@
 #include "Allocator.h"
 
+void endProgram () {
+    int i;
+
+    if (terms != NULL)
+        free(terms);
+    if (documents != NULL)
+        free(documents);
+    if (clusters != NULL) {
+        for (i = 0; i < NUMBER_OF_CLUSTERS; i++) {
+            DictDestroy(clusters[i].dictionary);
+            DictDestroy(clusters[i].new_dictionary);
+        }
+
+        DictDestroy(merged_cluster.dictionary);
+        DictDestroy(merged_cluster.new_dictionary);
+
+        free(clusters);
+    }
+    if (sample_doc_ids != NULL)
+        free(sample_doc_ids);
+
+    closeDocumentVectorsFiles();
+    closeClusterDocumentIdsFiles();
+}
+
 /* NOT TESTED YET */
 bool isDocumentSampled (unsigned int doc_id) {
     int i;
@@ -45,6 +70,7 @@ void assignDocumentsToClusters () {
         }
 
         writeDocumentIdToClusterFile (most_similar_cluster_index, document->doc_id);
+        free(document_term_vectors);
     }
 }
 
@@ -101,6 +127,8 @@ void addDocumentToCluster(Cluster* cluster, Document* document) {
         DictIncreaseOrInsert(cluster->new_dictionary, document_term_vectors[i].term_id, document_term_vectors[i].term_frequency);
         cluster->new_term_count += document_term_vectors[i].term_frequency;
     }
+
+    free(document_term_vectors);
 }
 
 Document *getDocument(unsigned int doc_id) {
@@ -133,8 +161,8 @@ unsigned int rand_interval(unsigned int min, unsigned int max) {
 void randomSample (unsigned int *samples, unsigned int sample_count, unsigned int max) {
     int i;
     for (i = 0; i < sample_count; i++) {
-        //samples[i] = rand_interval(1, max);
-        samples[i] = rand_interval(15000000, 19999999);
+        samples[i] = rand_interval(1, max);
+        //samples[i] = rand_interval(15000000, 19999999); // test only for dvec.bin-4
     }
 }
 
@@ -191,6 +219,7 @@ void kMeans() {
 
         addDocumentToCluster(&clusters[most_similar_cluster_index], document);
         addDocumentToCluster(&merged_cluster, document);
+        free(document_term_vectors);
     }
 }
 
@@ -231,11 +260,6 @@ int initClusters () {
     merged_cluster.new_term_count = 0;
     merged_cluster.dictionary = DictCreate();
     merged_cluster.new_dictionary = DictCreate();
-    /*merged_cluster.document_count = 0;
-    if (!(merged_cluster.document_ids = malloc(INITIAL_SIZE * sizeof(int)))) {
-        state = COULD_NOT_ALLOCATE_CLUSTER_DOCUMENT_IDS;
-        return -1;
-    }*/
 
     /* Init clusters. */
     for (i = 0; i < NUMBER_OF_CLUSTERS; i++) {
@@ -243,11 +267,6 @@ int initClusters () {
         clusters[i].new_term_count = 0;
         clusters[i].dictionary = DictCreate();
         clusters[i].new_dictionary = DictCreate();
-        /*clusters[i].document_count = 0;
-        if (!(clusters[i].document_ids = malloc(INITIAL_SIZE * sizeof(int)))) {
-            state = COULD_NOT_ALLOCATE_CLUSTER_DOCUMENT_IDS;
-            return -1;
-        }*/
     }
 
     state = SUCCESS;
@@ -390,6 +409,7 @@ int openDocumentVectorsFiles () {
 }
 
 void actState () {
+    // TODO: state behaviourlari ayarla.
     printf("%s\n", state_messages[state]);
 
     switch (state) {
@@ -414,13 +434,13 @@ int initAllocator (Conf *conf) {
 
     config = conf;
 
-    long term_alloc_size = config->number_of_terms * sizeof(Term);
+    //long term_alloc_size = config->number_of_terms * sizeof(Term);
     long documents_alloc_size = config->number_of_documents * sizeof(Document);
 
-    if (!(terms = malloc(term_alloc_size))) {
+    /*if (!(terms = malloc(term_alloc_size))) {
         state = COULD_NOT_ALLOCATE_TERMS;
         return -1;
-    } else if (!(documents = malloc(documents_alloc_size))) {
+    } else */if (!(documents = malloc(documents_alloc_size))) {
         state = COULD_NOT_ALLOCATE_DOCUMENTS;
         return -1;
     }
