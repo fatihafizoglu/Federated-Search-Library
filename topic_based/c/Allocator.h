@@ -19,6 +19,8 @@
 #define NUMBER_OF_CLUSTERS 50
 #define LAMBDA 0.1
 
+typedef enum { false, true } bool;
+
 /* Configurable program elements. */
 typedef struct AllocatorConfiguration {
     char *wordlist_path;
@@ -69,6 +71,18 @@ typedef struct TermVector {
     unsigned int term_id;
     unsigned int term_frequency;
 } TermVector, *TermVectors;
+
+/*
+ * Returns true if sampled document ids array contains given document id.
+ * o/w returns false.
+ */
+bool isDocumentSampled (unsigned int);
+
+/*
+ * For each unsampled documents, calculates similarity
+ * with clusters and assign it to most similar one.
+ */
+void assignDocumentsToClusters ();
 
 /*
  * Writes document id to cluster's document ids vector file.

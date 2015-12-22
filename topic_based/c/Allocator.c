@@ -1,5 +1,56 @@
 #include "Allocator.h"
 
+/* NOT TESTED YET */
+bool isDocumentSampled (unsigned int doc_id) {
+    int i;
+    bool ret = false;
+    unsigned int sample_count = config->number_of_documents * PERCENTAGE_OF_SAMPLES;
+
+    for (i = 0; i < sample_count; i++) {
+        if (sample_doc_ids[i] == doc_id)
+            return true;
+    }
+
+    return ret;
+}
+
+/* NOT TESTED YET */
+void assignDocumentsToClusters () {
+    int i, j, k;
+
+    for (i = 0; i < config->number_of_documents; i++) {
+        Document *document = &documents[i];
+        if (isDocumentSampled(document->doc_id))
+            continue;
+
+        TermVectors document_term_vectors = getTermVectors(document);
+        double max_similarity_value = 0.0;
+        unsigned int most_similar_cluster_index = 0;
+
+        for (j = 0; j < NUMBER_OF_CLUSTERS; j++) {
+            Dict cluster_dictionary = clusters[j].dictionary;
+            double similarity_value = 0.0;
+
+            for (k = 0; k < document->uterm_count; k++) {
+                TermVector tv = document_term_vectors[k];
+                if (DictSearch(cluster_dictionary, tv.term_id) != 0) {
+                    double pciw = (double)DictSearch(cluster_dictionary, tv.term_id) / clusters[j].term_count;
+                    double pbw = (double)DictSearch(merged_cluster.dictionary, tv.term_id) / merged_cluster.term_count;
+                    double pdw = ((1.0 - LAMBDA) * (double)tv.term_frequency / document->term_count) + LAMBDA * pbw;
+                    similarity_value += (pciw * log10(pdw/(LAMBDA*pbw))) + (pdw * log10(pciw/(LAMBDA*pbw)));
+                }
+            }
+
+            if (similarity_value > max_similarity_value) {
+                max_similarity_value = similarity_value;
+                most_similar_cluster_index = j;
+            }
+        }
+
+        writeDocumentIdToClusterVector (most_similar_cluster_index, document->doc_id);
+    }
+}
+
 int writeDocumentIdToClusterVector (unsigned int cluster_index, unsigned int doc_id) {
     size_t write_length;
 
@@ -83,7 +134,8 @@ unsigned int rand_interval(unsigned int min, unsigned int max) {
 }
 
 void randomSample (unsigned int *samples, unsigned int sample_count, unsigned int max) {
-    for (int i = 0; i < sample_count; i++) {
+    int i;
+    for (i = 0; i < sample_count; i++) {
         //samples[i] = rand_interval(1, max);
         samples[i] = rand_interval(15000000, 19999999);
     }
@@ -99,6 +151,7 @@ void swapDictionary () {
         DictDestroy(clusters[i].dictionary);
         clusters[i].dictionary = clusters[i].new_dictionary;
         clusters[i].new_dictionary = DictCreate();
+
     }
 
     merged_cluster.term_count = merged_cluster.new_term_count;
@@ -169,6 +222,8 @@ int sampleDocuments() {
 }
 
 int initClusters () {
+    int i;
+
     if (!(clusters = malloc(NUMBER_OF_CLUSTERS * sizeof(Cluster)))) {
         state = COULD_NOT_ALLOCATE_CLUSTERS;
         return -1;
@@ -186,7 +241,7 @@ int initClusters () {
     }*/
 
     /* Init clusters. */
-    for (size_t i = 0; i < NUMBER_OF_CLUSTERS; i++) {
+    for (i = 0; i < NUMBER_OF_CLUSTERS; i++) {
         clusters[i].term_count = 0;
         clusters[i].new_term_count = 0;
         clusters[i].dictionary = DictCreate();
