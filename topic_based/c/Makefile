@@ -25,6 +25,8 @@ constants.o: constants.c constants.h
 dictionary.o: dictionary.c dictionary.h
 	$(CC) $(CFLAGS) -c dictionary.c
 
+readclusters:
+	$(CC) $(CFLAGS) -o readclusters readclusters.c
 
 clean:
 	rm *.o
