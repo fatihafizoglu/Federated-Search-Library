@@ -25,7 +25,6 @@ void endProgram () {
     closeClusterDocumentIdsFiles();
 }
 
-/* NOT TESTED YET */
 bool isDocumentSampled (unsigned int doc_id) {
     int i;
     bool ret = false;
@@ -39,7 +38,6 @@ bool isDocumentSampled (unsigned int doc_id) {
     return ret;
 }
 
-/* NOT TESTED YET */
 void assignDocumentsToClusters () {
     int i, j, k;
 

@@ -1,5 +1,7 @@
 #include <stdio.h>
+#include <stdlib.h>
 
+/* prints document ids of a cluster. */
 int main (int argc, char *argv[]) {
     FILE *fp;
     int value;
@@ -12,6 +14,8 @@ int main (int argc, char *argv[]) {
     while (fread(&value, 1, 4, fp)) {
         printf("%d\n", value);    
     }
+    
+    fclose(fp);
     
     return 0;
 }
