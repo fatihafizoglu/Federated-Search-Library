@@ -8,7 +8,7 @@ DEBUG = -g -DDEBUG
 # ****************************************************
 
 all: main.o Allocator.o constants.o dictionary.o
-	$(CC) $(CFLAGS) -o main main.o Allocator.o constants.o dictionary.o -lm
+	$(CC) $(CFLAGS) -o allocator main.o Allocator.o constants.o dictionary.o -lm
 
 debug: CFLAGS += $(DEBUG)
 debug: all
@@ -25,9 +25,14 @@ constants.o: constants.c constants.h
 dictionary.o: dictionary.c dictionary.h
 	$(CC) $(CFLAGS) -c dictionary.c
 
-readclusters:
+readclusters: readclusters.c
 	$(CC) $(CFLAGS) -o readclusters readclusters.c
 
+indexclusters: indexclusters.c
+	$(CC) $(CFLAGS) -o indexclusters indexclusters.c
+
 clean:
-	rm *.o
-	rm main
+	rm -f *.o
+	rm -f allocator
+	rm -f indexclusters
+	rm -f readclusters
