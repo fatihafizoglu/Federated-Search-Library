@@ -39,15 +39,15 @@ char *concatenateStrings (char *first, char *second) {
  * - cluster's document id values
  * - collection's document vectors
  */
-void createIndex (int cluster_id) {
+void createIndex (unsigned int cluster_id) {
     FILE *fp;
-    int *document_ids;
+    unsigned int *document_ids;
     char cluster_id_str[3];
     char *cluster_document_ids_filename;
     char *cluster_document_ids_filepath;
-    int doc_id;
-    int i;
-
+    unsigned int doc_id;
+    unsigned int number_of_documents;
+    unsigned int i;
 
     snprintf(cluster_id_str, sizeof(cluster_id_str), "%d", cluster_id);
     cluster_document_ids_filename =
@@ -61,19 +61,34 @@ void createIndex (int cluster_id) {
         return;
     }
 
-    printf("%d\n", fsize(cluster_document_ids_filepath));
+    /* Since each document represented as 4 bytes. */
+    number_of_documents = (int)fsize(cluster_document_ids_filepath) / 4;
+    if (number_of_documents == -1) {
+        printf("ERROR: Could not take size of cluster:%u\n", cluster_id);
+        return;
+    }
+
+    document_ids = malloc (sizeof(unsigned int) * number_of_documents);
+    if (document_ids == NULL) {
+        printf("ERROR: Allocation problem (cluster:%u).\n", cluster_id);
+        return;
+    }
 
     i = 0;
     while (fread(&doc_id, 1, 4, fp)) {
-        //printf("%d\n", doc_id);
+        document_ids[i] = doc_id;
+        i++;
     }
 
+    printf("All document ids read successfully (cluster:%u): %s\n", cluster_id,
+        i == number_of_documents ? "YES" : "NO");
 
-
-
+    // TODO: use getTermVectors from Allocator.c and write to file.
+    // ...
 
     fclose(fp);
     free(cluster_document_ids_filepath);
+    free(document_ids);
 }
 
 /*
@@ -96,7 +111,7 @@ int main (int argc, char *argv[]) {
     int check;
     int n = -1, c = -1;
     char *value = NULL;
-    int i;
+    unsigned int i;
 
     if (argc < 3) {
         usage();
