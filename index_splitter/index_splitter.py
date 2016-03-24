@@ -5,6 +5,8 @@ import time
 
 # #
 # Globals
+__MAX_MEMORY_READ__ = 10 # In GB
+__MAX_MEMORY_WRITE__ = 5 # In GB
 __INTEGER_SIZE__ = 4
 __NO_OF_CLUSTERS__ = 100
 clusters_directory						= "/home1/grupef/TopicBasedClusters_100_2"
@@ -79,7 +81,7 @@ for i in xrange(__NO_OF_CLUSTERS__):
 
 (latest_word,posting_list_length) = next_word_posting_list_length_getter.next()
 total_size_of_posting_lists_in_memory = posting_list_length
-for (doc_id,occurance_count,byte_string) in bytes_from_file(index_file,10*1024*1024*1024): # 10GB per read!
+for (doc_id,occurance_count,byte_string) in bytes_from_file(index_file,__MAX_MEMORY_READ__*1024*1024*1024): # 10GB per read!
 	
 	if posting_list_length == 0:
 		for i in xrange(__NO_OF_CLUSTERS__):
@@ -88,7 +90,7 @@ for (doc_id,occurance_count,byte_string) in bytes_from_file(index_file,10*1024*1
 			cluster_word_lists[i].append(latest_word + " " + str(cluster_word_occurances[i]) + " -1" + "\n")
 			cluster_word_occurances[i] = 0
 
-		if total_size_of_posting_lists_in_memory * 8 > 5*1024*1024*1024: # Larger than 5GB data in memory!
+		if total_size_of_posting_lists_in_memory * 8 > __MAX_MEMORY_WRITE__*1024*1024*1024: # Larger than 5GB data in memory!
 			print "Writing Started"
 			for i in xrange(__NO_OF_CLUSTERS__):
 				for binary_string in cluster_binaries[i]:

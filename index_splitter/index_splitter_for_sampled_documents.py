@@ -5,6 +5,8 @@ import time
 
 # #
 # Globals
+__MAX_MEMORY_READ__ = 10 # In GB
+__MAX_MEMORY_WRITE__ = 5 # In GB
 __INTEGER_SIZE__ = 4
 sampled_docs_ids_file_path				= "/home1/grupef/TopicBasedClusters_100_sampled_doc_ids_sorted"
 sampled_docs_index_file_create_path		= "/home1/grupef/TopicBasedClusters_100_CSI_merged_entry.txt"
@@ -90,7 +92,7 @@ sampled_docs_word_occurance = 0
 
 (latest_word,posting_list_length) = next_word_posting_list_length_getter.next()
 total_size_of_posting_lists_in_memory = posting_list_length
-for (doc_id,occurance_count,byte_string) in bytes_from_file(index_file,2*1024*1024*1024): # 10GB per read!
+for (doc_id,occurance_count,byte_string) in bytes_from_file(index_file,__MAX_MEMORY_READ__*1024*1024*1024): # 10GB per read!
 	
 	if posting_list_length == 0:
 		# if sampled_docs_word_occurance > 0:
@@ -98,7 +100,7 @@ for (doc_id,occurance_count,byte_string) in bytes_from_file(index_file,2*1024*10
 		sampled_docs_word_list.append(latest_word + " " + str(sampled_docs_word_occurance) + " -1" + "\n")
 		sampled_docs_word_occurance = 0
 
-		if total_size_of_posting_lists_in_memory * 8 > 1*1024*1024*1024: # Larger than 5GB data in memory!
+		if total_size_of_posting_lists_in_memory * 8 > __MAX_MEMORY_WRITE__*1024*1024*1024: # Larger than 5GB data in memory!
 			print "Writing Started"
 			for binary_string in sampled_docs_binaries:
 				sampled_docs_index_file.write(binary_string)
