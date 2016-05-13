@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
+#include <time.h>
 #include "constants.h"
 #include "dictionary.h"
 
@@ -16,8 +17,8 @@
 /* <term-id, tf> each field is int (4 byte) */
 #define TERM_ID_TF_PAIR_SIZE 8
 
-#define PERCENTAGE_OF_SAMPLES 0.00001
-#define NUMBER_OF_CLUSTERS 50
+#define PERCENTAGE_OF_SAMPLES 0.01
+#define NUMBER_OF_CLUSTERS 100
 #define LAMBDA 0.1
 
 typedef enum { false, true } bool;
