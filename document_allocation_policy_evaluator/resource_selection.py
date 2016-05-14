@@ -67,7 +67,7 @@ class ResourceSelectionRedde:
 		self.sorted_clusters = sorted(cluster_doc_count_dict.items(),key = lambda x:x[1])
 		self.sorted_clusters.reverse()
 
-		print cluster_doc_count_dict
+		# print cluster_doc_count_dict
 
 	def get_top_k_clusters(self,k):
 
@@ -88,7 +88,7 @@ class ResourceSelectionReddeTop:
 		self.sorted_clusters = sorted(cluster_doc_count_dict.items(),key = lambda x:x[1])
 		self.sorted_clusters.reverse()
 
-		print cluster_doc_count_dict
+		# print cluster_doc_count_dict
 
 	def get_top_k_clusters(self,k):
 
@@ -109,7 +109,7 @@ class ResourceSelectionCRCSExp:
 		self.sorted_clusters = sorted(cluster_doc_count_dict.items(),key = lambda x:x[1])
 		self.sorted_clusters.reverse()
 
-		print cluster_doc_count_dict
+		# print cluster_doc_count_dict
 
 	def get_top_k_clusters(self,k):
 
@@ -130,7 +130,7 @@ class ResourceSelectionCRCSLin:
 		self.sorted_clusters = sorted(cluster_doc_count_dict.items(),key = lambda x:x[1])
 		self.sorted_clusters.reverse()
 
-		print cluster_doc_count_dict
+		# print cluster_doc_count_dict
 
 	def get_top_k_clusters(self,k):
 
@@ -151,11 +151,12 @@ class ResultProducer:
 		for (doc_id,doc_score) in self.query_results:
 			cluster_id = doc_cluster_map.get_cluster_id(doc_id)
 			if cluster_id in self.cluster_list:
+				doc_score = "%.6f" % doc_score
 				print "{}\tQ0\t{}\t{}\t{}\tfs".format(self.query_id,doc_id,result_index,doc_score)
 				result_index += 1
 				if result_index > self.result_size:
 					return
-		print "Not enough document retrieved!!!!"
+		# print "Not enough document retrieved!!!!"
 		return
 
 
@@ -165,11 +166,11 @@ parser.add_argument('result_1', type=argparse.FileType('r'), help='result file o
 parser.add_argument('result_2', type=argparse.FileType('r'), help='result file of queries on CSI')
 parser.add_argument('cluster_concat_file', type=argparse.FileType('r'), help='file of document_id cluster_id pairs')
 parser.add_argument('-method', action="store",help='resource selection method (default: Redde)',default='Redde',choices=['Redde', 'Redde.top', 'CRCSExp', 'CRCSLin'])
-parser.add_argument('-no_of_resource', action="store", help='no of resource to select (default: 1)', default=1, choices=[1,3,5,10,15])
-parser.add_argument('-no_of_CSI_result', action="store", help='no of CSI result for resource selection (default:100)', default=100, choices=[50,100])
-parser.add_argument('-result_size', action="store", help='no of result page desired (default: 20)', default=20, choices=[10,20,30])
-parser.add_argument('-crcs_alpha', action="store", help='alpha component of CRCS Exp Formula (default:1.2)',default=1.2)
-parser.add_argument('-crcs_beta', action="store", help='beta component of CRCS Exp Formula (default:2.8)',default=2.8)
+parser.add_argument('-no_of_resource', type=int, action="store", help='no of resource to select (default: 1)', default=1, choices=[1,3,5,10,15,100])
+parser.add_argument('-no_of_CSI_result', type=int, action="store", help='no of CSI result for resource selection (default:100)', default=100, choices=[50,100])
+parser.add_argument('-result_size', type=int, action="store", help='no of result page desired (default: 20)', default=20, choices=[10,20,30])
+parser.add_argument('-crcs_alpha', type=float, action="store", help='alpha component of CRCS Exp Formula (default:1.2)',default=1.2)
+parser.add_argument('-crcs_beta', type=float, action="store", help='beta component of CRCS Exp Formula (default:2.8)',default=2.8)
 ARGUMENTS = parser.parse_args()
 
 
@@ -197,10 +198,11 @@ for query_index in range(query_results_on_original_index.get_query_count()):
 		print 'Requested resource selection method is not available'
 			
 	# cluster_list = resource_selection_mode.get_top_k_clusters(ARGUMENTS.no_of_resource)
-	cluster_list = resource_selection_mode.get_top_k_clusters(10)
-	print cluster_list
-	break
-	# query_results = query_results_on_original_index.get_results(query_index+1,-1)
+	cluster_list = resource_selection_mode.get_top_k_clusters(ARGUMENTS.no_of_resource)
+	# cluster_list = range(100)
+	# print cluster_list
+	# break
+	query_results = query_results_on_original_index.get_results(query_index+1,-1)
 	
-	# result_producer =  ResultProducer(query_index+1,cluster_list,query_results,ARGUMENTS.result_size)
-	# result_producer.print_output()
+	result_producer =  ResultProducer(query_index+1,cluster_list,query_results,ARGUMENTS.result_size)
+	result_producer.print_output()
