@@ -56,18 +56,16 @@ class ResourceSelectionRedde:
 
 	def __init__(self,query_results,doc_cluster_map):
 
-		cluster_doc_count_dict = {}
+		cluster_score_dict = {}
 		for (doc_id,doc_score) in query_results:
 			cluster_id = doc_cluster_map.get_cluster_id(doc_id)
 			try:
-				cluster_doc_count_dict[cluster_id] += 1
+				cluster_score_dict[cluster_id] += 1
 			except KeyError:
-				cluster_doc_count_dict[cluster_id] = 1
+				cluster_score_dict[cluster_id] = 1
 
-		self.sorted_clusters = sorted(cluster_doc_count_dict.items(),key = lambda x:x[1])
+		self.sorted_clusters = sorted(cluster_score_dict.items(),key = lambda x:x[1])
 		self.sorted_clusters.reverse()
-
-		# print cluster_doc_count_dict
 
 	def get_top_k_clusters(self,k):
 
@@ -77,18 +75,16 @@ class ResourceSelectionReddeTop:
 
 	def __init__(self,query_results,doc_cluster_map):
 
-		cluster_doc_count_dict = {}
+		cluster_score_dict = {}
 		for (doc_id,doc_score) in query_results:
 			cluster_id = doc_cluster_map.get_cluster_id(doc_id)
 			try:
-				cluster_doc_count_dict[cluster_id] += doc_score
+				cluster_score_dict[cluster_id] += doc_score
 			except KeyError:
-				cluster_doc_count_dict[cluster_id] = doc_score
+				cluster_score_dict[cluster_id] = doc_score
 
-		self.sorted_clusters = sorted(cluster_doc_count_dict.items(),key = lambda x:x[1])
+		self.sorted_clusters = sorted(cluster_score_dict.items(),key = lambda x:x[1])
 		self.sorted_clusters.reverse()
-
-		# print cluster_doc_count_dict
 
 	def get_top_k_clusters(self,k):
 
@@ -98,18 +94,16 @@ class ResourceSelectionCRCSExp:
 
 	def __init__(self,query_results,doc_cluster_map,alpha,beta):
 
-		cluster_doc_count_dict = {}
+		cluster_score_dict = {}
 		for index,(doc_id,doc_score) in enumerate(query_results):
 			cluster_id = doc_cluster_map.get_cluster_id(doc_id)
 			try:
-				cluster_doc_count_dict[cluster_id] += alpha * math.exp(-1 * beta * (index + 1))
+				cluster_score_dict[cluster_id] += alpha * math.exp(-1 * beta * (index + 1))
 			except KeyError:
-				cluster_doc_count_dict[cluster_id] = alpha * math.exp(-1 * beta * (index + 1))
+				cluster_score_dict[cluster_id] = alpha * math.exp(-1 * beta * (index + 1))
 
-		self.sorted_clusters = sorted(cluster_doc_count_dict.items(),key = lambda x:x[1])
+		self.sorted_clusters = sorted(cluster_score_dict.items(),key = lambda x:x[1])
 		self.sorted_clusters.reverse()
-
-		# print cluster_doc_count_dict
 
 	def get_top_k_clusters(self,k):
 
@@ -119,18 +113,48 @@ class ResourceSelectionCRCSLin:
 
 	def __init__(self,query_results,doc_cluster_map):
 
-		cluster_doc_count_dict = {}
+		cluster_score_dict = {}
 		for index,(doc_id,doc_score) in enumerate(query_results):
 			cluster_id = doc_cluster_map.get_cluster_id(doc_id)
 			try:
-				cluster_doc_count_dict[cluster_id] += len(query_results) - (index + 1)
+				cluster_score_dict[cluster_id] += len(query_results) - (index + 1)
 			except KeyError:
-				cluster_doc_count_dict[cluster_id] = len(query_results) - (index + 1)
+				cluster_score_dict[cluster_id] = len(query_results) - (index + 1)
 
-		self.sorted_clusters = sorted(cluster_doc_count_dict.items(),key = lambda x:x[1])
+		self.sorted_clusters = sorted(cluster_score_dict.items(),key = lambda x:x[1])
 		self.sorted_clusters.reverse()
 
-		# print cluster_doc_count_dict
+	def get_top_k_clusters(self,k):
+
+		return [x[0] for x in self.sorted_clusters[0:k]]
+
+class ResourceSelectionGAVG:
+
+	def __init__(self,query_results,doc_cluster_map,doc_per_cluster):
+
+		cluster_doc_dict = {}
+		for (doc_id,doc_score) in query_results:
+			cluster_id = doc_cluster_map.get_cluster_id(doc_id)
+			try:
+				cluster_doc_dict[cluster_id].append(doc_score)
+			except KeyError:
+				cluster_doc_dict[cluster_id] = [doc_score]
+
+		cluster_score_dict = {}
+		for cluster_id,score_array in cluster_doc_dict.iteritems():
+			min_score = query_results[-1][1]
+			
+			while len(score_array) < doc_per_cluster:
+				score_array.append(min_score)
+			cluster_score = 1
+			for doc_score in score_array[0:doc_per_cluster]:
+				cluster_score *= doc_score
+			cluster_score_dict[cluster_id] = cluster_score
+
+		self.sorted_clusters = []
+
+		self.sorted_clusters = sorted(cluster_score_dict.items(),key = lambda x:x[1])
+		self.sorted_clusters.reverse()
 
 	def get_top_k_clusters(self,k):
 
@@ -165,12 +189,13 @@ parser = argparse.ArgumentParser(description='Resource Selection Algorithms')
 parser.add_argument('result_1', type=argparse.FileType('r'), help='result file of queries on main index')
 parser.add_argument('result_2', type=argparse.FileType('r'), help='result file of queries on CSI')
 parser.add_argument('cluster_concat_file', type=argparse.FileType('r'), help='file of document_id cluster_id pairs')
-parser.add_argument('-method', action="store",help='resource selection method (default: Redde)',default='Redde',choices=['Redde', 'Redde.top', 'CRCSExp', 'CRCSLin'])
+parser.add_argument('-method', action="store",help='resource selection method (default: Redde)',default='Redde',choices=['Redde', 'Redde.top', 'CRCSExp', 'CRCSLin', 'GAVG'])
 parser.add_argument('-no_of_resource', type=int, action="store", help='no of resource to select (default: 1)', default=1, choices=[1,3,5,10,15,100])
 parser.add_argument('-no_of_CSI_result', type=int, action="store", help='no of CSI result for resource selection (default:100)', default=100, choices=[50,100])
 parser.add_argument('-result_size', type=int, action="store", help='no of result page desired (default: 20)', default=20, choices=[10,20,30])
 parser.add_argument('-crcs_alpha', type=float, action="store", help='alpha component of CRCS Exp Formula (default:1.2)',default=1.2)
 parser.add_argument('-crcs_beta', type=float, action="store", help='beta component of CRCS Exp Formula (default:2.8)',default=2.8)
+parser.add_argument('-gavg_k', type=int, action="store", help='k component of GAVG (default:5)',default=5)
 ARGUMENTS = parser.parse_args()
 
 
@@ -194,6 +219,8 @@ for query_index in range(query_results_on_original_index.get_query_count()):
 		resource_selection_mode = ResourceSelectionCRCSExp(top_k_results_on_CSI,doc_cluster_map,ARGUMENTS.crcs_alpha,ARGUMENTS.crcs_beta)
 	elif ARGUMENTS.method == 'CRCSLin':
 		resource_selection_mode = ResourceSelectionCRCSLin(top_k_results_on_CSI,doc_cluster_map)
+	elif ARGUMENTS.method == 'GAVG':
+		resource_selection_mode = ResourceSelectionGAVG(top_k_results_on_CSI,doc_cluster_map,ARGUMENTS.gavg_k)
 	else:
 		print 'Requested resource selection method is not available'
 			
