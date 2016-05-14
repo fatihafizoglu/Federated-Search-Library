@@ -150,6 +150,9 @@ unsigned int rand_interval(unsigned int min, unsigned int max) {
      * the buckets until you land in one of them. All buckets are equally
      * likely. If you land off the end of the line of buckets, try again. */
     do {
+        struct timeval tm;
+        gettimeofday(&tm, NULL);
+        srandom(tm.tv_sec + tm.tv_usec * 1000000ul);
         r = rand();
     } while (r >= limit);
 
