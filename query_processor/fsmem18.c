@@ -228,7 +228,7 @@ void process_tuple(char *line, long int tuple_no) {
                     DVector[d_size].index = index;
                     d_size++;
 
-                    if (d_size>DOC_SIZE) {
+                    if (d_size > DOC_SIZE) {
                         printf("Doc size exceeds %d!\n", DOC_SIZE);
                         exit(1);
                     }
@@ -353,14 +353,12 @@ void sorting() {
     int maxHeapSize;
     int i;
 
-    /* heapsort */
     if (maxScoresHeap.itemCount < maxScoresHeap.maxSize)
         buildMaxHeap(&maxScoresHeap);
 
     maxHeapSize = maxScoresHeap.itemCount;
     for (i = 0; i < maxHeapSize; i++) {
         extractMaxHeap(&maxScoresHeap, &docId, &score);
-        //    printf("extracted docId %d with score %f\n", docId, score);
         accumulator[maxHeapSize-i-1].doc_index = docId;
         accumulator[maxHeapSize-i-1].sim_rank = -score;
     }
@@ -373,30 +371,30 @@ void TOs4ExtractionSelectionSorting(int q_size) {
     maxScoresHeap.itemCount = 0;
     maxScoresHeap.items = accumulator;
 
-    // AND logic
     for (i = 1; i < DOC_NUM; i++)
-    /* try to select nonzero accumulators */
 #if (AND_MODE)
-    if (accumulator[i].sim_rank && accumulator[i].last_updated_by ==q_size)
+        if (accumulator[i].sim_rank && accumulator[i].last_updated_by == q_size)
 #else
-    if (accumulator[i].sim_rank)
+        if (accumulator[i].sim_rank)
 #endif
-    {
-        nonzero_acc_nodes++;
+        {
+            nonzero_acc_nodes++;
 
 #if ((SIM_MEASURE == TFIDF) || (SIM_MEASURE == MF8))
-        accumulator[i].sim_rank /= doc_lengths[i];
+            accumulator[i].sim_rank /= doc_lengths[i];
 #elif (SIM_MEASURE == CARMEL_SMART)
-        accumulator[i].sim_rank /= (double)(sqrt(0.8*avg_unique + 0.2 *unique_terms[i]));
+            accumulator[i].sim_rank /= (double)(sqrt(0.8*avg_unique + 0.2 *unique_terms[i]));
 #elif (SIM_MEASURE == DIRICHLET)
-        accumulator[i].sim_rank += total_no_of_terms_in_query * (double) logf( DIRICHLET_CONSTANT /( (double) DIRICHLET_CONSTANT + total_tf_per_doc[i]));
+            accumulator[i].sim_rank += total_no_of_terms_in_query * (double) logf( DIRICHLET_CONSTANT /( (double) DIRICHLET_CONSTANT + total_tf_per_doc[i]));
 #endif
-        selection(accumulator[i].sim_rank, /*accumulator[i].doc_index*/ i);
-    }
+            selection(accumulator[i].sim_rank, i);
+        }
 
 #if (AND_MODE)
-    else accumulator[i].sim_rank = 0; // AND logic
+        else accumulator[i].sim_rank = 0;
 #endif
+
+    // TODO: diversify TOP_N documents in accumulator
 
     sorting();
 }
@@ -431,7 +429,7 @@ void run_ranking_query(DocVec *q_vec, int q_size, int q_no, char* original_q_no)
     CONT_STOP = 0; // stop condition with continue strategy is reached
     nonzero_doc_acc = 0;
 
-    for (i=0; i<q_size; i++) {
+    for (i = 0; i < q_size; i++) {
         u_stoptimer(&process_time);
         t_sum += process_time.time;
         WordList[q_vec[i].index].postinglist = (InvEntry *) malloc(sizeof(InvEntry)*WordList[q_vec[i].index].occurs_in_docs);
@@ -442,7 +440,7 @@ void run_ranking_query(DocVec *q_vec, int q_size, int q_no, char* original_q_no)
         u_cleartimer(&process_time);
         u_starttimer(&process_time);
 
-#if (PRUNE_METHOD==NO_PRUNE )
+#if (PRUNE_METHOD==NO_PRUNE)
         total_list_length += WordList[q_vec[i].index].occurs_in_docs;
         uncompressed_DISK_TIME(WordList[q_vec[i].index].occurs_in_docs);
 #if (SIM_MEASURE == DIRICHLET)
@@ -469,7 +467,7 @@ void run_ranking_query(DocVec *q_vec, int q_size, int q_no, char* original_q_no)
 #elif (SIM_MEASURE == BM25)
             doc_id = WordList[q_vec[i].index].postinglist[j].doc_id;
             doc_weight = WordList[q_vec[i].index].postinglist[j].weight;
-            q_vec[i].term_weight = log( (REMAINING_DOC_NUM-WordList[q_vec[i].index].real_occurs_in_docs + 0.5) / (double)(WordList[q_vec[i].index].real_occurs_in_docs + 0.5));
+            q_vec[i].term_weight = log( (REMAINING_DOC_NUM-WordList[q_vec[i].index].occurs_in_docs + 0.5) / (double)(WordList[q_vec[i].index].occurs_in_docs + 0.5));
 #if (AND_MODE)
             if (accumulator[doc_id].last_updated_by == i) {
                 accumulator[doc_id].sim_rank += q_vec[i].term_weight * (doc_weight * (BM25_K1_CONSTANT + 1)) / (doc_weight + BM25_K1_CONSTANT *((1-BM25_B_CONSTANT)+(BM25_B_CONSTANT*(total_tf_per_doc[doc_id]/avg_total_tf ))));
@@ -557,7 +555,7 @@ void run_ranking_query(DocVec *q_vec, int q_size, int q_no, char* original_q_no)
 
     if (!USE_HEAP) {
         s_pt = 0;
-        e_pt = DOC_NUM-1;
+        e_pt = DOC_NUM - 1;
 
         while (s_pt < e_pt) {
             while (accumulator[s_pt].sim_rank != 0)
@@ -573,12 +571,11 @@ void run_ranking_query(DocVec *q_vec, int q_size, int q_no, char* original_q_no)
                 accumulator[e_pt].sim_rank = 0;
             }
         }
-        qsort(accumulator, s_pt, sizeof(accumulator[0]),ordering);
+        qsort(accumulator, s_pt, sizeof(accumulator[0]), ordering);
 
-    } else
-        if (USE_HEAP) {
-            TOs4ExtractionSelectionSorting(q_size);
-        }
+    } else {
+        TOs4ExtractionSelectionSorting(q_size);
+    }
 
     sum_list_length += total_list_length;
     sum_node_access += total_node_access;
@@ -587,10 +584,14 @@ void run_ranking_query(DocVec *q_vec, int q_size, int q_no, char* original_q_no)
 
     u_stoptimer(&process_time);
     t_sum += process_time.time;
-    WRITE_BEST_N = BEST_DOCS;
 
-    for (j=0; j < WRITE_BEST_N; j++) {
-        fprintf(out_trec, "%d\tQ0\t%d\t%d\t%lf\tfs\n", q_no+1, accumulator[j].doc_index, j+1, accumulator[j].sim_rank);
+    for (j = 0; j < TOP_N; j++)
+        if (accumulator[j].sim_rank == 0)
+            break;
+
+    WRITE_BEST_N = j;
+    for (j = 0; j < WRITE_BEST_N; j++) {
+        fprintf(out_trec, "%d\tQ0\t%d\t%d\t%lf\tfs\n", q_no + 1, accumulator[j].doc_index, j + 1, accumulator[j].sim_rank);
         accumulator[j].sim_rank = 0;
     }
 
@@ -600,7 +601,7 @@ void run_ranking_query(DocVec *q_vec, int q_size, int q_no, char* original_q_no)
     }
 }
 
-void process_ranked_query(char * rel_name) {
+void process_ranked_query(char *rel_name) {
     char line[MAX_TUPLE_LENGTH];
     long int tmp;
     int  i,j,k,p;
@@ -626,11 +627,11 @@ void process_ranked_query(char * rel_name) {
     fgets(line, MAX_TUPLE_LENGTH, ifp); // read blank line
 
     while (!feof(ifp)) {
-        sprintf(original_doc_id,"%ld",doc_no);
+        sprintf(original_doc_id,"%ld", doc_no);
         line[strlen(line)-1] = NULL;
         extract_content(line, content);
         process_tuple(content, doc_no);
-        qsort(DVector,d_size,sizeof(DVector[0]),index_order);
+        qsort(DVector, d_size, sizeof(DVector[0]), index_order);
 
         count = 0;
         token_freq=1;   // the freq. of a given token is set to 1 initially
@@ -640,9 +641,9 @@ void process_ranked_query(char * rel_name) {
         total_no_of_terms_in_query = 0;
         total_no_of_terms_in_query = d_size;
 #endif
-        for (i=0; i<d_size; i++) {
+        for (i=0; i < d_size; i++) {
             next = i + 1;
-            if ( next<d_size && DVector[i].index==DVector[next].index)
+            if (next<d_size && DVector[i].index == DVector[next].index)
                 token_freq++;
             else {
                 q_vec[count].index = DVector[i].index;
@@ -651,18 +652,18 @@ void process_ranked_query(char * rel_name) {
                 token_freq = 1;
             }
 
-            if (token_freq>max_tf)
+            if (token_freq > max_tf)
                 max_tf = token_freq;
         }
 
         avg_tf = 0;
-        for (i=0; i<count; i++)
+        for (i = 0; i < count; i++)
             avg_tf += q_vec[i].rank_in_doc;
 
         avg_tf /= count;
 
         // set query weights
-        for (i=0; i<count; i++) {
+        for (i=0; i < count; i++) {
 #if (SIM_MEASURE == TFIDF)
             // Indeed a term with rank 0 can not be in this vector...
             if (q_vec[i].rank_in_doc != 0)
@@ -684,7 +685,7 @@ void process_ranked_query(char * rel_name) {
         }
 
         // run the query
-        for (p=0; p<RUN_NO; p++) {
+        for (p=0; p < RUN_NO; p++) {
             run_ranking_query(q_vec, count, doc_no, original_doc_id);
         }
 
@@ -771,7 +772,7 @@ void main(int argc,char *argv[]) {
         fscanf (ifp, "%d %lf\n", &doc_id, &doc_length);
         avg_doc_length += doc_length;
 #if (SIM_MEASURE == TFIDF)
-        doc_lengths[doc_id] =doc_length;
+        doc_lengths[doc_id] = doc_length;
 #elif (SIM_MEASURE == MF8)
         doc_lengths[doc_id] = sqrt (doc_length);
 #endif
