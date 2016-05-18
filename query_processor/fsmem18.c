@@ -22,7 +22,7 @@ int d_size=0; // length of current doc
 
 long int doc_no = 0; // total no_of docs in all files
 
-int err=0;
+int err = 0;
 
 FILE * ifp, *eval_out;
 FILE * out, *entry_ifp, *out_trec;
@@ -343,25 +343,6 @@ void selection(double score, int docId) {
             insertMaxHeap(&maxScoresHeap, docId, (-1)*score);
         }
     }
-
-    // if (maxScoresHeap.itemCount < maxScoresHeap.maxSize) {
-    //     maxScoresHeap.items[maxScoresHeap.itemCount].doc_index = docId;
-    //     maxScoresHeap.items[maxScoresHeap.itemCount].sim_rank = -score;
-    //     maxScoresHeap.itemCount++;
-    //
-    //     if (maxScoresHeap.itemCount == maxScoresHeap.maxSize)
-    //         buildMaxHeap(&maxScoresHeap);
-    // } else {
-    //     queryMaxMaxHeap(&maxScoresHeap, &minDocId, &minScore);
-    //     /* new accumulator has a score higher than the minimum, so insert it */
-    //     if (score > -minScore) {
-    //         maxScoresHeap.items[0].doc_index = docId;
-    //         maxScoresHeap.items[0].sim_rank = -score;
-    //         heapifyMaxHeap(&maxScoresHeap, 0);
-    //     }
-    // }
-    //
-    // accumulator[docId].sim_rank = 0;
 }
 
 void sorting() {
@@ -371,8 +352,6 @@ void sorting() {
     int i;
 
     initialize_results();
-    // if (maxScoresHeap.itemCount < maxScoresHeap.maxSize)
-    //     buildMaxHeap(&maxScoresHeap);
 
     maxHeapSize = maxScoresHeap.itemCount;
     for (i = 0; i < maxHeapSize; i++) {
@@ -410,9 +389,8 @@ void TOs4ExtractionSelectionSorting(int q_size) {
         else accumulator[i].sim_rank = 0;
 #endif
 
-    // TODO: diversify TOP_N documents in accumulator
-
     sorting();
+    freeMaxHeap(&maxScoresHeap);
 }
 
 void run_ranking_query(DocVec *q_vec, int q_size, int q_no, char* original_q_no) {
@@ -431,9 +409,7 @@ void run_ranking_query(DocVec *q_vec, int q_size, int q_no, char* original_q_no)
     total_node_access = 0;
     nonzero_acc_nodes = 0;
 
-// #if (AND_MODE)
     initialize_accumulator();
-// #endif
 
     u_cleartimer(&process_time);
     u_starttimer(&process_time);
@@ -595,6 +571,8 @@ void run_ranking_query(DocVec *q_vec, int q_size, int q_no, char* original_q_no)
         TOs4ExtractionSelectionSorting(q_size);
     }
 
+    // TODO: diversify documents in results[BEST_DOCS] array
+
     sum_list_length += total_list_length;
     sum_node_access += total_node_access;
     sum_nonzero_acc_nodes += nonzero_acc_nodes;
@@ -603,7 +581,7 @@ void run_ranking_query(DocVec *q_vec, int q_size, int q_no, char* original_q_no)
     u_stoptimer(&process_time);
     t_sum += process_time.time;
 
-    for (j = 0; j < TOP_N; j++)
+    for (j = 0; j < BEST_DOCS; j++)
         if (results[j].sim_rank == 0)
             break;
 
