@@ -82,6 +82,7 @@ double dvec_length(int size);
 
 void dvec_normalize (int size);
 void initialize_accumulator();
+void initialize_results();
 
 /* decreasing order */
 int ordering (RP p, RP q);
@@ -100,6 +101,5 @@ void run_ranking_query(DocVec *q_vec, int q_size, int q_no, char* original_q_no)
 void process_ranked_query(char * rel_name);
 
 void main(int argc,char *argv[]);
-
 
 #endif

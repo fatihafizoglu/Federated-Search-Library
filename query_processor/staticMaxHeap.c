@@ -42,7 +42,7 @@ int insertMaxHeap(struct staticMaxHeapStruct *maxHeap, int docId, double score) 
     int current;
 
     if (maxHeap->itemCount == maxHeap->maxSize)
-        return 0;
+        return -1;
 
     current = maxHeap->itemCount;
 
@@ -55,12 +55,12 @@ int insertMaxHeap(struct staticMaxHeapStruct *maxHeap, int docId, double score) 
     maxHeap->items[current].sim_rank = score;
     maxHeap->itemCount++;
 
-    return 1;
+    return 0;
 }
 
 int extractMaxHeap(struct staticMaxHeapStruct *maxHeap, int *docId, double *score) {
     if (!maxHeap->itemCount)
-        return 0;
+        return -1;
 
     *docId = maxHeap->items[0].doc_index;
     *score = maxHeap->items[0].sim_rank;
@@ -68,17 +68,17 @@ int extractMaxHeap(struct staticMaxHeapStruct *maxHeap, int *docId, double *scor
     maxHeap->itemCount--;
     heapifyMaxHeap(maxHeap, 0);
 
-    return 1;
+    return 0;
 }
 
 int queryMaxMaxHeap(struct staticMaxHeapStruct *maxHeap, int *docId, double *score) {
     if (!maxHeap->itemCount)
-        return 0;
+        return -1;
 
     *docId = maxHeap->items[0].doc_index;
     *score = maxHeap->items[0].sim_rank;
 
-    return 1;
+    return 0;
 }
 
 void printMaxHeap(struct staticMaxHeapStruct *maxHeap) {
@@ -94,5 +94,6 @@ void printMaxHeap(struct staticMaxHeapStruct *maxHeap) {
 }
 
 void freeMaxHeap(struct staticMaxHeapStruct *maxHeap) {
+    maxHeap->itemCount = 0;
     free(maxHeap->items);
 }

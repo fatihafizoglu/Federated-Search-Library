@@ -35,7 +35,7 @@ int processing_S = 0;
 char final_tokens [TOKEN_NO][TOKEN_SIZE];
 
 Result *accumulator;
-Result **results; //Result results [QUERY_NO][TOP_N];
+Result *results;
 
 int total_list_length = 0;
 int total_node_access = 0;
@@ -306,10 +306,19 @@ void dvec_normalize (int size) {
 void initialize_accumulator() {
     int i;
 
-    for (i = 0; i<DOC_NUM; i++) {
-        accumulator[i].doc_index = i; // index is itself
+    for (i = 0; i < DOC_NUM; i++) {
+        accumulator[i].doc_index = i;
         accumulator[i].sim_rank = 0;
-        accumulator[i].last_updated_by=0;
+        accumulator[i].last_updated_by = 0;
+    }
+}
+
+void initialize_results() {
+    int i;
+
+    for (i = 0; i < BEST_DOCS; i++) {
+        results[i].doc_index = 0;
+        results[i].sim_rank = 0;
     }
 }
 
@@ -326,25 +335,33 @@ void selection(double score, int docId) {
     double minScore;
     int minDocId;
 
-    /* there are less than s accumulators in the heap */
-    if (maxScoresHeap.itemCount < maxScoresHeap.maxSize) {
-        maxScoresHeap.items[maxScoresHeap.itemCount].doc_index = docId;
-        maxScoresHeap.items[maxScoresHeap.itemCount].sim_rank = -score;
-        maxScoresHeap.itemCount++;
-
-        if (maxScoresHeap.itemCount == maxScoresHeap.maxSize)
-            buildMaxHeap(&maxScoresHeap);
-    } else { /* there are exactly s accumulators in the heap */
+    if (insertMaxHeap(&maxScoresHeap, docId, (-1)*score) != 0) {
+        /* means that heap is full */
         queryMaxMaxHeap(&maxScoresHeap, &minDocId, &minScore);
-        /* new accumulator has a score higher than the minimum, so insert it */
         if (score > -minScore) {
-            maxScoresHeap.items[0].doc_index = docId;
-            maxScoresHeap.items[0].sim_rank = -score;
-            heapifyMaxHeap(&maxScoresHeap, 0);
+            extractMaxHeap(&maxScoresHeap, &minDocId, &minScore);
+            insertMaxHeap(&maxScoresHeap, docId, (-1)*score);
         }
     }
 
-    accumulator[docId].sim_rank = 0;
+    // if (maxScoresHeap.itemCount < maxScoresHeap.maxSize) {
+    //     maxScoresHeap.items[maxScoresHeap.itemCount].doc_index = docId;
+    //     maxScoresHeap.items[maxScoresHeap.itemCount].sim_rank = -score;
+    //     maxScoresHeap.itemCount++;
+    //
+    //     if (maxScoresHeap.itemCount == maxScoresHeap.maxSize)
+    //         buildMaxHeap(&maxScoresHeap);
+    // } else {
+    //     queryMaxMaxHeap(&maxScoresHeap, &minDocId, &minScore);
+    //     /* new accumulator has a score higher than the minimum, so insert it */
+    //     if (score > -minScore) {
+    //         maxScoresHeap.items[0].doc_index = docId;
+    //         maxScoresHeap.items[0].sim_rank = -score;
+    //         heapifyMaxHeap(&maxScoresHeap, 0);
+    //     }
+    // }
+    //
+    // accumulator[docId].sim_rank = 0;
 }
 
 void sorting() {
@@ -353,23 +370,22 @@ void sorting() {
     int maxHeapSize;
     int i;
 
-    if (maxScoresHeap.itemCount < maxScoresHeap.maxSize)
-        buildMaxHeap(&maxScoresHeap);
+    initialize_results();
+    // if (maxScoresHeap.itemCount < maxScoresHeap.maxSize)
+    //     buildMaxHeap(&maxScoresHeap);
 
     maxHeapSize = maxScoresHeap.itemCount;
     for (i = 0; i < maxHeapSize; i++) {
         extractMaxHeap(&maxScoresHeap, &docId, &score);
-        accumulator[maxHeapSize-i-1].doc_index = docId;
-        accumulator[maxHeapSize-i-1].sim_rank = -score;
+        results[maxHeapSize-i-1].doc_index = docId;
+        results[maxHeapSize-i-1].sim_rank = -score;
     }
 }
 
 void TOs4ExtractionSelectionSorting(int q_size) {
     int i;
 
-    maxScoresHeap.maxSize = TOP_N;
-    maxScoresHeap.itemCount = 0;
-    maxScoresHeap.items = accumulator;
+    createMaxHeap(&maxScoresHeap, TOP_N);
 
     for (i = 1; i < DOC_NUM; i++)
 #if (AND_MODE)
@@ -415,9 +431,9 @@ void run_ranking_query(DocVec *q_vec, int q_size, int q_no, char* original_q_no)
     total_node_access = 0;
     nonzero_acc_nodes = 0;
 
-#if (AND_MODE)
+// #if (AND_MODE)
     initialize_accumulator();
-#endif
+// #endif
 
     u_cleartimer(&process_time);
     u_starttimer(&process_time);
@@ -440,15 +456,17 @@ void run_ranking_query(DocVec *q_vec, int q_size, int q_no, char* original_q_no)
         u_cleartimer(&process_time);
         u_starttimer(&process_time);
 
-#if (PRUNE_METHOD==NO_PRUNE)
+#if (PRUNE_METHOD == NO_PRUNE)
         total_list_length += WordList[q_vec[i].index].occurs_in_docs;
         uncompressed_DISK_TIME(WordList[q_vec[i].index].occurs_in_docs);
+
 #if (SIM_MEASURE == DIRICHLET)
         WordList[q_vec[i].index].term_tf_sum = 0;
         for (j=0; j<WordList[q_vec[i].index].occurs_in_docs; j++)
             WordList[q_vec[i].index].term_tf_sum += WordList[q_vec[i].index].postinglist[j].weight;
 #endif
-        for (j=0; j<WordList[q_vec[i].index].occurs_in_docs; j++) {
+
+        for (j = 0; j < WordList[q_vec[i].index].occurs_in_docs; j++) {
             doc_weight = 0;
 #if (SIM_MEASURE == TFIDF)
             doc_weight= ((double)(WordList[q_vec[i].index].postinglist[j].weight) * WordList[q_vec[i].index].CFCweight);
@@ -543,7 +561,7 @@ void run_ranking_query(DocVec *q_vec, int q_size, int q_no, char* original_q_no)
         }
 #endif
 
-#if (PRUNE_METHOD==QUIT)
+#if (PRUNE_METHOD == QUIT)
         if (nonzero_doc_acc>DOC_PRUNE_ACC)
             QUIT_STOP = 1;  // or we could directly say break the loop!
 #elif (PRUNE_METHOD == CONT)
@@ -586,13 +604,13 @@ void run_ranking_query(DocVec *q_vec, int q_size, int q_no, char* original_q_no)
     t_sum += process_time.time;
 
     for (j = 0; j < TOP_N; j++)
-        if (accumulator[j].sim_rank == 0)
+        if (results[j].sim_rank == 0)
             break;
 
     WRITE_BEST_N = j;
     for (j = 0; j < WRITE_BEST_N; j++) {
-        fprintf(out_trec, "%d\tQ0\t%d\t%d\t%lf\tfs\n", q_no + 1, accumulator[j].doc_index, j + 1, accumulator[j].sim_rank);
-        accumulator[j].sim_rank = 0;
+        fprintf(out_trec, "%d\tQ0\t%d\t%d\t%lf\tfs\n", q_no + 1, results[j].doc_index, j + 1, results[j].sim_rank);
+        //accumulator[j].sim_rank = 0;
     }
 
     if (DETAILED_LOG) {
@@ -647,7 +665,7 @@ void process_ranked_query(char *rel_name) {
                 token_freq++;
             else {
                 q_vec[count].index = DVector[i].index;
-                q_vec[count].rank_in_doc = token_freq; //DVector[i].rank_in_doc;
+                q_vec[count].rank_in_doc = token_freq;
                 count++;
                 token_freq = 1;
             }
@@ -663,7 +681,7 @@ void process_ranked_query(char *rel_name) {
         avg_tf /= count;
 
         // set query weights
-        for (i=0; i < count; i++) {
+        for (i = 0; i < count; i++) {
 #if (SIM_MEASURE == TFIDF)
             // Indeed a term with rank 0 can not be in this vector...
             if (q_vec[i].rank_in_doc != 0)
@@ -684,7 +702,6 @@ void process_ranked_query(char *rel_name) {
             fflush(out);
         }
 
-        // run the query
         for (p=0; p < RUN_NO; p++) {
             run_ranking_query(q_vec, count, doc_no, original_doc_id);
         }
@@ -716,9 +733,10 @@ void main(int argc,char *argv[]) {
     off_t address;
 
     WordList = (Word *) malloc(sizeof(Word)*WORD_NO);
-    buffer = (InvEntry *) malloc(sizeof(InvEntry)*BUFFERSIZE);
-    accumulator = (Result*) malloc(sizeof(Result)*DOC_NUM);
-    DVector = (DocVec *) malloc(sizeof(DocVec) *DOC_SIZE);
+    buffer = (InvEntry *) malloc(sizeof(InvEntry) * BUFFERSIZE);
+    accumulator = (Result*) malloc(sizeof(Result) * DOC_NUM);
+    DVector = (DocVec *) malloc(sizeof(DocVec) * DOC_SIZE);
+    results = (Result*) malloc(sizeof(Result)* BEST_DOCS);
 
     if (!WordList)
         printf("could not allocate???\n");
@@ -737,8 +755,8 @@ void main(int argc,char *argv[]) {
 
     strcpy(query_file, argv[4]);
 
-    out = fopen("fs-log.txt", "wt");
-    out_trec = fopen("fs-log-trec.txt", "wt");
+    out = fopen("log.txt", "wt");
+    out_trec = fopen("result.txt", "wt");
     ifp = fopen("stopword.lst","rt") ;
 
     for (i=0; i < NOSTOPWORD; i++)
@@ -862,7 +880,7 @@ void main(int argc,char *argv[]) {
 
     fclose(out);
 
-    eval_out = fopen("fs-ranked.txt", "wt");
+    eval_out = fopen("stats.txt", "wt");
 
     fprintf(eval_out,"no of results returned: top %d\n", TOP_N);
     fprintf(eval_out, "total and avg total list length (over all queries): %lld %lf\n",sum_list_length, sum_list_length/(double) (QUERY_NO*RUN_NO));
@@ -880,4 +898,6 @@ void main(int argc,char *argv[]) {
 
     free(WordList);
     free(buffer);
+
+    // TODO: free allocated memory areas where it is possible.
 }

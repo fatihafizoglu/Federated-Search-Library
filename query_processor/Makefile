@@ -25,6 +25,6 @@ clean:
 distclean:
 	rm -f *.o
 	rm -f query
-	rm -f fs-log.txt
-	rm -f fs-log-trec.txt
-	rm -f fs-ranked.txt
+	rm -f log.txt
+	rm -f result.txt
+	rm -f stats.txt
