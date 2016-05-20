@@ -209,7 +209,7 @@ parser.add_argument('cluster_concat_file', type=argparse.FileType('r'), help='fi
 parser.add_argument('-method', action="store",help='resource selection method (default: Redde)',default='Redde',choices=['Redde', 'Redde.top', 'CRCSExp', 'CRCSLin', 'GAVG'])
 parser.add_argument('-no_of_resource', type=int, action="store", help='no of resource to select (default: 1)', default=1, choices=[1,3,5,10,20,30,40,50,60,70,80,90,100])
 parser.add_argument('-no_of_CSI_result', type=int, action="store", help='no of CSI result for resource selection (default:100)', default=100, choices=[50,100,150,200,250,300,350,400,450,500,550,600,650,700,750,800,850,900,950,1000])
-parser.add_argument('-result_size', type=int, action="store", help='no of result page desired (default: 20)', default=20, choices=[10,20,30])
+parser.add_argument('-result_size', type=int, action="store", help='no of result page desired (default: 20)', default=20, choices=[10,20,30,40,50,60,70,80,90,100])
 parser.add_argument('-crcs_alpha', type=float, action="store", help='alpha component of CRCS Exp Formula (default:1.2)',default=1.2)
 parser.add_argument('-crcs_beta', type=float, action="store", help='beta component of CRCS Exp Formula (default:2.8)',default=2.8)
 parser.add_argument('-gavg_k', type=int, action="store", help='k component of GAVG (default:5)',default=5)

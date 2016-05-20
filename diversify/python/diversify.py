@@ -3,40 +3,41 @@ import time
 import struct
 import math
 
+
 print "Script started at: " + time.strftime('%X %x')
 
 INTEGER_SIZE = 4
 
-LAMBDA = 0.5
+LAMBDA = 1.00
 
 DIV_SIZE = 100
 
 WORD_NO = 163629158
-wordlist_file = "/home/eckucukoglu/projects/ms-thesis/allocation_runs/topic_based_2/csi_wordlist_idf.txt"
+wordlist_file = "/media/fatihafizoglu/LenovoMS/Index/TopicBasedClusters_100_2_CSI_merged_wordlist_new.txt"
 cfcweights = []
 
 
 DOC_NUM = 50220538
-smart_documents_file = "/home/eckucukoglu/projects/ms-thesis/main_index/doc_lengths.txt"
+smart_documents_file = "/media/fatihafizoglu/LenovoMS/Index/merged_SMART-documents.txt"
 unique_terms = []
 total_tf_per_doc = []
 
 
 QUERY_NO = 50
-query_results_file = "/home/eckucukoglu/projects/ms-thesis/results/2.txt"
+query_results_file = "/media/fatihafizoglu/LenovoMS/results/csi_index_top200.txt"
 query_results = []
 
-doc_file_names = ["/home/eckucukoglu/projects/ms-thesis/main_index/doc_vectors/dvec.bin-1",
-				"/home/eckucukoglu/projects/ms-thesis/main_index/doc_vectors/dvec.bin-2",
-				"/home/eckucukoglu/projects/ms-thesis/main_index/doc_vectors/dvec.bin-3",
-				"/home/eckucukoglu/projects/ms-thesis/main_index/doc_vectors/dvec.bin-4",
-				"/home/eckucukoglu/projects/ms-thesis/main_index/doc_vectors/dvec.bin-5",
-				"/home/eckucukoglu/projects/ms-thesis/main_index/doc_vectors/dvec.bin-6",
-				"/home/eckucukoglu/projects/ms-thesis/main_index/doc_vectors/dvec.bin-7",
-				"/home/eckucukoglu/projects/ms-thesis/main_index/doc_vectors/dvec.bin-8",
-				"/home/eckucukoglu/projects/ms-thesis/main_index/doc_vectors/dvec.bin-9",
-				"/home/eckucukoglu/projects/ms-thesis/main_index/doc_vectors/dvec.bin-10",
-				"/home/eckucukoglu/projects/ms-thesis/main_index/doc_vectors/dvec.bin-11"
+doc_file_names = ["/home/fatihafizoglu/Dvecs/dvec.bin-1",
+				"/home/fatihafizoglu/Dvecs/dvec.bin-2",
+				"/home/fatihafizoglu/Dvecs/dvec.bin-3",
+				"/home/fatihafizoglu/Dvecs/dvec.bin-4",
+				"/home/fatihafizoglu/Dvecs/dvec.bin-5",
+				"/home/fatihafizoglu/Dvecs/dvec.bin-6",
+				"/home/fatihafizoglu/Dvecs/dvec.bin-7",
+				"/home/fatihafizoglu/Dvecs/dvec.bin-8",
+				"/home/fatihafizoglu/Dvecs/dvec.bin-9",
+				"/home/fatihafizoglu/Dvecs/dvec.bin-10",
+				"/home/fatihafizoglu/Dvecs/dvec.bin-11"
 				]
 doc_files = []
 
@@ -223,10 +224,8 @@ def diversifyMaxSum(query_id):
 
 	for i in range(1,number_of_results):
 		for j in range(i + 1,number_of_results):
-			distances[i][j] = (1 - LAMBDA) * ((query_results[query_id][i][2]/maximum_relevance_score) + (query_results[query_id][j][2]/maximum_relevance_score)) +
-							  2 * LAMBDA * (1 - dotProduct(dvecs[i],dvecs[j],dvec_lengths[i],dvec_lengths[j]))
+			distances[i][j] = (1 - LAMBDA) * ((query_results[query_id][i][2]/maximum_relevance_score) + (query_results[query_id][j][2]/maximum_relevance_score)) + 2 * LAMBDA * (1 - dotProduct(dvecs[i],dvecs[j],dvec_lengths[i],dvec_lengths[j]))
 
-	diversified_query_result.append((-1,-1,-1))
 	k = 1
 	while k <= DIV_SIZE / 2:
 		max_dist = 0.0
@@ -240,12 +239,12 @@ def diversifyMaxSum(query_id):
 					max_i = i
 					max_j = j
 
-		# print max_i
-		# print max_j
+		print max_i
+		print max_j
 
 		if max_dist > 0:
-			diversified_query_result.append((query_results[query_id][max_i][0],2 * k - 1,max_dist))
-			diversified_query_result.append((query_results[query_id][max_j][0],2 * k,max_dist))
+			diversified_query_result.append((query_results[query_id][max_i][0],2 * k - 1,query_results[query_id][max_i][2]))
+			diversified_query_result.append((query_results[query_id][max_j][0],2 * k,query_results[query_id][max_j][2]))
 
 
 			for i in range(1,number_of_results):
@@ -256,6 +255,9 @@ def diversifyMaxSum(query_id):
 				distances[max_j][i] = -1.0
 
 		k += 1
+
+	diversified_query_result.sort(key=lambda tup: tup[2],reverse=True)
+	diversified_query_result.insert(0,(-1,-1,-1))
 
 	return diversified_query_result
 
@@ -284,7 +286,7 @@ for i in range(1,QUERY_NO + 1):
 		# print str(diversified_query_results[i][j][0]) + " " + str(diversified_query_results[i][1]) + " " + str(diversified_query_results[i][2])
 		doc_score = "%.6f" % diversified_query_results[i][j][2]
 		# print str(i) + "\tQ0\t" + str(diversified_query_results[i][j][0]) + "\t" + str(diversified_query_results[i][j][1]) + "\t" + str(doc_score) + "\tfs"
-		output_file.write(str(i) + "\tQ0\t" + str(diversified_query_results[i][j][0]) + "\t" + str(diversified_query_results[i][j][1]) + "\t" + str(doc_score) + "\tfs\n")
+		output_file.write(str(i) + "\tQ0\t" + str(diversified_query_results[i][j][0]) + "\t" + str(j) + "\t" + str(doc_score) + "\tfs\n")
 output_file.close()
 
 
