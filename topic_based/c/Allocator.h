@@ -34,10 +34,14 @@ typedef struct AllocatorConfiguration {
     unsigned int number_of_documents;
     /* Total number of terms in the collection. */
     unsigned int number_of_terms;
+
+    /* Below ones required for result diversification process. */
     /* Total number of results per query in preresults. */
     unsigned int number_of_preresults;
     /* Total number of query in preresults. */
     unsigned int number_of_query;
+    /* Selected diversification algorithm. */
+    unsigned int diversification_algorithm;
 } Conf;
 
 typedef struct Cluster {

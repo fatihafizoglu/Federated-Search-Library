@@ -1,7 +1,86 @@
 #include "diversify.h"
 
+double cosineSimilarity (int doc1_id, int doc2_id) {
+    double ret = 0.0;
+    Document *doc1 = getDocument(doc1_id);
+    Document *doc2 = getDocument(doc2_id);
+    TermVectors doc1_term_vectors = getTermVectors(doc1);
+    TermVectors doc2_term_vectors = getTermVectors(doc2);
+
+    // TODO: calculate cosine similarity
+
+    return ret;
+}
+
+void getQueryScores(int q_no, int number_of_results, double *max_score, double *sum_score) {
+    int i = 0;
+
+    for (i = 0; i < number_of_results; i++) {
+        (*sum_score) += preresults[q_no][i].score;
+        if ((*max_score) < preresults[q_no][i].score)
+            (*max_score) = preresults[q_no][i].score;
+    }
+}
+
+void diversifyQuery (int q_no, int algorithm, int number_of_results) {
+    if (algorithm == MAX_SUM) {
+        int i, j;
+        double max_score = 0.0;
+        // double sum_score = 0.0;
+        double distances[number_of_results][number_of_results];
+        double temp;
+
+        memset(distances, 0, number_of_results * number_of_results * sizeof(double));
+        // getQueryScores(q_no, number_of_results, &max_score, &sum_score);
+        max_score = preresults[q_no][0].score; /* Since rank 1 is the highest score.*/
+        for (i = 0; i < number_of_results; i++) {
+            for (j = 1; j < number_of_results; j++) {
+                temp = preresults[q_no][i].score + preresults[q_no][j].score;
+                temp += temp / max_score;
+                temp = (1 - MAX_SUM_LAMBDA) * temp;
+                distances[i][j] = temp;
+                temp = cosineSimilarity(preresults[q_no][i].doc_id, preresults[q_no][j].doc_id);
+                temp = 2 * MAX_SUM_LAMBDA * (1 - temp);
+                distances[i][j] += temp;
+            }
+        }
+
+        // TODO: we have work to do at max_sum
+
+
+    } else if (algorithm == MMR) {
+        // TODO: implement MMR
+
+    } else if (algorithm == SY) {
+        // TODO: implement SY
+
+    } else {
+        /* Let's implement one more algorithm. */
+    }
+}
+
+int getNumberOfResults (int q_no) {
+    int ret = 0;
+
+    for (ret = 0; ret < config->number_of_preresults; ret++) {
+        if (preresults[q_no][ret].doc_id == 0 || preresults[q_no][ret].score == 0)
+            break;
+    }
+
+    return ret;
+}
+
+void diversify () {
+    int i;
+
+    for (i = 0; i < config->number_of_query; i++) {
+        diversifyQuery(i, config->diversification_algorithm, getNumberOfResults(i));
+    }
+}
+
 void writeResults () {
     FILE *fp;
+    int q_no, j;
     char results_path[FILEPATH_LENGTH] = "";
     size_t len1 = strlen(config->preresults_path);
     memcpy(results_path, config->preresults_path, len1);
@@ -11,8 +90,8 @@ void writeResults () {
         return;
     }
 
-    for (int q_no = 0; q_no < config->number_of_query; q_no++)
-        for (int j = 0; j < config->number_of_preresults; j++)
+    for (q_no = 0; q_no < config->number_of_query; q_no++)
+        for (j = 0; j < config->number_of_preresults; j++)
             if (results[q_no][j].doc_id != 0 && results[q_no][j].score != 0)
                 fprintf(fp, "%d\tQ0\t%d\t%d\t%lf\tfs\n", q_no + 1, results[q_no][j].doc_id, j + 1, results[q_no][j].score);
 
@@ -49,6 +128,7 @@ int initDiversify (Conf *conf) {
 
     config = conf;
 
+    int i, j;
     long term_alloc_size = config->number_of_terms * sizeof(Term);
     long documents_alloc_size = config->number_of_documents * sizeof(Document);
     long results_pointer_alloc_size = config->number_of_query * sizeof(Result *);
@@ -84,67 +164,13 @@ int initDiversify (Conf *conf) {
         }
     }
 
-    for (int i = 0; i < config->number_of_query; i++) {
-        for (int j = 0; j < config->number_of_preresults; j++) {
+    for (i = 0; i < config->number_of_query; i++) {
+        for (j = 0; j < config->number_of_preresults; j++) {
             preresults[i][j].doc_id = 0;
             preresults[i][j].score = 0;
             results[i][j].doc_id = 0;
             results[i][j].score = 0;
         }
-    }
-
-    return 0;
-}
-
-int main (int argc, char *argv[]) {
-    char wordlist_path[FILEPATH_LENGTH] = "/home/eckucukoglu/projects/ms-thesis/allocation_runs/topic_based_2/csi_wordlist_idf.txt";
-    char document_info_path[FILEPATH_LENGTH] = "/home/eckucukoglu/projects/ms-thesis/main_index/doc_lengths.txt";
-    char document_vectors_folder_path[FILEPATH_LENGTH] = "/home/eckucukoglu/projects/ms-thesis/main_index/doc_vectors";
-    char preresults_path[FILEPATH_LENGTH] = "/home/eckucukoglu/projects/ms-thesis/results/1.txt";
-    unsigned int number_of_documents = 50220538;
-    unsigned int number_of_terms = 163629158;
-    unsigned int number_of_preresults = 1000;
-    unsigned int number_of_query = 50;
-
-    Conf conf = {
-        .wordlist_path = wordlist_path,
-        .document_info_path = document_info_path,
-        .document_vectors_folder_path = document_vectors_folder_path,
-        .preresults_path = preresults_path,
-        .number_of_documents = number_of_documents,
-        .number_of_terms = number_of_terms,
-        .number_of_preresults = number_of_preresults,
-        .number_of_query = number_of_query
-    };
-
-    {
-        initDiversify(&conf); // TODO: free allocated areas.
-        // loadDocuments();
-        // loadTerms();
-        loadPreresults();
-
-
-        writeResults();
-        // openDocumentVectorsFiles();
-        // actState();
-        // openClusterDocumentIdsFiles();
-        // actState();
-        // initClusters();
-        // actState();
-        // sampleDocuments();
-        // actState();
-        //
-        // initializeKMeans();
-        // swapDictionary();
-        // printf("initializeKMeans end.\n");
-        // for (i = 0; i < 5; i++) {
-        //     kMeans();
-        //     swapDictionary();
-        //     printf("kMeans %d end.\n", i+1);
-        // }
-        // assignDocumentsToClusters();
-        // printf("assignDocumentsToClusters end.\n");
-        // endProgram ();
     }
 
     return 0;

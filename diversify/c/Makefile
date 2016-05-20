@@ -8,11 +8,15 @@ DEBUG = -g -DDEBUG
 # RELATIVE_ALLOCATOR_PATH
 RAP = ../../topic_based/c/
 # ****************************************************
-all: diversify.o Allocator.o constants.o dictionary.o
-	$(CC) $(CFLAGS) -o diversify diversify.o Allocator.o constants.o dictionary.o -lm
+
+all: main.o diversify.o Allocator.o constants.o dictionary.o
+	$(CC) $(CFLAGS) -o diversify main.o diversify.o Allocator.o constants.o dictionary.o -lm
 
 debug: CFLAGS += $(DEBUG)
 debug: all
+
+main.o: main.c diversify.h
+	$(CC) $(CFLAGS) -c main.c
 
 diversify.o: diversify.c diversify.h
 	$(CC) $(CFLAGS) -c diversify.c
