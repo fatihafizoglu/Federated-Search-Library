@@ -2,13 +2,13 @@ import os
 import time
 import math
 
-wordlist_file_path = "/media/fatihafizoglu/LenovoMS/Index/TopicBasedClusters_100_2_CSI_merged_wordlist.txt"
-new_wordlist_file_path = "/media/fatihafizoglu/LenovoMS/Index/TopicBasedClusters_100_2_CSI_merged_wordlist_new.txt"
+wordlist_file_path = "/home/eckucukoglu/projects/ms-thesis/allocation_runs/topic_based_1/csi_wordlist.txt"
+new_wordlist_file_path = "/home/eckucukoglu/projects/ms-thesis/allocation_runs/topic_based_1/csi_wordlist_idf.txt"
 new_wordlist_file = open(new_wordlist_file_path,"w")
 
 # DOC_NUM = 50220538 # ALL
-# DOC_NUM = 502252 # TopicBasedClusters_100
-DOC_NUM = 502254 # TopicBasedClusters_100_2
+DOC_NUM = 502252 # TopicBasedClusters_100
+# DOC_NUM = 502254 # TopicBasedClusters_100_2
 
 
 with open(wordlist_file_path) as f:

@@ -3,7 +3,6 @@ import time
 import struct
 import math
 
-
 print "Script started at: " + time.strftime('%X %x')
 
 INTEGER_SIZE = 4
@@ -13,31 +12,31 @@ LAMBDA = 0.5
 DIV_SIZE = 100
 
 WORD_NO = 163629158
-wordlist_file = "/media/fatihafizoglu/LenovoMS/Index/TopicBasedClusters_100_2_CSI_merged_wordlist_new.txt"
+wordlist_file = "/home/eckucukoglu/projects/ms-thesis/allocation_runs/topic_based_2/csi_wordlist_idf.txt"
 cfcweights = []
 
 
 DOC_NUM = 50220538
-smart_documents_file = "/media/fatihafizoglu/LenovoMS/Index/merged_SMART-documents.txt"
+smart_documents_file = "/home/eckucukoglu/projects/ms-thesis/main_index/doc_lengths.txt"
 unique_terms = []
 total_tf_per_doc = []
 
 
 QUERY_NO = 50
-query_results_file = "/media/fatihafizoglu/LenovoMS/results/csi_index_top1000.txt"
+query_results_file = "/home/eckucukoglu/projects/ms-thesis/results/2.txt"
 query_results = []
 
-doc_file_names = ["/home/fatihafizoglu/Dvecs/dvec.bin-1",
-				"/home/fatihafizoglu/Dvecs/dvec.bin-2",
-				"/home/fatihafizoglu/Dvecs/dvec.bin-3",
-				"/home/fatihafizoglu/Dvecs/dvec.bin-4",
-				"/home/fatihafizoglu/Dvecs/dvec.bin-5",
-				"/home/fatihafizoglu/Dvecs/dvec.bin-6",
-				"/home/fatihafizoglu/Dvecs/dvec.bin-7",
-				"/home/fatihafizoglu/Dvecs/dvec.bin-8",
-				"/home/fatihafizoglu/Dvecs/dvec.bin-9",
-				"/home/fatihafizoglu/Dvecs/dvec.bin-10",
-				"/home/fatihafizoglu/Dvecs/dvec.bin-11"
+doc_file_names = ["/home/eckucukoglu/projects/ms-thesis/main_index/doc_vectors/dvec.bin-1",
+				"/home/eckucukoglu/projects/ms-thesis/main_index/doc_vectors/dvec.bin-2",
+				"/home/eckucukoglu/projects/ms-thesis/main_index/doc_vectors/dvec.bin-3",
+				"/home/eckucukoglu/projects/ms-thesis/main_index/doc_vectors/dvec.bin-4",
+				"/home/eckucukoglu/projects/ms-thesis/main_index/doc_vectors/dvec.bin-5",
+				"/home/eckucukoglu/projects/ms-thesis/main_index/doc_vectors/dvec.bin-6",
+				"/home/eckucukoglu/projects/ms-thesis/main_index/doc_vectors/dvec.bin-7",
+				"/home/eckucukoglu/projects/ms-thesis/main_index/doc_vectors/dvec.bin-8",
+				"/home/eckucukoglu/projects/ms-thesis/main_index/doc_vectors/dvec.bin-9",
+				"/home/eckucukoglu/projects/ms-thesis/main_index/doc_vectors/dvec.bin-10",
+				"/home/eckucukoglu/projects/ms-thesis/main_index/doc_vectors/dvec.bin-11"
 				]
 doc_files = []
 
@@ -224,7 +223,8 @@ def diversifyMaxSum(query_id):
 
 	for i in range(1,number_of_results):
 		for j in range(i + 1,number_of_results):
-			distances[i][j] = (1 - LAMBDA) * ((query_results[query_id][i][2]/maximum_relevance_score) + (query_results[query_id][j][2]/maximum_relevance_score)) + 2 * LAMBDA * (1 - dotProduct(dvecs[i],dvecs[j],dvec_lengths[i],dvec_lengths[j]))
+			distances[i][j] = (1 - LAMBDA) * ((query_results[query_id][i][2]/maximum_relevance_score) + (query_results[query_id][j][2]/maximum_relevance_score)) +
+							  2 * LAMBDA * (1 - dotProduct(dvecs[i],dvecs[j],dvec_lengths[i],dvec_lengths[j]))
 
 	diversified_query_result.append((-1,-1,-1))
 	k = 1

@@ -17,7 +17,7 @@ void endProgram () {
     }
     DictDestroy(merged_cluster.dictionary);
     DictDestroy(merged_cluster.new_dictionary);
-    
+
     if (sample_doc_ids != NULL)
         free(sample_doc_ids);
 

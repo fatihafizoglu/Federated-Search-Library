@@ -6,6 +6,7 @@
 #include <string.h>
 #include <math.h>
 #include <time.h>
+#include <sys/time.h>
 #include "constants.h"
 #include "dictionary.h"
 
@@ -28,10 +29,15 @@ typedef struct AllocatorConfiguration {
     char *wordlist_path;
     char *document_info_path;
     char *document_vectors_folder_path;
+    char *preresults_path;
     /* Total number of documents in the collection. */
-    int number_of_documents;
+    unsigned int number_of_documents;
     /* Total number of terms in the collection. */
-    int number_of_terms;
+    unsigned int number_of_terms;
+    /* Total number of results per query in preresults. */
+    unsigned int number_of_preresults;
+    /* Total number of query in preresults. */
+    unsigned int number_of_query;
 } Conf;
 
 typedef struct Cluster {
