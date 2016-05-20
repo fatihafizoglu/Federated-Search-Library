@@ -196,9 +196,6 @@ def dotProduct(doc_vector1,doc_vector2,doc_vector1_length,doc_vector2_length):
 
 def diversifyMaxSum(query_id):
 	global query_results
-	global cfcweights
-	global unique_terms
-	global total_tf_per_doc
 
 	diversified_query_result = []
 
@@ -261,6 +258,33 @@ def diversifyMaxSum(query_id):
 
 	return diversified_query_result
 
+def diversifySy(query_id):
+	global query_results
+
+	diversified_query_result = []
+
+	number_of_results = len(query_results[query_id])
+
+	dvecs = [[] for i in range(number_of_results)]
+	dvec_lengths = [1 for i in range(number_of_results)]
+	for i in range(1,number_of_results):
+		dvecs[i] = getDocumentVector(query_results[query_id][i][0])
+		dvec_lengths[i] = getVectorLength(dvecs[i])
+
+
+	diversified_query_result = query_results[query_id][:]
+	i = 1
+	while i <= DIV_SIZE and i < number_of_results:
+		j = i + 1
+		while j < number_of_results and len(diversified_query_result) > DIV_SIZE + 1:
+			if dotProduct(dvecs[i],dvecs[j],dvec_lengths[i],dvec_lengths[j]) > LAMBDA:
+				diversified_query_result.pop(j)
+			else:
+				j += 1
+		i += 1
+
+	return diversified_query_result[0:DIV_SIZE+1]
+
 
 readWordList()
 print "readWordList()"
@@ -274,9 +298,11 @@ print "openDocFiles()"
 diversified_query_results = []
 diversified_query_results.append([])
 for i in range(1,QUERY_NO + 1):
-	diversified_query_result = diversifyMaxSum(i)
+	# diversified_query_result = diversifyMaxSum(i)
+	# print "*********************************" + " => diversifyMaxSum(" + str(i) + ") "  + time.strftime('%X %x')
+	diversified_query_result = diversifySy(i)
+	print "*********************************" + " => diversifySy(" + str(i) + ") "  + time.strftime('%X %x')
 	diversified_query_results.append(diversified_query_result)
-	print "*********************************" + " => diversifyMaxSum(" + str(i) + ") "  + time.strftime('%X %x')
 
 
 
