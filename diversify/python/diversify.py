@@ -276,9 +276,11 @@ def diversifySy(query_id):
 	i = 1
 	while i <= DIV_SIZE and i < number_of_results:
 		j = i + 1
-		while j < number_of_results and len(diversified_query_result) > DIV_SIZE + 1:
-			if dotProduct(dvecs[i],dvecs[j],dvec_lengths[i],dvec_lengths[j]) > LAMBDA:
+		while j < len(diversified_query_result) and len(diversified_query_result) > DIV_SIZE + 1:
+			if dotProduct(dvecs[i],dvecs[j],dvec_lengths[i],dvec_lengths[j]) > (1 - LAMBDA):
 				diversified_query_result.pop(j)
+				dvecs.pop(j)
+				dvec_lengths.pop(j)
 			else:
 				j += 1
 		i += 1
@@ -301,6 +303,8 @@ for i in range(1,QUERY_NO + 1):
 	# diversified_query_result = diversifyMaxSum(i)
 	# print "*********************************" + " => diversifyMaxSum(" + str(i) + ") "  + time.strftime('%X %x')
 	diversified_query_result = diversifySy(i)
+	for j in range(1,len(diversified_query_result)):
+		print diversified_query_result[j][1]
 	print "*********************************" + " => diversifySy(" + str(i) + ") "  + time.strftime('%X %x')
 	diversified_query_results.append(diversified_query_result)
 
