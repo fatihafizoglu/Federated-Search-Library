@@ -82,9 +82,7 @@ typedef struct Term {
 
 typedef struct TermVector {
     unsigned int term_id;
-    //unsigned int term_frequency;
-    double term_frequency; /* Allocator uses 'unsigned int' tf value,
-                            however Diversify needs double tf-idf value. */
+    unsigned int term_frequency;
 } TermVector, *TermVectors;
 
 typedef struct QueryResult {
@@ -123,7 +121,7 @@ FILE* getDocumentVectorsFile (unsigned int);
  * Returns term vectors of a given document.
  * Term vectors are lists of <term id, term frequency> pairs.
  */
-TermVectors getTermVectors (Document*);
+TermVectors getTermVectors (Document*, double*);
 
 /*
  * Adds document to cluster's temporary dictionary.

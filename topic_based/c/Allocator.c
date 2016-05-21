@@ -41,6 +41,7 @@ void endProgram () {
         if (results != NULL)
             free(results);
     }
+    state = SUCCESS;
 }
 
 bool isDocumentSampled (unsigned int doc_id) {
@@ -61,7 +62,7 @@ void assignDocumentsToClusters () {
 
     for (i = 0; i < config->number_of_documents; i++) {
         Document *document = &documents[i];
-        TermVectors document_term_vectors = getTermVectors(document);
+        TermVectors document_term_vectors = getTermVectors(document, NULL);
         double max_similarity_value = 0.0;
         unsigned int most_similar_cluster_index = 0;
 
@@ -109,7 +110,7 @@ FILE* getDocumentVectorsFile (unsigned int doc_id) {
     return document_vectors_files[file_index];
 }
 
-TermVectors getTermVectors (Document* document) {
+TermVectors getTermVectors (Document* document, double *tf_idfs) {
     if (!document) {
         state = NULL_DOCUMENT;
         return NULL;
@@ -142,10 +143,11 @@ TermVectors getTermVectors (Document* document) {
         }
 
         for (i = 0; i < (long)document->uterm_count; i++) {
-            tf_idf = (double)term_vectors[i].term_frequency;
-            tf_idf /= total_tf; /* normalize */
-            tf_idf *= terms[term_vectors[i].term_id].cfc_weight;
-            term_vectors[i].term_frequency = tf_idf;
+            tf_idf = ((double)term_vectors[i].term_frequency / total_tf) * terms[term_vectors[i].term_id-1].cfc_weight;
+            if (terms[term_vectors[i].term_id-1].cfc_weight == -1.0)
+                printf("cfc_weight %lf. \n", terms[term_vectors[i].term_id-1].cfc_weight);
+            tf_idfs[i] = tf_idf;
+            //printf("tf_idf[%ld]: %lf\n", i, tf_idfs[i]);
         }
     }
 
@@ -155,12 +157,10 @@ TermVectors getTermVectors (Document* document) {
 
 void addDocumentToCluster(Cluster* cluster, Document* document) {
     int i;
-    TermVectors document_term_vectors = getTermVectors(document);
+    TermVectors document_term_vectors = getTermVectors(document, NULL);
     for (i = 0; i < document->uterm_count; i++) {
-        /* Since 'double term_frequency' used in diversify,
-            temporarily comment in below lines. */
-        //DictIncreaseOrInsert(cluster->new_dictionary, document_term_vectors[i].term_id, document_term_vectors[i].term_frequency);
-        //cluster->new_term_count += document_term_vectors[i].term_frequency;
+        DictIncreaseOrInsert(cluster->new_dictionary, document_term_vectors[i].term_id, document_term_vectors[i].term_frequency);
+        cluster->new_term_count += document_term_vectors[i].term_frequency;
     }
 
     free(document_term_vectors);
@@ -229,7 +229,7 @@ void kMeans() {
 
     for (i = 0; i < sample_count; i++) {
         Document *document = getDocument(sample_doc_ids[i]);
-        TermVectors document_term_vectors = getTermVectors(document);
+        TermVectors document_term_vectors = getTermVectors(document, NULL);
         double max_similarity_value = 0.0;
         unsigned int most_similar_cluster_index = 0;
 

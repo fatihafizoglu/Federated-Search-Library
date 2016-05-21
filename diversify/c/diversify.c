@@ -7,13 +7,13 @@ int cmpfunc_score (const void * a, const void * b) {
     return (resultA->score - resultB->score);
 }
 
-double dotProduct (TermVectors v1, int len1, TermVectors v2, int len2) {
+double dotProduct (TermVectors v1, int len1, double *tf_idf1, TermVectors v2, int len2, double *tf_idf2) {
     double ret = 0.0;
     int i = 0, j = 0;
 
     while (i < len1 && j < len2) {
         if (v1[i].term_id == v2[j].term_id) {
-            ret += v1[i].term_frequency * v2[j].term_frequency;
+            ret += tf_idf1[i] * tf_idf2[j];
             i++;
             j++;
         } else if (v1[i].term_id < v2[j].term_id)
@@ -25,13 +25,14 @@ double dotProduct (TermVectors v1, int len1, TermVectors v2, int len2) {
     return ret;
 }
 
-double getVectorLength (TermVectors vector, int length) {
+double getVectorLength (int length, double *tf_idf) {
     double ret = 0.0;
     int i;
 
     for (i = 0; i < length; i++)
-        ret += vector[i].term_frequency * vector[i].term_frequency;
+        ret += tf_idf[i] * tf_idf[i];
 
+    ret = sqrt(ret);
     return ret;
 }
 
@@ -39,15 +40,19 @@ double cosineSimilarity (int doc1_id, int doc2_id) {
     double ret = 0.0;
     Document *doc1 = getDocument(doc1_id);
     Document *doc2 = getDocument(doc2_id);
-    TermVectors doc1_term_vectors = getTermVectors(doc1);
-    TermVectors doc2_term_vectors = getTermVectors(doc2);
+    double tf_idf1[doc1->uterm_count];
+    double tf_idf2[doc2->uterm_count];
+    TermVectors doc1_term_vectors = getTermVectors(doc1, tf_idf1);
+    TermVectors doc2_term_vectors = getTermVectors(doc2, tf_idf2);
 
-    ret = dotProduct(doc1_term_vectors, doc1->uterm_count,
-                     doc2_term_vectors, doc2->uterm_count);
+    ret = dotProduct(doc1_term_vectors, doc1->uterm_count, tf_idf1,
+                     doc2_term_vectors, doc2->uterm_count, tf_idf2);
+    // printf("dotdone(%d,%d): %lf\n", doc1_id, doc2_id, ret);
+    ret = ret / (getVectorLength(doc1->uterm_count, tf_idf1) * getVectorLength(doc2->uterm_count, tf_idf2));
 
-    ret /= getVectorLength(doc1_term_vectors, doc1->uterm_count);
-    ret *= getVectorLength(doc2_term_vectors, doc2->uterm_count);
-
+    // printf("cosdone(%d,%d): %lf\n", doc1_id, doc2_id, ret);
+    free(doc1_term_vectors);
+    free(doc2_term_vectors);
     return ret;
 }
 
@@ -72,20 +77,15 @@ void diversifyQuery (int q_no, int algorithm, int number_of_preresults) {
         double max_score = 0.0, max_distance = 0.0;
         // double sum_score = 0.0;
         double distances[number_of_preresults][number_of_preresults];
-        double temp;
 
         memset(distances, 0, number_of_preresults * number_of_preresults * sizeof(double));
         // getQueryScores(q_no, number_of_preresults, &max_score, &sum_score);
         max_score = preresults[q_no][0].score; /* Since rank 1 is the highest score.*/
+
         for (i = 0; i < number_of_preresults; i++) {
             for (j = 1; j < number_of_preresults; j++) {
-                temp = preresults[q_no][i].score + preresults[q_no][j].score;
-                temp += temp / max_score;
-                temp = (1 - MAX_SUM_LAMBDA) * temp;
-                distances[i][j] = temp;
-                temp = cosineSimilarity(preresults[q_no][i].doc_id, preresults[q_no][j].doc_id);
-                temp = 2 * MAX_SUM_LAMBDA * (1 - temp);
-                distances[i][j] += temp;
+                distances[i][j] = (1.0 - MAX_SUM_LAMBDA) * ((preresults[q_no][i].score/max_score) + (preresults[q_no][j].score/max_score)) + 2.0 * MAX_SUM_LAMBDA * (1.0 - cosineSimilarity(preresults[q_no][i].doc_id, preresults[q_no][j].doc_id));
+                // printf("dist[%d][%d]: %lf\n", i, j, distances[i][j]);
             }
         }
 
@@ -94,7 +94,8 @@ void diversifyQuery (int q_no, int algorithm, int number_of_preresults) {
             config->number_of_results++;
 
         while (result_size < config->number_of_results) {
-
+            max_distance = 0.0;
+            index1 = 0; index2 = 0;
             for (i = 0; i < number_of_preresults; i++) {
                 for (j = 1; j < number_of_preresults; j++) {
                     if (distances[i][j] > max_distance) {
@@ -125,13 +126,17 @@ void diversifyQuery (int q_no, int algorithm, int number_of_preresults) {
             }
         }
 
+        for (int k = 0; k < config->number_of_results; k++)
+            printf("%d\tQ0\t%d\t%d\t%lf\tfs\n", q_no + 1, results[q_no][k].doc_id, k + 1, results[q_no][k].score);
+
+        // FIXME: qsort can not sort!!!
         qsort (results[q_no], result_size, sizeof(Result), cmpfunc_score);
 
     } else if (algorithm == MMR) {
         // TODO: implement MMR
 
-    } else if (algorithm == SY) {
-        // TODO: implement SY
+    } else if (algorithm == SF) {
+        // TODO: implement SF
 
     } else {
         /* Let's implement one more algorithm. */
@@ -152,9 +157,11 @@ int getExactNumberOfPreresults (int q_no) {
 void diversify () {
     int i;
 
-    for (i = 0; i < config->number_of_query; i++) {
+    for (i = 0; i < 1/*config->number_of_query*/; i++) {
+        printf("Query: %d results diversifying.\n", i);
         diversifyQuery(i, config->diversification_algorithm, getExactNumberOfPreresults(i));
     }
+    state = SUCCESS;
 }
 
 void writeResults () {
@@ -170,11 +177,12 @@ void writeResults () {
     }
 
     for (q_no = 0; q_no < config->number_of_query; q_no++)
-        for (j = 0; j < config->number_of_preresults; j++)
+        for (j = 0; j < config->number_of_results; j++)
             if (results[q_no][j].doc_id != 0 && results[q_no][j].score != 0)
                 fprintf(fp, "%d\tQ0\t%d\t%d\t%lf\tfs\n", q_no + 1, results[q_no][j].doc_id, j + 1, results[q_no][j].score);
 
     fclose(fp);
+    state = SUCCESS;
 }
 
 void loadPreresults () {
@@ -197,6 +205,7 @@ void loadPreresults () {
     }
 
     fclose(fp);
+    state = SUCCESS;
 }
 
 int initDiversify (Conf *conf) {
@@ -259,5 +268,6 @@ int initDiversify (Conf *conf) {
         }
     }
 
+    state = SUCCESS;
     return 0;
 }

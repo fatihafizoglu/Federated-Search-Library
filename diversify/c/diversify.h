@@ -10,12 +10,12 @@
 enum Diversification_Algorithm {
     MAX_SUM, /* Max-sum dispersion. */
     MMR, /* Maximal marginal relevance. */
-    SY
+    SF
 };
 
 int cmpfunc_score (const void *, const void *);
-double dotProduct (TermVectors, int, TermVectors, int);
-double getVectorLength (TermVectors, int);
+double dotProduct (TermVectors, int, double *, TermVectors, int, double *);
+double getVectorLength (int, double *);
 double cosineSimilarity (int, int);
 void getQueryScores(int, int, double *, double *);
 void diversifyQuery (int, int, int);
