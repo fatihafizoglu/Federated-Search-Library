@@ -3,6 +3,8 @@
 void endProgram () {
     int i;
 
+    closeDocumentVectorsFiles();
+
     if (terms != NULL)
         free(terms);
     if (documents != NULL)
@@ -15,14 +17,30 @@ void endProgram () {
 
         free(clusters);
     }
-    DictDestroy(merged_cluster.dictionary);
-    DictDestroy(merged_cluster.new_dictionary);
 
-    if (sample_doc_ids != NULL)
-        free(sample_doc_ids);
+    if (!config->DIVERSIFY) {
+        DictDestroy(merged_cluster.dictionary);
+        DictDestroy(merged_cluster.new_dictionary);
 
-    closeDocumentVectorsFiles();
-    closeClusterDocumentIdsFiles();
+        if (sample_doc_ids != NULL)
+            free(sample_doc_ids);
+
+        closeClusterDocumentIdsFiles();
+    } else {
+        for (i = 0; i < config->number_of_query; i++) {
+            if (preresults[i] != NULL)
+                free(preresults[i]);
+
+            if (results[i] != NULL)
+                free(results[i]);
+        }
+
+        if (preresults != NULL)
+            free(preresults);
+
+        if (results != NULL)
+            free(results);
+    }
 }
 
 bool isDocumentSampled (unsigned int doc_id) {
@@ -114,6 +132,23 @@ TermVectors getTermVectors (Document* document) {
         return term_vectors;
     }
 
+    if (config->DIVERSIFY) {
+        double total_tf = 0;
+        double tf_idf = 0.0;
+        long i;
+
+        for (i = 0; i < (long)document->uterm_count; i++) {
+            total_tf += term_vectors[i].term_frequency;
+        }
+
+        for (i = 0; i < (long)document->uterm_count; i++) {
+            tf_idf = (double)term_vectors[i].term_frequency;
+            tf_idf /= total_tf; /* normalize */
+            tf_idf *= terms[term_vectors[i].term_id].cfc_weight;
+            term_vectors[i].term_frequency = tf_idf;
+        }
+    }
+
     state = SUCCESS;
     return term_vectors;
 }
@@ -122,8 +157,10 @@ void addDocumentToCluster(Cluster* cluster, Document* document) {
     int i;
     TermVectors document_term_vectors = getTermVectors(document);
     for (i = 0; i < document->uterm_count; i++) {
-        DictIncreaseOrInsert(cluster->new_dictionary, document_term_vectors[i].term_id, document_term_vectors[i].term_frequency);
-        cluster->new_term_count += document_term_vectors[i].term_frequency;
+        /* Since 'double term_frequency' used in diversify,
+            temporarily comment in below lines. */
+        //DictIncreaseOrInsert(cluster->new_dictionary, document_term_vectors[i].term_id, document_term_vectors[i].term_frequency);
+        //cluster->new_term_count += document_term_vectors[i].term_frequency;
     }
 
     free(document_term_vectors);
@@ -161,10 +198,8 @@ unsigned int rand_interval(unsigned int min, unsigned int max) {
 
 void randomSample (unsigned int *samples, unsigned int sample_count, unsigned int max) {
     int i;
-    for (i = 0; i < sample_count; i++) {
+    for (i = 0; i < sample_count; i++)
         samples[i] = rand_interval(1, max);
-        //samples[i] = rand_interval(15000000, 19999999); // test only for dvec.bin-4
-    }
 }
 
 void swapDictionary () {

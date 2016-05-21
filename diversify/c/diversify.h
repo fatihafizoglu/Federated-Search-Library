@@ -13,20 +13,16 @@ enum Diversification_Algorithm {
     SY
 };
 
-typedef struct QueryResult {
-    int doc_id;
-    double score;
-} Result;
-
+int cmpfunc_score (const void *, const void *);
+double dotProduct (TermVectors, int, TermVectors, int);
+double getVectorLength (TermVectors, int);
 double cosineSimilarity (int, int);
 void getQueryScores(int, int, double *, double *);
 void diversifyQuery (int, int, int);
-int getNumberOfResults (int);
+int getExactNumberOfPreresults (int);
 void diversify ();
 void writeResults ();
 void loadPreresults ();
 int initDiversify (Conf *);
-
-Result **preresults, **results;
 
 #endif /* not defined _DIVERSIFY_H_ */

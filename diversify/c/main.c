@@ -9,6 +9,7 @@ int main (int argc, char *argv[]) {
     unsigned int number_of_documents = 50220538;
     unsigned int number_of_terms = 163629158;
     unsigned int number_of_preresults = 1000;
+    unsigned int number_of_results = 100;
     unsigned int number_of_query = 50;
     unsigned int diversification_algorithm = MAX_SUM;
 
@@ -19,38 +20,23 @@ int main (int argc, char *argv[]) {
         .preresults_path = preresults_path,
         .number_of_documents = number_of_documents,
         .number_of_terms = number_of_terms,
+
+        .DIVERSIFY = true,
         .number_of_preresults = number_of_preresults,
+        .number_of_results = number_of_results,
         .number_of_query = number_of_query,
         .diversification_algorithm = diversification_algorithm
     };
 
     {
-        initDiversify(&conf); // TODO: free allocated areas.
-        // loadDocuments();
-        // loadTerms();
+        initDiversify(&conf);
+        openDocumentVectorsFiles();
+        loadDocuments();
+        loadTerms();
         loadPreresults();
         diversify();
         writeResults();
-        // openDocumentVectorsFiles();
-        // actState();
-        // openClusterDocumentIdsFiles();
-        // actState();
-        // initClusters();
-        // actState();
-        // sampleDocuments();
-        // actState();
-        //
-        // initializeKMeans();
-        // swapDictionary();
-        // printf("initializeKMeans end.\n");
-        // for (i = 0; i < 5; i++) {
-        //     kMeans();
-        //     swapDictionary();
-        //     printf("kMeans %d end.\n", i+1);
-        // }
-        // assignDocumentsToClusters();
-        // printf("assignDocumentsToClusters end.\n");
-        // endProgram ();
+        endProgram ();
     }
 
     return 0;

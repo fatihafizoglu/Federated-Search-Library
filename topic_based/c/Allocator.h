@@ -36,8 +36,12 @@ typedef struct AllocatorConfiguration {
     unsigned int number_of_terms;
 
     /* Below ones required for result diversification process. */
+    /* Set flag true if Diversify otherwise false. */
+    bool DIVERSIFY;
     /* Total number of results per query in preresults. */
     unsigned int number_of_preresults;
+    /* Total number of results per query in results. */
+    unsigned int number_of_results;
     /* Total number of query in preresults. */
     unsigned int number_of_query;
     /* Selected diversification algorithm. */
@@ -78,8 +82,15 @@ typedef struct Term {
 
 typedef struct TermVector {
     unsigned int term_id;
-    unsigned int term_frequency;
+    //unsigned int term_frequency;
+    double term_frequency; /* Allocator uses 'unsigned int' tf value,
+                            however Diversify needs double tf-idf value. */
 } TermVector, *TermVectors;
+
+typedef struct QueryResult {
+    int doc_id;
+    double score;
+} Result;
 
 /*
  * Frees all allocated memory blocks and closes opened files.
@@ -241,5 +252,6 @@ FILE **document_vectors_files;
 FILE **cluster_document_ids_files;
 unsigned int *sample_doc_ids;
 Cluster merged_cluster;
+Result **preresults, **results;
 
 #endif  /* not defined _ALLOCATOR_H_ */
