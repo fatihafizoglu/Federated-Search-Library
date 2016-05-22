@@ -14,7 +14,9 @@ int main (int argc, char *argv[]) {
         .document_info_path = document_info_path,
         .document_vectors_folder_path = document_vectors_folder_path,
         .number_of_documents = number_of_documents,
-        .number_of_terms = number_of_terms
+        .number_of_terms = number_of_terms,
+
+        .DIVERSIFY = false;
     };
 
     {

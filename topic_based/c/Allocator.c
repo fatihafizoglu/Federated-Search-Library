@@ -3,6 +3,8 @@
 void endProgram () {
     int i;
 
+    closeDocumentVectorsFiles();
+
     if (terms != NULL)
         free(terms);
     if (documents != NULL)
@@ -15,14 +17,31 @@ void endProgram () {
 
         free(clusters);
     }
-    DictDestroy(merged_cluster.dictionary);
-    DictDestroy(merged_cluster.new_dictionary);
 
-    if (sample_doc_ids != NULL)
-        free(sample_doc_ids);
+    if (!config->DIVERSIFY) {
+        DictDestroy(merged_cluster.dictionary);
+        DictDestroy(merged_cluster.new_dictionary);
 
-    closeDocumentVectorsFiles();
-    closeClusterDocumentIdsFiles();
+        if (sample_doc_ids != NULL)
+            free(sample_doc_ids);
+
+        closeClusterDocumentIdsFiles();
+    } else {
+        for (i = 0; i < config->number_of_query; i++) {
+            if (preresults[i] != NULL)
+                free(preresults[i]);
+
+            if (results[i] != NULL)
+                free(results[i]);
+        }
+
+        if (preresults != NULL)
+            free(preresults);
+
+        if (results != NULL)
+            free(results);
+    }
+    state = SUCCESS;
 }
 
 bool isDocumentSampled (unsigned int doc_id) {
@@ -43,7 +62,7 @@ void assignDocumentsToClusters () {
 
     for (i = 0; i < config->number_of_documents; i++) {
         Document *document = &documents[i];
-        TermVectors document_term_vectors = getTermVectors(document);
+        TermVectors document_term_vectors = getTermVectors(document, NULL);
         double max_similarity_value = 0.0;
         unsigned int most_similar_cluster_index = 0;
 
@@ -91,7 +110,7 @@ FILE* getDocumentVectorsFile (unsigned int doc_id) {
     return document_vectors_files[file_index];
 }
 
-TermVectors getTermVectors (Document* document) {
+TermVectors getTermVectors (Document* document, double *tf_idfs) {
     if (!document) {
         state = NULL_DOCUMENT;
         return NULL;
@@ -114,13 +133,31 @@ TermVectors getTermVectors (Document* document) {
         return term_vectors;
     }
 
+    if (config->DIVERSIFY) {
+        double total_tf = 0;
+        double tf_idf = 0.0;
+        long i;
+
+        for (i = 0; i < (long)document->uterm_count; i++) {
+            total_tf += term_vectors[i].term_frequency;
+        }
+
+        for (i = 0; i < (long)document->uterm_count; i++) {
+            tf_idf = ((double)term_vectors[i].term_frequency / total_tf) * terms[term_vectors[i].term_id-1].cfc_weight;
+            if (terms[term_vectors[i].term_id-1].cfc_weight == -1.0)
+                printf("cfc_weight %lf. \n", terms[term_vectors[i].term_id-1].cfc_weight);
+            tf_idfs[i] = tf_idf;
+            //printf("tf_idf[%ld]: %lf\n", i, tf_idfs[i]);
+        }
+    }
+
     state = SUCCESS;
     return term_vectors;
 }
 
 void addDocumentToCluster(Cluster* cluster, Document* document) {
     int i;
-    TermVectors document_term_vectors = getTermVectors(document);
+    TermVectors document_term_vectors = getTermVectors(document, NULL);
     for (i = 0; i < document->uterm_count; i++) {
         DictIncreaseOrInsert(cluster->new_dictionary, document_term_vectors[i].term_id, document_term_vectors[i].term_frequency);
         cluster->new_term_count += document_term_vectors[i].term_frequency;
@@ -161,10 +198,8 @@ unsigned int rand_interval(unsigned int min, unsigned int max) {
 
 void randomSample (unsigned int *samples, unsigned int sample_count, unsigned int max) {
     int i;
-    for (i = 0; i < sample_count; i++) {
+    for (i = 0; i < sample_count; i++)
         samples[i] = rand_interval(1, max);
-        //samples[i] = rand_interval(15000000, 19999999); // test only for dvec.bin-4
-    }
 }
 
 void swapDictionary () {
@@ -194,7 +229,7 @@ void kMeans() {
 
     for (i = 0; i < sample_count; i++) {
         Document *document = getDocument(sample_doc_ids[i]);
-        TermVectors document_term_vectors = getTermVectors(document);
+        TermVectors document_term_vectors = getTermVectors(document, NULL);
         double max_similarity_value = 0.0;
         unsigned int most_similar_cluster_index = 0;
 
