@@ -8,12 +8,12 @@ print "Script started at: " + time.strftime('%X %x')
 
 INTEGER_SIZE = 4
 
-LAMBDA = 1.00
+LAMBDA_ARRAY = [0.25,0.50,0.75,1.00]
 
-DIV_SIZE = 100
+DIV_SIZE = 20
 
 WORD_NO = 163629158
-wordlist_file = "/media/fatihafizoglu/LenovoMS/Index/TopicBasedClusters_100_2_CSI_merged_wordlist_new.txt"
+wordlist_file = "/media/fatihafizoglu/LenovoMS/Index/merged_wordlist.txt"
 cfcweights = []
 
 
@@ -24,7 +24,7 @@ total_tf_per_doc = []
 
 
 QUERY_NO = 50
-query_results_file = "/media/fatihafizoglu/LenovoMS/results/csi_index_top200.txt"
+query_results_file = "/home/fatihafizoglu/Dropbox/arcelikTeam/results_new/NO_DIVERSIFICATION/CSI_100/RESOURCE_10/TOP_100/redde_top100_top10_top100.txt"
 query_results = []
 
 doc_file_names = ["/home/fatihafizoglu/Dvecs/dvec.bin-1",
@@ -194,7 +194,7 @@ def dotProduct(doc_vector1,doc_vector2,doc_vector1_length,doc_vector2_length):
 	return summ / (doc_vector1_length * doc_vector2_length)
 
 
-def diversifyMaxSum(query_id):
+def diversifyMaxSum(query_id,_lambda_):
 	global query_results
 
 	diversified_query_result = []
@@ -221,7 +221,7 @@ def diversifyMaxSum(query_id):
 
 	for i in range(1,number_of_results):
 		for j in range(i + 1,number_of_results):
-			distances[i][j] = (1 - LAMBDA) * ((query_results[query_id][i][2]/maximum_relevance_score) + (query_results[query_id][j][2]/maximum_relevance_score)) + 2 * LAMBDA * (1 - dotProduct(dvecs[i],dvecs[j],dvec_lengths[i],dvec_lengths[j]))
+			distances[i][j] = (1 - _lambda_) * ((query_results[query_id][i][2]/maximum_relevance_score) + (query_results[query_id][j][2]/maximum_relevance_score)) + 2 * _lambda_ * (1 - dotProduct(dvecs[i],dvecs[j],dvec_lengths[i],dvec_lengths[j]))
 
 	k = 1
 	while k <= DIV_SIZE / 2:
@@ -236,8 +236,8 @@ def diversifyMaxSum(query_id):
 					max_i = i
 					max_j = j
 
-		print max_i
-		print max_j
+		# print max_i
+		# print max_j
 
 		if max_dist > 0:
 			diversified_query_result.append((query_results[query_id][max_i][0],2 * k - 1,query_results[query_id][max_i][2]))
@@ -258,7 +258,7 @@ def diversifyMaxSum(query_id):
 
 	return diversified_query_result
 
-def diversifySy(query_id):
+def diversifySy(query_id,_lambda_):
 	global query_results
 
 	diversified_query_result = []
@@ -277,7 +277,7 @@ def diversifySy(query_id):
 	while i <= DIV_SIZE and i < number_of_results:
 		j = i + 1
 		while j < len(diversified_query_result) and len(diversified_query_result) > DIV_SIZE + 1:
-			if dotProduct(dvecs[i],dvecs[j],dvec_lengths[i],dvec_lengths[j]) > (1 - LAMBDA):
+			if dotProduct(dvecs[i],dvecs[j],dvec_lengths[i],dvec_lengths[j]) > (1 - _lambda_):
 				diversified_query_result.pop(j)
 				dvecs.pop(j)
 				dvec_lengths.pop(j)
@@ -297,28 +297,37 @@ print "readQueryResults()"
 openDocFiles()
 print "openDocFiles()"
 
-diversified_query_results = []
-diversified_query_results.append([])
-for i in range(1,QUERY_NO + 1):
-	# diversified_query_result = diversifyMaxSum(i)
-	# print "*********************************" + " => diversifyMaxSum(" + str(i) + ") "  + time.strftime('%X %x')
-	diversified_query_result = diversifySy(i)
-	for j in range(1,len(diversified_query_result)):
-		print diversified_query_result[j][1]
-	print "*********************************" + " => diversifySy(" + str(i) + ") "  + time.strftime('%X %x')
-	diversified_query_results.append(diversified_query_result)
 
+for _lambda_ in LAMBDA_ARRAY:
+	diversified_query_results = []
+	diversified_query_results.append([])
+	for i in range(1,QUERY_NO + 1):
+		print "*************STARTED*************" + " => diversifyMaxSum(" + str(i) + "," + str(_lambda_) + ") "  + time.strftime('%X %x')
+		diversified_query_result = diversifyMaxSum(i,_lambda_)
+		diversified_query_results.append(diversified_query_result)
+		print "**************ENDED**************" + " => diversifyMaxSum(" + str(i) + "," + str(_lambda_) + ") "  + time.strftime('%X %x')
 
+	output_file = open("MaxSum_" + str(_lambda_) + ".txt","w")
+	for i in range(1,QUERY_NO + 1):
+		for j in range(1,len(diversified_query_results[i])):
+			doc_score = "%.6f" % diversified_query_results[i][j][2]
+			output_file.write(str(i) + "\tQ0\t" + str(diversified_query_results[i][j][0]) + "\t" + str(j) + "\t" + str(doc_score) + "\tfs\n")
+	output_file.close()
 
-output_file = open(diversified_query_results_file,"w")
-for i in range(1,QUERY_NO + 1):
-	for j in range(1,len(diversified_query_results[i])):
-		# print str(diversified_query_results[i][j][0]) + " " + str(diversified_query_results[i][1]) + " " + str(diversified_query_results[i][2])
-		doc_score = "%.6f" % diversified_query_results[i][j][2]
-		# print str(i) + "\tQ0\t" + str(diversified_query_results[i][j][0]) + "\t" + str(diversified_query_results[i][j][1]) + "\t" + str(doc_score) + "\tfs"
-		output_file.write(str(i) + "\tQ0\t" + str(diversified_query_results[i][j][0]) + "\t" + str(j) + "\t" + str(doc_score) + "\tfs\n")
-output_file.close()
+for _lambda_ in LAMBDA_ARRAY:
+	diversified_query_results = []
+	diversified_query_results.append([])
+	for i in range(1,QUERY_NO + 1):
+		print "*************STARTED*************" + " => diversifySy(" + str(i) + "," + str(_lambda_) + ") "  + time.strftime('%X %x')
+		diversified_query_result = diversifySy(i,_lambda_)
+		diversified_query_results.append(diversified_query_result)
+		print "**************ENDED**************" + " => diversifySy(" + str(i) + "," + str(_lambda_) + ") "  + time.strftime('%X %x')
 
-
+	output_file = open("Sy_" + str(_lambda_) + ".txt","w")
+	for i in range(1,QUERY_NO + 1):
+		for j in range(1,len(diversified_query_results[i])):
+			doc_score = "%.6f" % diversified_query_results[i][j][2]
+			output_file.write(str(i) + "\tQ0\t" + str(diversified_query_results[i][j][0]) + "\t" + str(j) + "\t" + str(doc_score) + "\tfs\n")
+	output_file.close()
 
 print "Script ended at:   " + time.strftime('%X %x')
