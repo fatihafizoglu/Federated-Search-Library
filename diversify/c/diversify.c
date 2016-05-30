@@ -3,8 +3,14 @@
 int cmpfunc_score (const void * a, const void * b) {
     Result *resultA = (Result *)a;
     Result *resultB = (Result *)b;
+    double diff = resultA->score - resultB->score;
 
-    return (resultA->score - resultB->score);
+    if (diff > 0)
+        return -1;
+    else if (diff < 0)
+        return 1;
+    else
+        return 0;
 }
 
 double dotProduct (TermVectors v1, int len1, double *tf_idf1, TermVectors v2, int len2, double *tf_idf2) {
@@ -47,10 +53,9 @@ double cosineSimilarity (int doc1_id, int doc2_id) {
 
     ret = dotProduct(doc1_term_vectors, doc1->uterm_count, tf_idf1,
                      doc2_term_vectors, doc2->uterm_count, tf_idf2);
-    // printf("dotdone(%d,%d): %lf\n", doc1_id, doc2_id, ret);
+
     ret = ret / (getVectorLength(doc1->uterm_count, tf_idf1) * getVectorLength(doc2->uterm_count, tf_idf2));
 
-    // printf("cosdone(%d,%d): %lf\n", doc1_id, doc2_id, ret);
     free(doc1_term_vectors);
     free(doc2_term_vectors);
     return ret;
@@ -68,32 +73,31 @@ void getQueryScores(int q_no, int number_of_results, double *max_score, double *
 
 void diversifyQuery (int q_no, int algorithm, int number_of_preresults) {
     if (algorithm == MAX_SUM) {
-        /* If preresults size smaller than wanted results size, just return. */
-        if (number_of_preresults < config->number_of_results)
-            return;
+        int number_of_results = config->number_of_results;
+        /* If preresults size smaller than expected results size, use preresults size. */
+        if (number_of_preresults < number_of_results)
+            number_of_results = number_of_preresults;
 
         int i, j, index1, index2;
         int result_size = 0;
         double max_score = 0.0, max_distance = 0.0;
-        // double sum_score = 0.0;
         double distances[number_of_preresults][number_of_preresults];
 
         memset(distances, 0, number_of_preresults * number_of_preresults * sizeof(double));
-        // getQueryScores(q_no, number_of_preresults, &max_score, &sum_score);
         max_score = preresults[q_no][0].score; /* Since rank 1 is the highest score.*/
 
         for (i = 0; i < number_of_preresults; i++) {
             for (j = 1; j < number_of_preresults; j++) {
-                distances[i][j] = (1.0 - MAX_SUM_LAMBDA) * ((preresults[q_no][i].score/max_score) + (preresults[q_no][j].score/max_score)) + 2.0 * MAX_SUM_LAMBDA * (1.0 - cosineSimilarity(preresults[q_no][i].doc_id, preresults[q_no][j].doc_id));
-                // printf("dist[%d][%d]: %lf\n", i, j, distances[i][j]);
+                distances[i][j] = (1.0 - MAX_SUM_LAMBDA) * ((preresults[q_no][i].score/max_score) + (preresults[q_no][j].score/max_score)) +
+                                   2.0 * MAX_SUM_LAMBDA * (1.0 - cosineSimilarity(preresults[q_no][i].doc_id, preresults[q_no][j].doc_id));
             }
         }
 
         /* Avoid from odd. */
-        if (config->number_of_results % 2 == 1)
-            config->number_of_results++;
+        if (number_of_results % 2 == 1)
+            number_of_results++;
 
-        while (result_size < config->number_of_results) {
+        while (result_size < number_of_results) {
             max_distance = 0.0;
             index1 = 0; index2 = 0;
             for (i = 0; i < number_of_preresults; i++) {
@@ -126,10 +130,6 @@ void diversifyQuery (int q_no, int algorithm, int number_of_preresults) {
             }
         }
 
-        for (int k = 0; k < config->number_of_results; k++)
-            printf("%d\tQ0\t%d\t%d\t%lf\tfs\n", q_no + 1, results[q_no][k].doc_id, k + 1, results[q_no][k].score);
-
-        // FIXME: qsort can not sort!!!
         qsort (results[q_no], result_size, sizeof(Result), cmpfunc_score);
 
     } else if (algorithm == MMR) {
@@ -157,8 +157,8 @@ int getExactNumberOfPreresults (int q_no) {
 void diversify () {
     int i;
 
-    for (i = 0; i < 1/*config->number_of_query*/; i++) {
-        printf("Query: %d results diversifying.\n", i);
+    for (i = 0; i < config->number_of_query; i++) {
+        printf("Query: %d results diversifying.\n", i+1);
         diversifyQuery(i, config->diversification_algorithm, getExactNumberOfPreresults(i));
     }
     state = SUCCESS;
