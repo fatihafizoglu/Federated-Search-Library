@@ -5,7 +5,8 @@
 
 #include "../../topic_based/c/Allocator.h"
 
-#define MAX_SUM_LAMBDA 0.5
+#define MAX_SUM_LAMBDA  0.5
+#define SF_THRESHOLD    0.5
 
 enum Diversification_Algorithm {
     MAX_SUM, /* Max-sum dispersion. */
@@ -18,6 +19,9 @@ double dotProduct (TermVectors, int, double *, TermVectors, int, double *);
 double getVectorLength (int, double *);
 double cosineSimilarity (int, int);
 void getQueryScores(int, int, double *, double *);
+int maxsum_diverse (int, int, int);
+int mmr_diverse (int, int, int);
+int sf_diverse (int, int, int);
 void diversifyQuery (int, int, int);
 int getExactNumberOfPreresults (int);
 void diversify ();

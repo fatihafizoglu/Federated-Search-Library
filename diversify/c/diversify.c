@@ -71,76 +71,124 @@ void getQueryScores(int q_no, int number_of_results, double *max_score, double *
     }
 }
 
-void diversifyQuery (int q_no, int algorithm, int number_of_preresults) {
-    if (algorithm == MAX_SUM) {
-        int number_of_results = config->number_of_results;
-        /* If preresults size smaller than expected results size, use preresults size. */
-        if (number_of_preresults < number_of_results)
-            number_of_results = number_of_preresults;
+int maxsum_diverse (int q_no, int number_of_preresults, int number_of_results) {
+    int i, j, index1, index2;
+    int result_size = 0;
+    double max_score = 0.0, max_distance = 0.0;
+    double distances[number_of_preresults][number_of_preresults];
 
-        int i, j, index1, index2;
-        int result_size = 0;
-        double max_score = 0.0, max_distance = 0.0;
-        double distances[number_of_preresults][number_of_preresults];
+    memset(distances, 0, number_of_preresults * number_of_preresults * sizeof(double));
+    max_score = preresults[q_no][0].score; /* Since rank 1 is the highest score.*/
 
-        memset(distances, 0, number_of_preresults * number_of_preresults * sizeof(double));
-        max_score = preresults[q_no][0].score; /* Since rank 1 is the highest score.*/
+    for (i = 0; i < number_of_preresults; i++) {
+        for (j = 1; j < number_of_preresults; j++) {
+            distances[i][j] = (1.0 - MAX_SUM_LAMBDA) * ((preresults[q_no][i].score/max_score) + (preresults[q_no][j].score/max_score)) +
+                               2.0 * MAX_SUM_LAMBDA * (1.0 - cosineSimilarity(preresults[q_no][i].doc_id, preresults[q_no][j].doc_id));
+        }
+    }
 
+    /* Avoid from odd. */
+    if (number_of_results % 2 == 1)
+        number_of_results++;
+
+    while (result_size < number_of_results) {
+        max_distance = 0.0;
+        index1 = 0; index2 = 0;
         for (i = 0; i < number_of_preresults; i++) {
             for (j = 1; j < number_of_preresults; j++) {
-                distances[i][j] = (1.0 - MAX_SUM_LAMBDA) * ((preresults[q_no][i].score/max_score) + (preresults[q_no][j].score/max_score)) +
-                                   2.0 * MAX_SUM_LAMBDA * (1.0 - cosineSimilarity(preresults[q_no][i].doc_id, preresults[q_no][j].doc_id));
+                if (distances[i][j] > max_distance) {
+                    max_distance = distances[i][j];
+                    index1 = i;
+                    index2 = j;
+                }
             }
         }
 
-        /* Avoid from odd. */
-        if (number_of_results % 2 == 1)
-            number_of_results++;
+        if (max_distance > 0) {
+            results[q_no][result_size].doc_id = preresults[q_no][index1].doc_id;
+            results[q_no][result_size].score = preresults[q_no][index1].score;
+            result_size++;
+            results[q_no][result_size].doc_id = preresults[q_no][index2].doc_id;
+            results[q_no][result_size].score = preresults[q_no][index2].score;
+            result_size++;
 
-        while (result_size < number_of_results) {
-            max_distance = 0.0;
-            index1 = 0; index2 = 0;
             for (i = 0; i < number_of_preresults; i++) {
-                for (j = 1; j < number_of_preresults; j++) {
-                    if (distances[i][j] > max_distance) {
-                        max_distance = distances[i][j];
-                        index1 = i;
-                        index2 = j;
-                    }
-                }
+                distances[i][index1] = 0;
+                distances[index1][i] = 0;
+                distances[i][index2] = 0;
+                distances[index2][i] = 0;
             }
+        } else {
+            printf("Max-sum could not collect enough results.");
+            break;
+        }
+    }
 
-            if (max_distance > 0) {
-                results[q_no][result_size].doc_id = preresults[q_no][index1].doc_id;
-                results[q_no][result_size].score = preresults[q_no][index1].score;
-                result_size++;
-                results[q_no][result_size].doc_id = preresults[q_no][index2].doc_id;
-                results[q_no][result_size].score = preresults[q_no][index2].score;
-                result_size++;
+    return result_size;
+}
 
-                for (i = 0; i < number_of_preresults; i++) {
-                    distances[i][index1] = 0;
-                    distances[index1][i] = 0;
-                    distances[i][index2] = 0;
-                    distances[index2][i] = 0;
-                }
-            } else {
-                printf("Max-sum could not collect enough results.");
-                break;
-            }
+int mmr_diverse (int q_no, int number_of_preresults, int number_of_results) {
+    // TODO: implement MMR
+
+    return 0;
+}
+
+int sf_diverse (int q_no, int number_of_preresults, int number_of_results) {
+    int i = 0, j = 0;
+    int result_size = 0;
+
+    while (result_size < number_of_results && i < number_of_preresults) {
+        if (preresults[q_no][i].doc_id == 0) {
+            i++;
+            continue;
         }
 
-        qsort (results[q_no], result_size, sizeof(Result), cmpfunc_score);
+        j = i + 1;
+        while (j < number_of_preresults) {
+            if (preresults[q_no][j].doc_id == 0) {
+                j++;
+                continue;
+            }
+
+            if (cosineSimilarity(preresults[q_no][i].doc_id, preresults[q_no][j].doc_id) > SF_THRESHOLD) {
+                /* Remove result j. */
+                preresults[q_no][j].doc_id = 0;
+                preresults[q_no][j].score = 0;
+            }
+            j++;
+        }
+
+        results[q_no][result_size].doc_id = preresults[q_no][i].doc_id;
+        results[q_no][result_size].score = preresults[q_no][i].score;
+        result_size++;
+        i++;
+    }
+
+    return result_size;
+}
+
+void diversifyQuery (int q_no, int algorithm, int number_of_preresults) {
+    int result_size;
+
+    int number_of_results = config->number_of_results;
+    /* If preresults size smaller than expected results size, use preresults size. */
+    if (number_of_preresults < number_of_results)
+        number_of_results = number_of_preresults;
+
+    if (algorithm == MAX_SUM) {
+        result_size = maxsum_diverse(q_no, number_of_preresults, number_of_results);
 
     } else if (algorithm == MMR) {
-        // TODO: implement MMR
+        result_size = mmr_diverse(q_no, number_of_preresults, number_of_results);
 
     } else if (algorithm == SF) {
-        // TODO: implement SF
+        result_size = sf_diverse(q_no, number_of_preresults, number_of_results);
 
     } else {
         /* Let's implement one more algorithm. */
     }
+
+    qsort (results[q_no], result_size, sizeof(Result), cmpfunc_score);
 }
 
 int getExactNumberOfPreresults (int q_no) {
