@@ -207,7 +207,7 @@ parser.add_argument('result_1', type=argparse.FileType('r'), help='result file o
 parser.add_argument('result_2', type=argparse.FileType('r'), help='result file of queries on CSI')
 parser.add_argument('cluster_concat_file', type=argparse.FileType('r'), help='file of document_id cluster_id pairs')
 parser.add_argument('-method', action="store",help='resource selection method (default: Redde)',default='Redde',choices=['Redde', 'Redde.top', 'CRCSExp', 'CRCSLin', 'GAVG'])
-parser.add_argument('-no_of_resource', type=int, action="store", help='no of resource to select (default: 1)', default=1, choices=[1,3,5,10,20,30,40,50,60,70,80,90,100])
+parser.add_argument('-no_of_resource', type=int, action="store", help='no of resource to select (default: 10)', default=10, choices=[1,3,5,10,20,30,40,50,60,70,80,90,100])
 parser.add_argument('-no_of_CSI_result', type=int, action="store", help='no of CSI result for resource selection (default:100)', default=100, choices=[50,100,150,200,250,300,350,400,450,500,550,600,650,700,750,800,850,900,950,1000])
 parser.add_argument('-result_size', type=int, action="store", help='no of result page desired (default: 20)', default=20, choices=[10,20,30,40,50,60,70,80,90,100])
 parser.add_argument('-crcs_alpha', type=float, action="store", help='alpha component of CRCS Exp Formula (default:1.2)',default=1.2)
@@ -225,7 +225,8 @@ if query_results_on_original_index.get_query_count() != query_results_on_CSI.get
 	print "Query Counts Does Not Match!"
 
 percentage_of_documents_in_selected_clusters_total = 0
-output_file = open("output.txt","w")
+filename = ARGUMENTS.result_2.name + "_" + ARGUMENTS.method
+output_file = open(filename,"w")
 for query_index in range(query_results_on_original_index.get_query_count()):
 	
 	top_k_results_on_CSI = query_results_on_CSI.get_results(query_index+1,ARGUMENTS.no_of_CSI_result)
