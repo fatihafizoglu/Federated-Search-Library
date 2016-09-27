@@ -216,9 +216,21 @@ void writeResults () {
     FILE *fp;
     int q_no, j;
     char results_path[FILEPATH_LENGTH] = "";
+    char confstr[20] = "";
+    char lambdastr[5] = "";
     size_t len1 = strlen(config->preresults_path);
     memcpy(results_path, config->preresults_path, len1);
-    memcpy(results_path+len1, "_diversified", 12);
+    sprintf(lambdastr, "%.2f", config->lambda);
+    
+    if (config->diversification_algorithm == MAX_SUM) {
+        memcpy(confstr, "_maxsum_", 8);
+        memcpy(confstr+8, lambdastr, 5);
+    } else if (config->diversification_algorithm == SF) {
+        memcpy(confstr, "_sf_", 4);
+        memcpy(confstr+4, lambdastr, 5);
+    }
+    
+    memcpy(results_path+len1, confstr, 20);
 
     if (!(fp = fopen(results_path, "w"))) {
         return;
