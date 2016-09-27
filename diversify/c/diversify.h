@@ -5,9 +5,6 @@
 
 #include "../../topic_based/c/Allocator.h"
 
-#define MAX_SUM_LAMBDA  0.5
-#define SF_THRESHOLD    0.5
-
 enum Diversification_Algorithm {
     MAX_SUM, /* Max-sum dispersion. */
     MMR, /* Maximal marginal relevance. */

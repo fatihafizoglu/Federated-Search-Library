@@ -46,6 +46,8 @@ typedef struct AllocatorConfiguration {
     unsigned int number_of_query;
     /* Selected diversification algorithm. */
     unsigned int diversification_algorithm;
+    /* Diversification lambda value */
+    double lambda;
 } Conf;
 
 typedef struct Cluster {

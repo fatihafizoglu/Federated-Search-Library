@@ -82,8 +82,8 @@ int maxsum_diverse (int q_no, int number_of_preresults, int number_of_results) {
 
     for (i = 0; i < number_of_preresults; i++) {
         for (j = 1; j < number_of_preresults; j++) {
-            distances[i][j] = (1.0 - MAX_SUM_LAMBDA) * ((preresults[q_no][i].score/max_score) + (preresults[q_no][j].score/max_score)) +
-                               2.0 * MAX_SUM_LAMBDA * (1.0 - cosineSimilarity(preresults[q_no][i].doc_id, preresults[q_no][j].doc_id));
+            distances[i][j] = (1.0 - (config->lambda)) * ((preresults[q_no][i].score/max_score) + (preresults[q_no][j].score/max_score)) +
+                               2.0 * (config->lambda) * (1.0 - cosineSimilarity(preresults[q_no][i].doc_id, preresults[q_no][j].doc_id));
         }
     }
 
@@ -150,7 +150,7 @@ int sf_diverse (int q_no, int number_of_preresults, int number_of_results) {
                 continue;
             }
 
-            if (cosineSimilarity(preresults[q_no][i].doc_id, preresults[q_no][j].doc_id) > SF_THRESHOLD) {
+            if (cosineSimilarity(preresults[q_no][i].doc_id, preresults[q_no][j].doc_id) > (config->lambda)) {
                 /* Remove result j. */
                 preresults[q_no][j].doc_id = 0;
                 preresults[q_no][j].score = 0;
