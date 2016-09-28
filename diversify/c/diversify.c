@@ -223,11 +223,11 @@ void writeResults () {
     sprintf(lambdastr, "%.2f", config->lambda);
     
     if (config->diversification_algorithm == MAX_SUM) {
-        memcpy(confstr, "_maxsum_", 8);
-        memcpy(confstr+8, lambdastr, 5);
+        memcpy(confstr, "_maxsum", 7);
+        memcpy(confstr+7, lambdastr, 5);
     } else if (config->diversification_algorithm == SF) {
-        memcpy(confstr, "_sf_", 4);
-        memcpy(confstr+4, lambdastr, 5);
+        memcpy(confstr, "_sf", 3);
+        memcpy(confstr+3, lambdastr, 5);
     }
     
     memcpy(results_path+len1, confstr, 20);
