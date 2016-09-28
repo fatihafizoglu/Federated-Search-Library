@@ -30,6 +30,7 @@ typedef struct AllocatorConfiguration {
     char *document_info_path;
     char *document_vectors_folder_path;
     char *preresults_path;
+    char *results_path;
     /* Total number of documents in the collection. */
     unsigned int number_of_documents;
     /* Total number of terms in the collection. */
