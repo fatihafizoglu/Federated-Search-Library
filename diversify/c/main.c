@@ -5,7 +5,7 @@ int main (int argc, char *argv[]) {
     char wordlist_path[FILEPATH_LENGTH] = "/home/eckucukoglu/projects/ms-thesis/allocation_runs/topic_based_2/csi_wordlist_idf.txt";
     char document_info_path[FILEPATH_LENGTH] = "/home/eckucukoglu/projects/ms-thesis/main_index/doc_lengths.txt";
     char document_vectors_folder_path[FILEPATH_LENGTH] = "/home/eckucukoglu/projects/ms-thesis/main_index/dvec.bins";
-    char preresults_path[FILEPATH_LENGTH] = "/home/eckucukoglu/projects/ms-thesis/results/run.txt";
+    char preresults_path[FILEPATH_LENGTH] = "";
     unsigned int number_of_documents = 50220538;
     unsigned int number_of_terms = 163629158;
     unsigned int number_of_preresults = 200;
@@ -17,6 +17,8 @@ int main (int argc, char *argv[]) {
     int i, j;
     int div_len = sizeof(div_algorithms) / sizeof(unsigned int);
     int lambda_len = sizeof(div_lambdas) / sizeof(double);
+    
+    strcpy(preresults_path, argv[1]);
     
     Conf conf = {
         .wordlist_path = wordlist_path,
