@@ -17,7 +17,6 @@ query_terms = {}
 
 word_list_file_path = "/media/fatihafizoglu/LenovoMS/MS/Index/merged_wordlist.txt"
 word_list_file_path_topic_based_clusters_csi = "/media/fatihafizoglu/LenovoMS/MS/Index/merged_wordlist_TopicBasedClusters_100_2_CSI.txt"
-word_list_file_path_random_based_clusters_csi = "/media/fatihafizoglu/LenovoMS/MS/Index/merged_wordlist_RandomBasedClusters_100_CSI.txt"
 word_list_words = None
 word_list_occurance_in_docs = None
 word_list_cfc_weights = None
@@ -191,7 +190,7 @@ del word_list_disk_addresses
 # <occurance_in_docs> <cfc_weight> <disk_addresses>
 
 output_1 = open("queries_MAIN.txt","w")
-output_2 = open("queries_TOPIC.txt","w")
+output_2 = open("queries_TOPIC_CSI.txt","w")
 for query_index in xrange(len(query_lengths)):
     output_1.write(str(query_lengths[query_index]) + "\n")
     output_2.write(str(query_lengths[query_index]) + "\n")
