@@ -218,8 +218,17 @@ for query_index in query_terms.keys():
     selected_resources.append(resource_selection_method.get_top_k_clusters(NO_OF_RESOURCE))
 csi_index_file.close()
 
+# SELECTED CLUSTERS FILE FORMAT
+# <no_of_selected_clusters>
+# <cluster_id_1> .. <cluster_id_n>
+# ..
+# <no_of_selected_clusters>
+# <cluster_id_1> .. <cluster_id_n>
+
 output = open("selected_resources_TOPIC_CSI.txt","w")
 for selected_resource in selected_resources[1:]:
+    output.write(str(len(selected_resource)))
+    output.write("\n")
     output.write(" ".join(str(resource_id) for resource_id in selected_resource))
     output.write("\n")
 output.close()
