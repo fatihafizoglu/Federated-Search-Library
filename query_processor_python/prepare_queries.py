@@ -5,7 +5,7 @@ import time
 print "Script Started at: " + time.strftime('%X %x')
 
 DUMP_LOCATION = "/home/fatihafizoglu/git/MS/document-allocation-policies/query_processor_python/saved/"
-WORD_NO = 164000000
+WORD_NO = 163629159
 STOPWORD_NO = 423
 
 stopword_list_file_path = "/media/fatihafizoglu/LenovoMS/MS/stopword.lst"

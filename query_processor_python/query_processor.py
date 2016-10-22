@@ -11,7 +11,7 @@ print "Script Started at: " + time.strftime('%X %x')
 
 DUMP_LOCATION = "/home/fatihafizoglu/git/MS/document-allocation-policies/query_processor_python/saved/"
 DOC_ID_TERM_FREQUENCY_PAIR_SIZE_IN_BYTES = 8
-WORD_NO = 164000000
+WORD_NO = 163629159
 DOC_NO = 50220539
 STOPWORD_NO = 423
 BEST_DOCS = 1000
