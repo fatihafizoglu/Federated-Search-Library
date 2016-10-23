@@ -68,14 +68,17 @@ def read_queries(path, remove_stopwords):
         total_term_occurance_in_query = 0
         for i in range(len(line_splitted)):
             if remove_stopwords:
-                spam_index = stopword_list_words.searchsorted(line_splitted[i])
-                if stopword_list_words[spam_index] == line_splitted[i]:
+                stopword_index = stopword_list_words.searchsorted(line_splitted[i])
+                if stopword_index >= STOPWORD_NO:
+                    continue 
+                if stopword_list_words[stopword_index] == line_splitted[i]:
                     continue
             if len(query_terms[line_index]) == 0:
                 query_terms[line_index].append({
                     "word" : line_splitted[i],
                     "occurance_in_query" : 1,
                     })
+                total_term_occurance_in_query += 1
             else:
                 if query_terms[line_index][-1]["word"] == line_splitted[i]:
                     query_terms[line_index][-1]["occurance_in_query"] += 1
@@ -84,7 +87,7 @@ def read_queries(path, remove_stopwords):
                         "word" : line_splitted[i],
                         "occurance_in_query" : 1,
                         })
-            total_term_occurance_in_query += 1
+                    total_term_occurance_in_query += 1
         query_lengths.append(total_term_occurance_in_query)
         line_index += 1
 
