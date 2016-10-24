@@ -42,6 +42,7 @@ document_cluster_map = None
 
 csi_index_file_path = "/media/fatihafizoglu/LenovoMS/MS/Index/merged_entry_TopicBasedClusters_100_2_CSI.txt"
 selected_resources = []
+no_of_processed_postings = []
 
 def read_queries(path):
     global query_lengths
@@ -164,11 +165,13 @@ def score_docs_for_query(index_file, query_index):
     global query_terms
     global query_lengths
 
+    no_of_processed_posting = 0
     result = {}
     for term_index_in_query, word_dict in enumerate(query_terms[query_index]):
         index_file.seek(word_dict["disk_address"] * DOC_ID_TERM_FREQUENCY_PAIR_SIZE_IN_BYTES)
 
         term_occurance_in_docs = word_dict["occurance_in_docs"]
+        no_of_processed_posting += term_occurance_in_docs
         term_weight = math.log((doc_length_statistics["doc_length_total_doc_number_with_atleast_more_than_one_unique_term"] - term_occurance_in_docs + 0.5) / (term_occurance_in_docs + 0.5))
         doc_id_and_term_frequency_array_in_bytes = index_file.read(term_occurance_in_docs * DOC_ID_TERM_FREQUENCY_PAIR_SIZE_IN_BYTES)
         doc_id_and_term_frequency_array = struct.unpack('<' + str(term_occurance_in_docs * 2) + 'i', doc_id_and_term_frequency_array_in_bytes)
@@ -184,7 +187,7 @@ def score_docs_for_query(index_file, query_index):
             else:
                 result[doc_id] = increment_score_amount
 
-    return result
+    return (result, no_of_processed_posting)
 
 def get_best_n(result, no_of_result):
     global document_spam_scores
@@ -211,11 +214,13 @@ read_document_cluster_map(document_cluster_map_file_path)
 
 csi_index_file = open(csi_index_file_path, "rb")
 selected_resources.append([])
+no_of_processed_postings.append([])
 for query_index in query_terms.keys():
-    result = score_docs_for_query(csi_index_file, query_index)
+    (result, no_of_processed_posting) = score_docs_for_query(csi_index_file, query_index)
     heap = get_best_n(result, BEST_DOCS_CSI)
     resource_selection_method = Redde(heap, document_cluster_map)
     selected_resources.append(resource_selection_method.get_top_k_clusters(NO_OF_RESOURCE))
+    no_of_processed_postings.append(no_of_processed_posting)
 csi_index_file.close()
 
 # SELECTED CLUSTERS FILE FORMAT
@@ -225,13 +230,17 @@ csi_index_file.close()
 # <no_of_selected_clusters>
 # <cluster_id_1> .. <cluster_id_n>
 
-output = open("selected_resources_TOPIC_CSI.txt","w")
-for selected_resource in selected_resources[1:]:
-    output.write(str(len(selected_resource)))
-    output.write("\n")
-    output.write(" ".join(str(resource_id) for resource_id in selected_resource))
-    output.write("\n")
-output.close()
+output_1 = open("selected_resources_TOPIC_CSI.txt", "w")
+output_2 = open("costs_TOPIC_CSI.txt", "w")
+for query_index in range(1,len(selected_resources)):
+    output_2.write(str(no_of_processed_postings[query_index]))
+    output_2.write("\n")
+    output_1.write(str(len(selected_resources[query_index])))
+    output_1.write("\n")
+    output_1.write(" ".join(str(resource_id) for resource_id in selected_resources[query_index]))
+    output_1.write("\n")
+output_1.close()
+output_2.close()
 
 
 print "Script Ended at: " + time.strftime('%X %x')
