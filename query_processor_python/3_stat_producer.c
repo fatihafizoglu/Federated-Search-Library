@@ -11,7 +11,7 @@
 #define TOPIC_DOCUMENT_CLUSTER_MAP_FILE_PATH "/media/fatihafizoglu/LenovoMS/MS/TopicBasedClusters_100_2/read/final/cluster_concat_sorted"
 #define RANDOM_DOCUMENT_CLUSTER_MAP_FILE_PATH "/media/fatihafizoglu/LenovoMS/MS/RandomBasedClusters_100/read/final/cluster_concat_sorted"
 #define INDEX_FILE_PATH "/media/fatihafizoglu/LenovoMS/MS/Index/merged_entry.txt"
-#define NO_OF_METHOD 4 //EXHAUSTIVE, TOPIC, TOPIC_AND_RANDOM, RANDOM
+#define NO_OF_METHOD 4 /* EXHAUSTIVE, TOPIC, TOPIC_AND_RANDOM, RANDOM */
 
 typedef struct Term {
     unsigned int occurange_in_query;
@@ -122,13 +122,11 @@ void read_cluster_map(unsigned int *map, char *map_path) {
     fclose(fp);
 }
 
-void main(void) {
+int main(void) {
     
     FILE *fp;
     FILE **csvs;
-    unsigned int query_index, i, j, k;
-    unsigned int total_posting_list_checked;
-    unsigned int max_posting_list_checked;
+    unsigned int query_index, i, j;
     unsigned int *posting_list;
     unsigned int *document_accesses;
     unsigned int topic_cluster_id;
@@ -136,7 +134,7 @@ void main(void) {
     double total_load;
 
 
-    // Variables that keeps statistics
+    /* Variables that keeps statistics */
     unsigned int ***cluster_accesses;
     unsigned int **total_posting_lists;
     unsigned int **max_posting_lists;
@@ -155,7 +153,7 @@ void main(void) {
     read_cluster_map(topic_document_cluster_map, TOPIC_DOCUMENT_CLUSTER_MAP_FILE_PATH);
     read_cluster_map(random_document_cluster_map, RANDOM_DOCUMENT_CLUSTER_MAP_FILE_PATH);
 
-    // Init variables that keeps statistics
+    /* Init variables that keeps statistics */
     csvs = (FILE**) malloc(NO_OF_METHOD * sizeof(FILE*));
 
     cluster_accesses = (unsigned int***) malloc(NO_OF_QUERY * sizeof(unsigned int**));
@@ -204,22 +202,22 @@ void main(void) {
         }
 
         
-        // Calculate statistics new!
+        /* Calculate statistics new! */
         for (i = 0; i < DOC_NO; i++) {
-            cluster_accesses[query_index][0][0] += document_accesses[i]; // EXHAUSTIVE - Increment first cluster
+            cluster_accesses[query_index][0][0] += document_accesses[i]; /* EXHAUSTIVE - Increment first cluster */
 
             topic_cluster_id = topic_document_cluster_map[i];
             random_cluster_id = random_document_cluster_map[i];
 
             for (j = 0; j < selected_resources_lengths[query_index]; j++) {
                 if (selected_resources[query_index][j] == topic_cluster_id) {
-                    cluster_accesses[query_index][1][topic_cluster_id] += document_accesses[i]; // TOPIC - Increment documents topic cluster
-                    cluster_accesses[query_index][2][random_cluster_id] += document_accesses[i]; // RANDOM AND TOPIC - Increment documents topic cluster
+                    cluster_accesses[query_index][1][topic_cluster_id] += document_accesses[i]; /* TOPIC - Increment documents topic cluster */
+                    cluster_accesses[query_index][2][random_cluster_id] += document_accesses[i]; /* RANDOM AND TOPIC - Increment documents topic cluster */
                     break;
                 }
             }
 
-            cluster_accesses[query_index][3][random_cluster_id] += document_accesses[i]; // RANDOM - Increment documents random cluster
+            cluster_accesses[query_index][3][random_cluster_id] += document_accesses[i]; /* RANDOM - Increment documents random cluster */
         }
 
         free(document_accesses);
@@ -278,13 +276,13 @@ void main(void) {
         }
         for (j = 0; j < NO_OF_CLUSTERS; j++) {
             if (j != NO_OF_CLUSTERS - 1)
-                printf("%lf,", ((cluster_loads[i][j]*100)/total_load));
+                printf("%f,", ((cluster_loads[i][j]*100)/total_load));
             else
-                printf("%lf\n", ((cluster_loads[i][j]*100)/total_load));
+                printf("%f\n", ((cluster_loads[i][j]*100)/total_load));
         }
     }
 
 
     print_time("Script Ended at:");
-    return;
+    return 0;
 }
