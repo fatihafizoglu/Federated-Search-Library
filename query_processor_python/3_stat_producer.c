@@ -133,12 +133,14 @@ void main(void) {
     unsigned int *document_accesses;
     unsigned int topic_cluster_id;
     unsigned int random_cluster_id;
+    double total_load;
 
 
     // Variables that keeps statistics
     unsigned int ***cluster_accesses;
     unsigned int **total_posting_lists;
     unsigned int **max_posting_lists;
+    double **cluster_loads;
 
     print_time("Script Started at:");
 
@@ -170,6 +172,13 @@ void main(void) {
             for (j = 0; j < NO_OF_CLUSTERS; j++) {
                 cluster_accesses[query_index][i][j] = 0;
             }
+        }
+    }
+    cluster_loads = (double**) malloc(NO_OF_METHOD * sizeof(double*));
+    for (i = 0; i < NO_OF_METHOD; i++) {
+        cluster_loads[i] = (double*) malloc(NO_OF_CLUSTERS * sizeof(double));
+        for (j = 0; j < NO_OF_CLUSTERS; j++) {
+            cluster_loads[i][j] = 0.0;
         }
     }
 
@@ -231,6 +240,7 @@ void main(void) {
                 total_posting_lists[query_index][i] += cluster_accesses[query_index][i][j];
                 if (cluster_accesses[query_index][i][j] > max_posting_lists[query_index][i])
                     max_posting_lists[query_index][i] = cluster_accesses[query_index][i][j];
+                cluster_loads[i][j] += cluster_accesses[query_index][i][j];
             }
         }
     }
@@ -259,6 +269,21 @@ void main(void) {
                 printf("%u\n", total_posting_lists[query_index][i]);
         }
     }
+    printf("********************************************************************************\n");
+    printf("CLUSTER LOADS\n");
+    for (i = 0; i < NO_OF_METHOD; i++) {
+        total_load = 0.0;
+        for (j = 0; j < NO_OF_CLUSTERS; j++) {
+            total_load += cluster_loads[i][j];
+        }
+        for (j = 0; j < NO_OF_CLUSTERS; j++) {
+            if (j != NO_OF_CLUSTERS - 1)
+                printf("%lf,", ((cluster_loads[i][j]*100)/total_load));
+            else
+                printf("%lf\n", ((cluster_loads[i][j]*100)/total_load));
+        }
+    }
+
 
     print_time("Script Ended at:");
     return;
