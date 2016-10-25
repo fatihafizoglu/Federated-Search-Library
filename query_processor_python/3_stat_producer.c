@@ -125,13 +125,15 @@ void read_cluster_map(unsigned int *map, char *map_path) {
 int main(void) {
     
     FILE *fp;
-    FILE **csvs;
-    unsigned int query_index, i, j;
+    /* FILE **csvs; */
+    unsigned int query_index, i, j, k;
     unsigned int *posting_list;
     unsigned int *document_accesses;
+    unsigned int *cluster_costs;
     unsigned int topic_cluster_id;
     unsigned int random_cluster_id;
-    double total_load;
+    double total_load[4];
+    char **random_topic_existence_matrix;
 
 
     /* Variables that keeps statistics */
@@ -154,7 +156,7 @@ int main(void) {
     read_cluster_map(random_document_cluster_map, RANDOM_DOCUMENT_CLUSTER_MAP_FILE_PATH);
 
     /* Init variables that keeps statistics */
-    csvs = (FILE**) malloc(NO_OF_METHOD * sizeof(FILE*));
+    /* csvs = (FILE**) malloc(NO_OF_METHOD * sizeof(FILE*)); */
 
     cluster_accesses = (unsigned int***) malloc(NO_OF_QUERY * sizeof(unsigned int**));
     total_posting_lists = (unsigned int**) malloc(NO_OF_QUERY * sizeof(unsigned int*));
@@ -189,15 +191,40 @@ int main(void) {
         for (i = 0; i < DOC_NO; i++) {
             document_accesses[i] = 0;
         }
+        cluster_costs = (unsigned int*) malloc(NO_OF_CLUSTERS * sizeof(unsigned int));
+        for (i = 0; i < NO_OF_CLUSTERS; i++) {
+            cluster_costs[i] = 0;
+        }
 
         for (i = 0; i < queries[query_index].queryLength; i++ ) {
             posting_list = (unsigned int*) malloc(DOC_ID_TERM_FREQUENCY_PAIR_SIZE_IN_BYTES * queries[query_index].terms[i].occurange_in_docs * sizeof(unsigned int));
             fseek(fp, DOC_ID_TERM_FREQUENCY_PAIR_SIZE_IN_BYTES * queries[query_index].terms[i].disk_address, 0);
             fread(posting_list, DOC_ID_TERM_FREQUENCY_PAIR_SIZE_IN_BYTES, queries[query_index].terms[i].occurange_in_docs, fp);
 
+            random_topic_existence_matrix = (char**) malloc(NO_OF_CLUSTERS * sizeof(char*));
+            for (j = 0; j < NO_OF_CLUSTERS; j++) {
+                random_topic_existence_matrix[j] = (char*) malloc(NO_OF_CLUSTERS * sizeof(char));
+                for (k = 0; k < NO_OF_CLUSTERS; k++) {
+                    random_topic_existence_matrix[j][k] = 0;
+                }
+            }
+
             for (j = 0; j < queries[query_index].terms[i].occurange_in_docs * 2; j += 2 ) {
                 document_accesses[posting_list[j]] += 1;
+
+                topic_cluster_id = topic_document_cluster_map[posting_list[j]];
+                random_cluster_id = random_document_cluster_map[posting_list[j]];
+                random_topic_existence_matrix[random_cluster_id][topic_cluster_id] = 1;
             }
+
+            for (j = 0; j < NO_OF_CLUSTERS; j++) {
+                for (k = 0; k < NO_OF_CLUSTERS; k++) {
+                    if (random_topic_existence_matrix[j][k] == 1)
+                        cluster_costs[j] += 1;
+                }
+                free(random_topic_existence_matrix[j]);
+            }
+            free(random_topic_existence_matrix);
             free(posting_list);
         }
 
@@ -220,10 +247,16 @@ int main(void) {
             cluster_accesses[query_index][3][random_cluster_id] += document_accesses[i]; /* RANDOM - Increment documents random cluster */
         }
 
+        for (j = 0; j < NO_OF_CLUSTERS; j++) {
+            cluster_accesses[query_index][2][j] += cluster_costs[j];
+        }
+
         free(document_accesses);
+        free(cluster_costs);
     }
     fclose(fp);
 
+    /*
     csvs[0] = fopen("stat_EXHAUSTIVE.csv","w");
     csvs[1] = fopen("stat_TOPIC.csv","w");
     csvs[2] = fopen("stat_RANDOM_AND_TOPIC.csv","w");
@@ -246,42 +279,38 @@ int main(void) {
     fclose(csvs[1]);
     fclose(csvs[2]);
     fclose(csvs[3]);
-
-    printf("********************************************************************************\n");
-    printf("MAX POSTING LIST PROCESSED\n");
+    */
     for (query_index = 0; query_index < NO_OF_QUERY; query_index++) {
         for (i = 0; i < NO_OF_METHOD; i++) {
-            if (i != NO_OF_METHOD - 1)
-                printf("%u,", max_posting_lists[query_index][i]);
-            else
-                printf("%u\n", max_posting_lists[query_index][i]);
-        }
-    }
-    printf("********************************************************************************\n");
-    printf("TOTAL POSTING LIST PROCESSED\n");
-    for (query_index = 0; query_index < NO_OF_QUERY; query_index++) {
-        for (i = 0; i < NO_OF_METHOD; i++) {
-            if (i != NO_OF_METHOD - 1)
-                printf("%u,", total_posting_lists[query_index][i]);
-            else
-                printf("%u\n", total_posting_lists[query_index][i]);
-        }
-    }
-    printf("********************************************************************************\n");
-    printf("CLUSTER LOADS\n");
-    for (i = 0; i < NO_OF_METHOD; i++) {
-        total_load = 0.0;
-        for (j = 0; j < NO_OF_CLUSTERS; j++) {
-            total_load += cluster_loads[i][j];
-        }
-        for (j = 0; j < NO_OF_CLUSTERS; j++) {
-            if (j != NO_OF_CLUSTERS - 1)
-                printf("%f,", ((cluster_loads[i][j]*100)/total_load));
-            else
-                printf("%f\n", ((cluster_loads[i][j]*100)/total_load));
+            for (j = 0; j < NO_OF_CLUSTERS; j++) {
+                total_posting_lists[query_index][i] += cluster_accesses[query_index][i][j];
+                if (cluster_accesses[query_index][i][j] > max_posting_lists[query_index][i])
+                    max_posting_lists[query_index][i] = cluster_accesses[query_index][i][j];
+                cluster_loads[i][j] += cluster_accesses[query_index][i][j];
+            }
         }
     }
 
+    fp = fopen("stats.csv","w");
+    total_load[0] = 0.0;
+    total_load[1] = 0.0;
+    total_load[2] = 0.0;
+    total_load[3] = 0.0;
+    for (i = 0; i < NO_OF_CLUSTERS; i++) {
+        total_load[0] += cluster_loads[0][i];
+        total_load[1] += cluster_loads[1][i];
+        total_load[2] += cluster_loads[2][i];
+        total_load[3] += cluster_loads[3][i];
+    }
+    fprintf(fp, ",Exhaustive,Topic,Random+Topic,Random\n");
+    for (i = 0; i < NO_OF_CLUSTERS; i++) {
+        fprintf(fp, "%d,%f,%f,%f,%f\n",i,((cluster_loads[0][i]*100)/total_load[0]),((cluster_loads[1][i]*100)/total_load[1]),((cluster_loads[2][i]*100)/total_load[2]),((cluster_loads[3][i]*100)/total_load[3]));
+    }
+    fprintf(fp, "MAX,Exhaustive,Topic,Random+Topic,Random,SUM,Exhaustive,Topic,Random+Topic,Random\n");
+    for (query_index = 0; query_index < NO_OF_QUERY; query_index++) {
+        fprintf(fp, "%d,%u,%u,%u,%u,,%u,%u,%u,%u\n", query_index + 1,max_posting_lists[query_index][0], max_posting_lists[query_index][1], max_posting_lists[query_index][2], max_posting_lists[query_index][3],total_posting_lists[query_index][0], total_posting_lists[query_index][1], total_posting_lists[query_index][2], total_posting_lists[query_index][3]);
+    }
+    fclose(fp);
 
     print_time("Script Ended at:");
     return 0;
