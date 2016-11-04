@@ -5,7 +5,7 @@ char* const state_messages[] = {
     "Empty configuration data.",
     "Could not allocate Terms.",
     "Could not allocate Documents.",
-    "Could not open merged wordlist.",
+    "Could not open wordlist.",
     "Could not open documents info file.",
     "Null document was questioned.",
     "Could not allocate Term Vectors.",
@@ -14,7 +14,15 @@ char* const state_messages[] = {
     "Could not allocate Clusters.",
     "Could not allocate document ids global array.",
     "Could not open cluster document ids file.",
-    "Could not write document id to cluster file."
+    "Could not write document id to cluster file.",
+    "Could not allocate terms cluster occurence counts.",
+    "Could not open inverted index.",
+    "Could not open document to cluster map for cluster 1.",
+    "Could not open document to cluster map for cluster 2.",
+    "Could not allocate document to cluster map array.",
+    "Could not read document to cluster map file.",
+    "Warning: Document occurences can not equal to 0.",
+    "Could not open cluster occurence counts file."
 };
 
 char* const document_vectors_file_names[] = {
