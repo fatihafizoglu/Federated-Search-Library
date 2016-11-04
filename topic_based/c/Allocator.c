@@ -455,7 +455,8 @@ int openDocumentVectorsFiles () {
 void actState () {
     // TODO: state behaviourlari ayarla.
     printf("%s\n", state_messages[state]);
-
+    fflush(stdout);
+    
     switch (state) {
         case SUCCESS:
             break;
