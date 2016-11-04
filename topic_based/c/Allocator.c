@@ -3,8 +3,8 @@
 void endProgram () {
     int i;
 
-    closeDocumentVectorsFiles();
-
+    if (document_vectors_files != NULL)
+        closeDocumentVectorsFiles();
     if (terms != NULL)
         free(terms);
     if (documents != NULL)
@@ -17,16 +17,24 @@ void endProgram () {
 
         free(clusters);
     }
-
-    if (!config->DIVERSIFY) {
-        DictDestroy(merged_cluster.dictionary);
-        DictDestroy(merged_cluster.new_dictionary);
-
-        if (sample_doc_ids != NULL)
-            free(sample_doc_ids);
-
+    if (sample_doc_ids != NULL)
+        free(sample_doc_ids);
+    if (cluster_document_ids_files != NULL)
         closeClusterDocumentIdsFiles();
-    } else {
+    if (merged_cluster.dictionary != NULL)
+        DictDestroy(merged_cluster.dictionary);
+    if (merged_cluster.new_dictionary != NULL)
+        DictDestroy(merged_cluster.new_dictionary);
+    if (terms_coc_counts != NULL)
+        free(terms_coc_counts);
+    if (inverted_index != NULL)
+        fclose(inverted_index);
+    if (doc_to_cluster_map_for_c1_file != NULL)
+        fclose(doc_to_cluster_map_for_c1_file);
+    if (doc_to_cluster_map_for_c2_file != NULL)
+        fclose(doc_to_cluster_map_for_c2_file);
+
+    if (config->DIVERSIFY) {
         for (i = 0; i < config->number_of_query; i++) {
             if (preresults[i] != NULL)
                 free(preresults[i]);
