@@ -17,6 +17,8 @@
 #define MAX_TOKEN_LENGTH 8
 /* <term-id, tf> each field is int (4 byte) */
 #define TERM_ID_TF_PAIR_SIZE 8
+/* <doc-id, occurence_count> each field is int (4 byte) */
+#define POSTING_SIZE 8
 
 #define PERCENTAGE_OF_SAMPLES 0.01
 #define NUMBER_OF_CLUSTERS 100
@@ -26,16 +28,22 @@ typedef enum { false, true } bool;
 
 /* Configurable program elements. */
 typedef struct AllocatorConfiguration {
+    /* Files */
+    char *inverted_index_path;
     char *wordlist_path;
     char *document_info_path;
     char *document_vectors_folder_path;
-    char *preresults_path;
-    char *results_path;
+
     /* Total number of documents in the collection. */
     unsigned int number_of_documents;
     /* Total number of terms in the collection. */
     unsigned int number_of_terms;
 
+
+    /* ___DIVERSIFICATION___ */
+    /* Files */
+    char *preresults_path;
+    char *results_path;
     /* Below ones required for result diversification process. */
     /* Set flag true if Diversify otherwise false. */
     bool DIVERSIFY;
@@ -49,6 +57,16 @@ typedef struct AllocatorConfiguration {
     unsigned int diversification_algorithm;
     /* Diversification lambda value */
     double lambda;
+    /* ___END___ */
+
+    /* ___CLUSTER_OCCURENCE_COMPARATOR___ */
+    /* Files */
+    char *doc_to_cluster_map_path_for_c1;
+    char *doc_to_cluster_map_path_for_c2;
+    /* Number of clusters for both clusters {c1, c2}. */
+    unsigned int number_of_clusters_for_c1;
+    unsigned int number_of_clusters_for_c2;
+    /* ___END___ */
 } Conf;
 
 typedef struct Cluster {
@@ -93,6 +111,10 @@ typedef struct QueryResult {
     double score;
 } Result;
 
+typedef struct Posting {
+    int doc_id;
+    int occurence_count;
+} Posting;
 /*
  * Frees all allocated memory blocks and closes opened files.
  */
@@ -254,5 +276,11 @@ FILE **cluster_document_ids_files;
 unsigned int *sample_doc_ids;
 Cluster merged_cluster;
 Result **preresults, **results;
+unsigned int *terms_coc_counts;
+FILE *inverted_index;
+FILE *doc_to_cluster_map_for_c1_file;
+FILE *doc_to_cluster_map_for_c2_file;
+int *doc_to_cluster_map_for_c1;
+int *doc_to_cluster_map_for_c2;
 
 #endif  /* not defined _ALLOCATOR_H_ */
