@@ -144,6 +144,7 @@ void compare () {
 
         if (i % 1000000 == 0) {
             printf("Comparison for term %dM done.\n", count_M++);
+            fflush(stdout);
         }
     }
 
