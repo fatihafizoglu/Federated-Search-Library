@@ -1,0 +1,4 @@
+spampruner sourceRanking destRanking spamsMap spamScore
+
+i.e.
+spampruner trec-top1000.txt trec-pruned.txt spamsMap.bin 60
