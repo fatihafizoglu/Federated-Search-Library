@@ -65,7 +65,7 @@ int initFixer (Conf *conf) {
         return -1;
     }
 
-    for (int i = 0; i < config->number_of_query; i++) {
+    for (i = 0; i < config->number_of_query; i++) {
         if (!(results[i] = malloc(results_alloc_size))) {
             return -1;
         }
@@ -94,7 +94,7 @@ int main (int argc, char *argv[]) {
         .number_of_query = number_of_query,
         .results_path = results_path
     };
-    
+
     initFixer(&conf);
     loadResults();
     writeResults();
