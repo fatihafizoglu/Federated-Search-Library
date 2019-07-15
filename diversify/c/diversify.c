@@ -221,7 +221,7 @@ void writeResults () {
     size_t len1 = strlen(config->preresults_path);
     memcpy(results_path, config->preresults_path, len1);
     sprintf(lambdastr, "%.2f", config->lambda);
-    
+
     if (config->diversification_algorithm == MAX_SUM) {
         memcpy(confstr, "_maxsum", 7);
         memcpy(confstr+7, lambdastr, 5);
@@ -229,7 +229,7 @@ void writeResults () {
         memcpy(confstr, "_sf", 3);
         memcpy(confstr+3, lambdastr, 5);
     }
-    
+
     memcpy(results_path+len1, confstr, 20);
 
     if (!(fp = fopen(results_path, "w"))) {
@@ -300,7 +300,7 @@ int initDiversify (Conf *conf) {
         return -1;
     }
 
-    for (int i = 0; i < config->number_of_query; i++) {
+    for (i = 0; i < config->number_of_query; i++) {
         if (!(preresults[i] = malloc(preresults_alloc_size))) {
             return -1;
         }
@@ -310,7 +310,7 @@ int initDiversify (Conf *conf) {
         return -1;
     }
 
-    for (int i = 0; i < config->number_of_query; i++) {
+    for (i = 0; i < config->number_of_query; i++) {
         if (!(results[i] = malloc(results_alloc_size))) {
             return -1;
         }
