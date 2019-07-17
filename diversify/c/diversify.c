@@ -79,7 +79,10 @@ int maxsum_diverse (int q_no, int number_of_preresults, int number_of_results) {
 
     memset(distances, 0, number_of_preresults * number_of_preresults * sizeof(double));
     max_score = preresults[q_no][0].score; /* Since rank 1 is the highest score.*/
-
+#ifdef DEBUG
+    printf("max_score %f\n", max_score);
+    fflush(stdout);
+#endif
     for (i = 0; i < number_of_preresults; i++) {
         for (j = 1; j < number_of_preresults; j++) {
             distances[i][j] = (1.0 - (config->lambda)) * ((preresults[q_no][i].score/max_score) + (preresults[q_no][j].score/max_score)) +
@@ -105,6 +108,10 @@ int maxsum_diverse (int q_no, int number_of_preresults, int number_of_results) {
         }
 
         if (max_distance > 0) {
+#ifdef DEBUG
+            printf("rank %d, index1 %d, index2 %d\n", result_size, index1, index2);
+            fflush(stdout);
+#endif
             results[q_no][result_size].doc_id = preresults[q_no][index1].doc_id;
             results[q_no][result_size].score = preresults[q_no][index1].score;
             result_size++;
@@ -119,11 +126,10 @@ int maxsum_diverse (int q_no, int number_of_preresults, int number_of_results) {
                 distances[index2][i] = 0;
             }
         } else {
-            printf("Max-sum could not collect enough results.");
+            printf("Max-sum could not collect enough results.\n");
             break;
         }
     }
-
     return result_size;
 }
 
@@ -188,7 +194,14 @@ void diversifyQuery (int q_no, int algorithm, int number_of_preresults) {
         /* Let's implement one more algorithm. */
     }
 
-    qsort (results[q_no], result_size, sizeof(Result), cmpfunc_score);
+    if (number_of_results == number_of_preresults) {
+        printf("IMPORTANT WARNING\n");
+        printf("Diversified results has the same amount of results with preresults,\n");
+        printf("and if you are going to sort this list, final results will be the same as preresults.\n");
+        fflush(stdout);
+    } else {
+        qsort (results[q_no], result_size, sizeof(Result), cmpfunc_score);
+    }
 }
 
 int getExactNumberOfPreresults (int q_no) {
@@ -198,7 +211,10 @@ int getExactNumberOfPreresults (int q_no) {
         if (preresults[q_no][ret].doc_id == 0 || preresults[q_no][ret].score == 0)
             break;
     }
-
+#ifdef DEBUG
+    printf("%s -> %d\n", __FUNCTION__, ret);
+    fflush(stdout);
+#endif
     return ret;
 }
 
