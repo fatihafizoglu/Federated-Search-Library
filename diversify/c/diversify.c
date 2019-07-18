@@ -194,14 +194,16 @@ void diversifyQuery (int q_no, int algorithm, int number_of_preresults) {
         /* Let's implement one more algorithm. */
     }
 
+#ifdef DEBUG
     if (number_of_results == number_of_preresults) {
-        printf("IMPORTANT WARNING\n");
+        printf("\nIMPORTANT WARNING\n");
         printf("Diversified results has the same amount of results with preresults,\n");
         printf("and if you are going to sort this list, final results will be the same as preresults.\n");
         fflush(stdout);
-    } else {
-        qsort (results[q_no], result_size, sizeof(Result), cmpfunc_score);
     }
+#endif
+
+    qsort (results[q_no], result_size, sizeof(Result), cmpfunc_score);
 }
 
 int getExactNumberOfPreresults (int q_no) {
@@ -221,10 +223,13 @@ int getExactNumberOfPreresults (int q_no) {
 void diversify () {
     int i;
 
+    printf("#Q:");
     for (i = 0; i < config->number_of_query; i++) {
-        printf("Query: %d results diversifying.\n", i+1);
+        printf("%d.", i+1);
+        fflush(stdout);
         diversifyQuery(i, config->diversification_algorithm, getExactNumberOfPreresults(i));
     }
+    printf("\n");
     state = SUCCESS;
 }
 
