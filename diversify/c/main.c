@@ -2,24 +2,38 @@
 #include <unistd.h>
 
 int main (int argc, char *argv[]) {
-    char wordlist_path[FILEPATH_LENGTH] = "/home/eckucukoglu/projects/ms-thesis/allocation_runs/topic_based_2/csi_wordlist_idf.txt";
-    char document_info_path[FILEPATH_LENGTH] = "/home/eckucukoglu/projects/ms-thesis/main_index/doc_lengths.txt";
-    char document_vectors_folder_path[FILEPATH_LENGTH] = "/home/eckucukoglu/projects/ms-thesis/main_index/dvec.bins";
+    char wordlist_path[FILEPATH_LENGTH] = "/home1/grupef/ecank/data/wordlist_TOPIC100_CSI_IDF";
+    char document_info_path[FILEPATH_LENGTH] = "/home1/grupef/ecank/data/doc_lengths";
+    char document_vectors_folder_path[FILEPATH_LENGTH] = "/home1/grupef/ecank/data/document_vectors";
     char preresults_path[FILEPATH_LENGTH] = "";
     unsigned int number_of_documents = 50220538;
     unsigned int number_of_terms = 163629158;
     unsigned int number_of_preresults = 200;
-    unsigned int number_of_results = 100;
-    unsigned int number_of_query = 50;
+    unsigned int number_of_results = 20;
+    unsigned int number_of_query = 198;
     unsigned int div_algorithms[] = {MAX_SUM, SF};
     double div_lambdas[] = { 0.25, 0.5, 0.75, 1 };
-    
+
     int i, j;
     int div_len = sizeof(div_algorithms) / sizeof(unsigned int);
     int lambda_len = sizeof(div_lambdas) / sizeof(double);
-    
+
+    /* It is convenient to gather some information from command line. */
     strcpy(preresults_path, argv[1]);
-    
+    if (argc > 2) {
+        sscanf(argv[2], "%d", &number_of_results);
+    }
+
+#ifdef DEBUG
+    printf("Number of preresults: %d\n", number_of_preresults);
+    printf("Number of results: %d\n", number_of_results);
+    printf("Number of query: %d\n", number_of_query);
+
+    printf("Now, you have 10 seconds to send SIGINT...\n");
+    fflush(stdout);
+    sleep(10);
+#endif
+
     Conf conf = {
         .wordlist_path = wordlist_path,
         .document_info_path = document_info_path,
@@ -38,20 +52,17 @@ int main (int argc, char *argv[]) {
         for (j = 0; j < lambda_len; j++) {
             conf.diversification_algorithm = div_algorithms[i];
             conf.lambda = div_lambdas[j];
-            
-            {
-                initDiversify(&conf);
-                openDocumentVectorsFiles();
-                loadDocuments();
-                loadTerms();
-                loadPreresults();
-                diversify();
-                writeResults();
-                endProgram ();
-            }
-            
-        }   
+
+            initDiversify(&conf);
+            openDocumentVectorsFiles();
+            loadDocuments();
+            loadTerms();
+            loadPreresults();
+            diversify();
+            writeResults();
+            endProgram ();
+        }
     }
-        
+
     return 0;
 }
