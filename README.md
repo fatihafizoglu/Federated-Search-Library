@@ -1,2 +1,2 @@
 # Federated Search Library
-Distributed Information Retrieval Query Processing Diversification Resource Selection Library
+Distributed Information Retrieval | Document Allocation | Query Processing | Diversification | Resource Selection | 
