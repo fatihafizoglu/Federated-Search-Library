@@ -1,2 +1,2 @@
-# document-allocation-policies
-Collection clustering methods, written in python and C.
+# Federated Search Library
+Distributed Information Retrieval Query Processing Diversification Resource Selection Library
