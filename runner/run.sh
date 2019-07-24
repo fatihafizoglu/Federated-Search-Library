@@ -176,11 +176,11 @@ generateEvalTables_BASELINE () {
     rsEvalFiles=$(getMergedFilenames rsFiles eval_suffix)
 
     rs_eval_file="BASELINE_eval"
-    echo "file,runid,topic,ERR-IA@5,ERR-IA@10,ERR-IA@20,nERR-IA@5,nERR-IA@10,nERR-IA@20,alpha-DCG@5,alpha-DCG@10,alpha-DCG@20,alpha-nDCG@5,alpha-nDCG@10,alpha-nDCG@20,NRBP,nNRBP,MAP-IA,P-IA@5,P-IA@10,P-IA@20,strec@5,strec@10,strec@20" > ${rs_eval_file}
+    echo "method,file,runid,topic,ERR-IA@5,ERR-IA@10,ERR-IA@20,nERR-IA@5,nERR-IA@10,nERR-IA@20,alpha-DCG@5,alpha-DCG@10,alpha-DCG@20,alpha-nDCG@5,alpha-nDCG@10,alpha-nDCG@20,NRBP,nNRBP,MAP-IA,P-IA@5,P-IA@10,P-IA@20,strec@5,strec@10,strec@20" > ${rs_eval_file}
 
     for i in ${rsEvalFiles[@]}; do
         line=$(tail -1 $i)
-        echo $i,$line >> ${rs_eval_file}
+        echo "BASELINE",$i,$line >> ${rs_eval_file}
     done
 }
 
@@ -194,11 +194,11 @@ generateEvalTables_BDIV () {
     rsDivEvalFiles=$(getMergedFilenames rsDivFiles eval_suffix)
 
     rsDiv_eval_file="BDIV_eval"
-    echo "file,runid,topic,ERR-IA@5,ERR-IA@10,ERR-IA@20,nERR-IA@5,nERR-IA@10,nERR-IA@20,alpha-DCG@5,alpha-DCG@10,alpha-DCG@20,alpha-nDCG@5,alpha-nDCG@10,alpha-nDCG@20,NRBP,nNRBP,MAP-IA,P-IA@5,P-IA@10,P-IA@20,strec@5,strec@10,strec@20" > ${rsDiv_eval_file}
+    echo "method,file,runid,topic,ERR-IA@5,ERR-IA@10,ERR-IA@20,nERR-IA@5,nERR-IA@10,nERR-IA@20,alpha-DCG@5,alpha-DCG@10,alpha-DCG@20,alpha-nDCG@5,alpha-nDCG@10,alpha-nDCG@20,NRBP,nNRBP,MAP-IA,P-IA@5,P-IA@10,P-IA@20,strec@5,strec@10,strec@20" > ${rsDiv_eval_file}
 
     for i in ${rsDivEvalFiles[@]}; do
         line=$(tail -1 $i)
-        echo $i,$line >> ${rsDiv_eval_file}
+        echo "BDIV",$i,$line >> ${rsDiv_eval_file}
     done
 }
 
@@ -212,11 +212,11 @@ generateEvalTables_DDIV () {
     divRsEvalFiles=$(getMergedFilenames divRsFiles eval_suffix)
 
     divRs_eval_file="DDIV_eval"
-    echo "file,runid,topic,ERR-IA@5,ERR-IA@10,ERR-IA@20,nERR-IA@5,nERR-IA@10,nERR-IA@20,alpha-DCG@5,alpha-DCG@10,alpha-DCG@20,alpha-nDCG@5,alpha-nDCG@10,alpha-nDCG@20,NRBP,nNRBP,MAP-IA,P-IA@5,P-IA@10,P-IA@20,strec@5,strec@10,strec@20" > ${divRs_eval_file}
+    echo "method,file,runid,topic,ERR-IA@5,ERR-IA@10,ERR-IA@20,nERR-IA@5,nERR-IA@10,nERR-IA@20,alpha-DCG@5,alpha-DCG@10,alpha-DCG@20,alpha-nDCG@5,alpha-nDCG@10,alpha-nDCG@20,NRBP,nNRBP,MAP-IA,P-IA@5,P-IA@10,P-IA@20,strec@5,strec@10,strec@20" > ${divRs_eval_file}
 
     for i in ${divRsEvalFiles[@]}; do
        line=$(tail -1 $i)
-       echo $i,$line >> ${divRs_eval_file}
+       echo "DDIV",$i,$line >> ${divRs_eval_file}
     done
 }
 
@@ -230,6 +230,6 @@ generateEvalTables_DDIV () {
 #resourceSelection_Div
 #evaluate_RsDiv
 #evaluate_DivRsDiv
-#generateEvalTables_BASELINE
-#generateEvalTables_BDIV
-#generateEvalTables_DDIV
+generateEvalTables_BASELINE
+generateEvalTables_BDIV
+generateEvalTables_DDIV
