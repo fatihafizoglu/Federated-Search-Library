@@ -12,7 +12,7 @@ int main (int argc, char *argv[]) {
     unsigned int number_of_results = 20;
     unsigned int number_of_query = 198;
     unsigned int div_algorithms[] = {MAX_SUM, SF};
-    double div_lambdas[] = { 0.25, 0.5, 0.75, 1 };
+    double div_lambdas[] = { 0.25, 0.5, 0.75 };
 
     int i, j;
     int div_len = sizeof(div_algorithms) / sizeof(unsigned int);
