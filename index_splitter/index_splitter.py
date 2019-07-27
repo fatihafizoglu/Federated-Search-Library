@@ -10,7 +10,7 @@ __MAX_MEMORY_WRITE__ = 5 # In GB
 __INTEGER_SIZE__ = 4
 __NO_OF_CLUSTERS__ = 100
 clusters_directory						= "/home1/grupef/TopicBasedClusters_100_2"
-clusters_index_and_wordlist_directory	= "/home1/grupef/TopicBasedClusters_100_2_Indexes"
+clusters_index_and_wordlist_directory	= "/home1/grupef/ecank/data/CLUSTERS"
 index_file								= "/home1/sengor/CLUEWEB/createIIS/merged_entry.txt"
 word_list_file							= "/home1/sengor/CLUEWEB/createIIS/merged_wordlist.txt"
 
@@ -47,8 +47,8 @@ def bytes_from_file(filename, chunksize=8192):
 # #
 # This function returns an array: Document having id X has belong to cluster at (X-1)th index of returned array.
 def read_cluster_concat():
-	
-	cluster_concat_file = open(os.path.join(clusters_directory,"read","final","cluster_concat_sorted")) 
+
+	cluster_concat_file = open(os.path.join(clusters_directory,"read","final","cluster_concat_sorted"))
 	cluster_concat_file_read = cluster_concat_file.readlines()
 	cluster_concat_file.close()
 
@@ -82,7 +82,7 @@ for i in xrange(__NO_OF_CLUSTERS__):
 (latest_word,posting_list_length) = next_word_posting_list_length_getter.next()
 total_size_of_posting_lists_in_memory = posting_list_length
 for (doc_id,occurance_count,byte_string) in bytes_from_file(index_file,__MAX_MEMORY_READ__*1024*1024*1024): # 10GB per read!
-	
+
 	if posting_list_length == 0:
 		for i in xrange(__NO_OF_CLUSTERS__):
 			# if cluster_word_occurances[i] > 0:
@@ -108,7 +108,7 @@ for (doc_id,occurance_count,byte_string) in bytes_from_file(index_file,__MAX_MEM
 
 		(latest_word,posting_list_length) = next_word_posting_list_length_getter.next()
 		total_size_of_posting_lists_in_memory += posting_list_length
-		
+
 
 	posting_list_length = posting_list_length - 1
 
