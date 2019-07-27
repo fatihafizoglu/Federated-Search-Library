@@ -15,8 +15,8 @@ OUTPUT_RESULTS_FILE=$INPUT
 
 while read p; do
     IFS=', ' read -r -a array <<< "$p"
-    echo "./query ${WORDLIST}_${array[1]}_IDF ${INVERTED_INDEX}_${array[1]} ${DOC_LENGTHS} ${QUERY_FILE}_${array[0]} ${OUTPUT_RESULTS_FILE}_q${array[0]}_c${array[1]}"
-    #./query ${WORDLIST}_${array[1]} ${INVERTED_INDEX}_${array[1]} ${DOC_LENGTHS} ${QUERY_FILE}_${array[0]} ${OUTPUT_RESULTS_FILE}_q${array[0]}_c${array[1]}
+    echo "./query ${WORDLIST}_${array[1]}_IDF ${INVERTED_INDEX}_${array[1]} ${DOC_LENGTHS} ${QUERY_FILE}_${array[0]} ${OUTPUT_RESULTS_FILE}_q${array[0]}_c${array[1]}" >> ${0}.log
+    ./query ${WORDLIST}_${array[1]} ${INVERTED_INDEX}_${array[1]} ${DOC_LENGTHS} ${QUERY_FILE}_${array[0]} ${OUTPUT_RESULTS_FILE}_q${array[0]}_c${array[1]}
 
 done <$INPUT
 
