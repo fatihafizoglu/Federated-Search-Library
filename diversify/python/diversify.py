@@ -10,34 +10,34 @@ INTEGER_SIZE = 4
 
 LAMBDA_ARRAY = [0.25,0.50,0.75,1.00]
 
-DIV_SIZE = 20
+DIV_SIZE = 200
 
 WORD_NO = 163629158
-wordlist_file = "/media/fatihafizoglu/LenovoMS/Index/merged_wordlist.txt"
+wordlist_file = "/home1/grupef/ecank/data/wordlist_TOPIC100_CSI_IDF"
 cfcweights = []
 
 
 DOC_NUM = 50220538
-smart_documents_file = "/media/fatihafizoglu/LenovoMS/Index/merged_SMART-documents.txt"
+smart_documents_file = "/home1/grupef/ecank/data/doc_lengths"
 unique_terms = []
 total_tf_per_doc = []
 
 
-QUERY_NO = 50
-query_results_file = "/home/fatihafizoglu/Dropbox/arcelikTeam/results_new/NO_DIVERSIFICATION/CSI_100/RESOURCE_10/TOP_100/redde_top100_top10_top100.txt"
+QUERY_NO = 198
+query_results_file = "/home1/grupef/ecank/results/c1kns/c1kns_fixed"
 query_results = []
 
-doc_file_names = ["/home/fatihafizoglu/Dvecs/dvec.bin-1",
-				"/home/fatihafizoglu/Dvecs/dvec.bin-2",
-				"/home/fatihafizoglu/Dvecs/dvec.bin-3",
-				"/home/fatihafizoglu/Dvecs/dvec.bin-4",
-				"/home/fatihafizoglu/Dvecs/dvec.bin-5",
-				"/home/fatihafizoglu/Dvecs/dvec.bin-6",
-				"/home/fatihafizoglu/Dvecs/dvec.bin-7",
-				"/home/fatihafizoglu/Dvecs/dvec.bin-8",
-				"/home/fatihafizoglu/Dvecs/dvec.bin-9",
-				"/home/fatihafizoglu/Dvecs/dvec.bin-10",
-				"/home/fatihafizoglu/Dvecs/dvec.bin-11"
+doc_file_names = ["/home1/grupef/ecank/data/document_vectors/dvec.bin-1",
+				  "/home1/grupef/ecank/data/document_vectors/dvec.bin-2",
+				  "/home1/grupef/ecank/data/document_vectors/dvec.bin-3",
+				  "/home1/grupef/ecank/data/document_vectors/dvec.bin-4",
+				  "/home1/grupef/ecank/data/document_vectors/dvec.bin-5",
+				  "/home1/grupef/ecank/data/document_vectors/dvec.bin-6",
+				  "/home1/grupef/ecank/data/document_vectors/dvec.bin-7",
+				  "/home1/grupef/ecank/data/document_vectors/dvec.bin-8",
+				  "/home1/grupef/ecank/data/document_vectors/dvec.bin-9",
+				  "/home1/grupef/ecank/data/document_vectors/dvec.bin-10",
+				  "/home1/grupef/ecank/data/document_vectors/dvec.bin-11"
 				]
 doc_files = []
 
