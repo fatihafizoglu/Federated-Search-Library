@@ -36,7 +36,7 @@
 #############################################################################
 ## PATHS ##
 #############################################################################
-CSI_Top200_NoSpamFixed="results/pool/c200"
+CSI_Top200_NoSpamFixed="results/CDIV/c200"
 MAIN_Top100k_NoSpamFixed="results/m100kns/m100kns_fixed"
 Doc2Cluster_Map="data/doc_to_cluster_map"
 #Ground_Truth="ground_truth-2009-withA.txt"
@@ -226,10 +226,10 @@ generateEvalTables_DDIV () {
 #diversify_CSI
 #diversify_Rs
 #diversify_DivRs
-#resourceSelection_CSI
+resourceSelection_CSI
 #resourceSelection_Div
 #evaluate_RsDiv
 #evaluate_DivRsDiv
-generateEvalTables_BASELINE
-generateEvalTables_BDIV
-generateEvalTables_DDIV
+#generateEvalTables_BASELINE
+#generateEvalTables_BDIV
+#generateEvalTables_DDIV
