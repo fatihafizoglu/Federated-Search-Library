@@ -2,7 +2,7 @@
 #include <unistd.h>
 
 int main (int argc, char *argv[]) {
-    char wordlist_path[FILEPATH_LENGTH] = "/home1/grupef/ecank/data/wordlist_TOPIC100_CSI_IDF";
+    char wordlist_path[FILEPATH_LENGTH] = "/home1/grupef/ecank/data/wordlist_IDF";
     char document_info_path[FILEPATH_LENGTH] = "/home1/grupef/ecank/data/doc_lengths";
     char document_vectors_folder_path[FILEPATH_LENGTH] = "/home1/grupef/ecank/data/document_vectors";
     char preresults_path[FILEPATH_LENGTH] = "";
@@ -20,11 +20,14 @@ int main (int argc, char *argv[]) {
 
     /* It is convenient to gather some information from command line. */
     strcpy(preresults_path, argv[1]);
-    if (argc > 2) {
-        sscanf(argv[2], "%d", &number_of_results);
+    strcpy(wordlist_path, argv[2]);
+    if (argc > 3) {
+        sscanf(argv[3], "%d", &number_of_results);
     }
 
 #ifdef DEBUG
+    prinf("Wordlist: %s\n", wordlist_path);
+    prinf("Preresults: %s\n", preresults_path);
     printf("Number of preresults: %d\n", number_of_preresults);
     printf("Number of results: %d\n", number_of_results);
     printf("Number of query: %d\n", number_of_query);
