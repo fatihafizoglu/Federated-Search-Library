@@ -734,8 +734,8 @@ void main(int argc,char *argv[]) {
     strcpy(query_file, argv[4]);
 
     out = fopen("log.txt", "wt");
-    out_trec = fopen("result.txt", "wt");
-    ifp = fopen("stopword.lst","rt") ;
+    out_trec = fopen(argv[5], "wt");
+    ifp = fopen("stopword.lst","rt");
 
     for (i=0; i < NOSTOPWORD; i++)
         fscanf(ifp,"%s\n", stopwords[i]);

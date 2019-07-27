@@ -6,7 +6,7 @@
 #define DOC_SIZE 600000
 #define DOC_NUM 50220539 /* exact number: 50220538 */ // get 1 more than exact value, so is word no
 #define BUFFERSIZE DOC_NUM
-#define QUERY_NO 50
+#define QUERY_NO 1
 
 #define DETAILED_LOG 1
 
@@ -20,7 +20,7 @@
 #define RUN_NO 1
 
 #define QSIZE 3000
-#define BEST_DOCS 1000
+#define BEST_DOCS 200
 #define TOP_N BEST_DOCS
 
 typedef struct inv_ent {
