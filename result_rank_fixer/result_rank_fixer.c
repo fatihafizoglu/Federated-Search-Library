@@ -83,10 +83,10 @@ int initFixer (Conf *conf) {
 }
 
 int main (int argc, char *argv[]) {
-    unsigned int number_of_preresults = 500;
-    unsigned int number_of_results = 200;
-    unsigned int number_of_query = 50;
-    char results_path[FILEPATH_LENGTH] = "/home/eckucukoglu/Dropbox/arcelik/arcelikTeam/results_nospam/c500ns";
+    unsigned int number_of_preresults = 1000;
+    unsigned int number_of_results = 1000;
+    unsigned int number_of_query = 198;
+    char results_path[FILEPATH_LENGTH] = "/home1/grupef/ecank/results/c1kns/c1kns";
 
     Conf conf = {
         .number_of_preresults = number_of_preresults,
