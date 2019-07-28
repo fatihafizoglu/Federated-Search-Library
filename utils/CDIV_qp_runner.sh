@@ -1,23 +1,23 @@
 #!/bin/bash
 
 INPUT="$1"
-#INPUT="/home1/grupef/ecank/results/CDIV/c200_CRCSExp_clusters"
-#INPUT="/home1/grupef/ecank/results/CDIV/c200_Redde_clusters"
-#INPUT="/home1/grupef/ecank/results/CDIV/c200_CRCSLin_clusters"
-#INPUT="/home1/grupef/ecank/results/CDIV/c200_Redde.top_clusters"
-#INPUT="/home1/grupef/ecank/results/CDIV/c200_GAVG_clusters"
+#INPUT="/home1/grupef/ecank/results/CDIV/c200_CRCSExp"
+#INPUT="/home1/grupef/ecank/results/CDIV/c200_Redde"
+#INPUT="/home1/grupef/ecank/results/CDIV/c200_CRCSLin"
+#INPUT="/home1/grupef/ecank/results/CDIV/c200_Redde.top"
+#INPUT="/home1/grupef/ecank/results/CDIV/c200_GAVG"
 
 WORDLIST="/home1/grupef/ecank/data/CLUSTERS/wordlist"
 INVERTED_INDEX="/home1/grupef/ecank/data/CLUSTERS/inverted_index"
 DOC_LENGTHS="/home1/grupef/ecank/data/doc_lengths"
 QUERY_FILE="/home1/grupef/ecank/data/TREC/i/query"
 OUTPUT_RESULTS_FILE=$INPUT
+NOW=$(date +"%Y%m%d%H%M%S")
 
 while read p; do
     IFS=', ' read -r -a array <<< "$p"
-    echo "./query ${WORDLIST}_${array[1]}_IDF ${INVERTED_INDEX}_${array[1]} ${DOC_LENGTHS} ${QUERY_FILE}_${array[0]} ${OUTPUT_RESULTS_FILE}_q${array[0]}_c${array[1]}" >> ${0}.log
-    ./query ${WORDLIST}_${array[1]} ${INVERTED_INDEX}_${array[1]} ${DOC_LENGTHS} ${QUERY_FILE}_${array[0]} ${OUTPUT_RESULTS_FILE}_q${array[0]}_c${array[1]}
-
+    echo "./query ${WORDLIST}_${array[1]}_IDF ${INVERTED_INDEX}_${array[1]} ${DOC_LENGTHS} ${QUERY_FILE}_${array[0]} ${OUTPUT_RESULTS_FILE}_q${array[0]}_c${array[1]}" >> ${0}_${NOW}.log
+    ./query ${WORDLIST}_${array[1]} ${INVERTED_INDEX}_${array[1]} ${DOC_LENGTHS} ${QUERY_FILE}_${array[0]} ${OUTPUT_RESULTS_FILE}_q${array[0]}_c${array[1]} >> ${0}_${NOW}.log
 done <$INPUT
 
 ######################
