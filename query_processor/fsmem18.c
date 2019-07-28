@@ -25,7 +25,7 @@ long int doc_no = 0; // total no_of docs in all files
 int err = 0;
 
 FILE * ifp, *eval_out;
-FILE * out, *entry_ifp, *out_trec;
+FILE /** out,*/ *entry_ifp, *out_trec;
 
 char tName2[MAX_TUPLE_LENGTH];
 
@@ -118,7 +118,7 @@ double v_dotProduct(Vector *v1, Vector *v2) {
 double v_VecCos( Vector *v1, Vector *v2) {
     double t = v_dotProduct(v1, v2); // as i normalize, no need any more /(v_length(v1)*v_length(v2));
 
-    fprintf(out, "dot %lf length %lf cos is %lf\n",v_dotProduct(v1, v2),v_length(v1)*v_length(v2), t);
+    // fprintf(out, "dot %lf length %lf cos is %lf\n",v_dotProduct(v1, v2),v_length(v1)*v_length(v2), t);
 
     return t;
 }
@@ -244,14 +244,14 @@ void process_tuple(char *line, long int tuple_no) {
     } //end_for
 
     free(sword);
-    if (DETAILED_LOG) {
-        fprintf(out, "%ld ", tuple_no);
-        for (i=0; i<tokens_left; i++) {
-            fprintf (out,"%s ",final_tokens[i]); // debugging
-            fflush(out);
-        }
-        fprintf(out, "\n");
-    }
+    // if (DETAILED_LOG) {
+    //     fprintf(out, "%ld ", tuple_no);
+    //     for (i=0; i<tokens_left; i++) {
+    //         fprintf (out,"%s ",final_tokens[i]); // debugging
+    //         fflush(out);
+    //     }
+    //     fprintf(out, "\n");
+    // }
 }
 
 void extract_content(char *line, char *content) {
@@ -414,8 +414,8 @@ void run_ranking_query(DocVec *q_vec, int q_size, int q_no, char* original_q_no)
     u_cleartimer(&process_time);
     u_starttimer(&process_time);
 
-    if (DETAILED_LOG)
-        fprintf(out, "Processing Q %d\n", q_no);
+    // if (DETAILED_LOG)
+    //     fprintf(out, "Processing Q %d\n", q_no);
 
     QUIT_STOP = 0; // stop condition with quit strategy is reached
     CONT_STOP = 0; // stop condition with continue strategy is reached
@@ -591,10 +591,10 @@ void run_ranking_query(DocVec *q_vec, int q_size, int q_no, char* original_q_no)
         //accumulator[j].sim_rank = 0;
     }
 
-    if (DETAILED_LOG) {
-        fprintf(out, "While processing %d:", q_no);
-        fprintf(out, "Computed disk access time: %11.3lf\n",disk_read_time_per_query);
-    }
+    // if (DETAILED_LOG) {
+    //     fprintf(out, "While processing %d:", q_no);
+    //     fprintf(out, "Computed disk access time: %11.3lf\n",disk_read_time_per_query);
+    // }
 }
 
 void process_ranked_query(char *rel_name) {
@@ -677,15 +677,15 @@ void process_ranked_query(char *rel_name) {
             else
                 q_vec[i].term_weight = 0;
 #endif
-            fflush(out);
+            // fflush(out);
         }
 
         for (p=0; p < RUN_NO; p++) {
             run_ranking_query(q_vec, count, doc_no, original_doc_id);
         }
 
-        if (DETAILED_LOG)
-            fprintf(out,"query:%d process time: %11.3lf\n",doc_no, process_time.time);
+        // if (DETAILED_LOG)
+        //     fprintf(out,"query:%d process time: %11.3lf\n",doc_no, process_time.time);
 
         initialize_doc_vec(d_size); // so I avoid fully initializing the doc vec each time
         d_size = 0;
@@ -733,7 +733,7 @@ void main(int argc,char *argv[]) {
 
     strcpy(query_file, argv[4]);
 
-    out = fopen("log.txt", "wt");
+    // out = fopen("log.txt", "wt");
     out_trec = fopen(argv[5], "wt");
     ifp = fopen("stopword.lst","rt");
 
@@ -853,25 +853,25 @@ void main(int argc,char *argv[]) {
 
     process_ranked_query(query_file);
 
-    if (DETAILED_LOG)
-        fprintf(out,"Total query process time: %11.3lf\n", t_sum/(float)(RUN_NO * QUERY_NO));
+    // if (DETAILED_LOG)
+    //     fprintf(out,"Total query process time: %11.3lf\n", t_sum/(float)(RUN_NO * QUERY_NO));
 
-    fclose(out);
+    // fclose(out);
 
-    eval_out = fopen("stats.txt", "wt");
-
-    fprintf(eval_out,"no of results returned: top %d\n", TOP_N);
-    fprintf(eval_out, "total and avg total list length (over all queries): %lld %lf\n",sum_list_length, sum_list_length/(double) (QUERY_NO*RUN_NO));
-    fprintf(eval_out, "total and avg total node access (over all queries): %lld %lf\n",sum_node_access, sum_node_access/(double) (QUERY_NO*RUN_NO));
-    fprintf(eval_out, "total and avg nonzero acc nodes(over all queries): %lld %lf\n",sum_nonzero_acc_nodes, sum_nonzero_acc_nodes/(double) (QUERY_NO*RUN_NO));
-    fprintf(eval_out,"Total query process time: %11.3lf\n", t_sum/(float)(RUN_NO * QUERY_NO));
-    fprintf(eval_out,"Computed (theoretically) disk read time per query (avg): %11.3lf\n", total_disk_time/(float)(RUN_NO*QUERY_NO));
-    fprintf(eval_out,"Computed (theoretically) seq disk read time (avg): %11.3lf\n", total_sequential_access/(float)(RUN_NO*QUERY_NO));
-    fprintf(eval_out,"Computed (theoretically) random disk read time (avg): %11.3lf\n", total_random_access/(float)(RUN_NO*QUERY_NO));
-    fprintf(eval_out,"Total query process time: %11.3lf\n", t_sum/(float)(RUN_NO * QUERY_NO));
-    fprintf(eval_out,"total and avg nonzero acc nodes(over all queries): %lld %lf\n",sum_nonzero_acc_nodes, sum_nonzero_acc_nodes/(double) (QUERY_NO*RUN_NO));
-
-    fclose(eval_out);
+    // eval_out = fopen("stats.txt", "wt");
+    //
+    // fprintf(eval_out,"no of results returned: top %d\n", TOP_N);
+    // fprintf(eval_out, "total and avg total list length (over all queries): %lld %lf\n",sum_list_length, sum_list_length/(double) (QUERY_NO*RUN_NO));
+    // fprintf(eval_out, "total and avg total node access (over all queries): %lld %lf\n",sum_node_access, sum_node_access/(double) (QUERY_NO*RUN_NO));
+    // fprintf(eval_out, "total and avg nonzero acc nodes(over all queries): %lld %lf\n",sum_nonzero_acc_nodes, sum_nonzero_acc_nodes/(double) (QUERY_NO*RUN_NO));
+    // fprintf(eval_out,"Total query process time: %11.3lf\n", t_sum/(float)(RUN_NO * QUERY_NO));
+    // fprintf(eval_out,"Computed (theoretically) disk read time per query (avg): %11.3lf\n", total_disk_time/(float)(RUN_NO*QUERY_NO));
+    // fprintf(eval_out,"Computed (theoretically) seq disk read time (avg): %11.3lf\n", total_sequential_access/(float)(RUN_NO*QUERY_NO));
+    // fprintf(eval_out,"Computed (theoretically) random disk read time (avg): %11.3lf\n", total_random_access/(float)(RUN_NO*QUERY_NO));
+    // fprintf(eval_out,"Total query process time: %11.3lf\n", t_sum/(float)(RUN_NO * QUERY_NO));
+    // fprintf(eval_out,"total and avg nonzero acc nodes(over all queries): %lld %lf\n",sum_nonzero_acc_nodes, sum_nonzero_acc_nodes/(double) (QUERY_NO*RUN_NO));
+    //
+    // fclose(eval_out);
     fclose(entry_ifp);
 
     free(WordList);

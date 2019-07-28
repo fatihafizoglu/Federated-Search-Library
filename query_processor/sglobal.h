@@ -8,7 +8,7 @@
 #define BUFFERSIZE DOC_NUM
 #define QUERY_NO 1
 
-#define DETAILED_LOG 1
+#define DETAILED_LOG 0
 
 #define TFIDF 1 // bnm orijinal measure, doc term wegits: tf ve IDF, query term: augmentd tf ve IDF, document vector length'e bolunur.
 #define MF8 2
