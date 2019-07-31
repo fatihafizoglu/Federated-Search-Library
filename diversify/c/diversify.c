@@ -269,9 +269,9 @@ void writeResults () {
 void loadPreresults () {
     FILE *fp;
     char temp[100];
-    unsigned int query_id;
+    unsigned int query_id, query_counter = 1;
     unsigned int document_id;
-    unsigned int rank;
+    unsigned int rank, previous_rank = 1;
     double score;
 
     if (!(fp = fopen(config->preresults_path, "r"))) {
@@ -281,8 +281,27 @@ void loadPreresults () {
     while (!feof(fp)) {
         fscanf (fp, "%u %s %u %u %lf %s\n", &(query_id), temp, &(document_id),
                                            &(rank), &(score), temp);
-        preresults[query_id-1][rank-1].doc_id = document_id;
-        preresults[query_id-1][rank-1].score = score;
+        if (rank > config->number_of_preresults) {
+            printf("!!! THIS SHOULD NOT HAPPEN, IF RESULT FILES ARE ALREADY TRUNCATED.\n");
+            printf("!!! query_id:%u, doc_id:%u, rank:%u, score:%lf\n", query_id, document_id, rank, score);
+            fflush(stdout);
+            continue;
+        }
+
+#ifdef DEBUG
+        printf("query_id:%u, doc_id:%u, rank:%u, score:%lf\n", query_id, document_id, rank, score);
+        printf("prev_rank:%u, rank:%u, query_counter:%u\n", previous_rank, rank, query_counter);
+        fflush(stdout);
+#endif
+        // new query list
+        if (previous_rank > rank) {
+            query_counter++;
+        }
+
+        preresults[query_counter-1][rank-1].doc_id = document_id;
+        preresults[query_counter-1][rank-1].score = score;
+
+        previous_rank = rank;
     }
 
     fclose(fp);

@@ -2,15 +2,15 @@
 #include <unistd.h>
 
 int main (int argc, char *argv[]) {
-    char wordlist_path[FILEPATH_LENGTH] = "/home1/grupef/ecank/data/wordlist_IDF";
+    char wordlist_path[FILEPATH_LENGTH] = "";
     char document_info_path[FILEPATH_LENGTH] = "/home1/grupef/ecank/data/doc_lengths";
     char document_vectors_folder_path[FILEPATH_LENGTH] = "/home1/grupef/ecank/data/document_vectors";
     char preresults_path[FILEPATH_LENGTH] = "";
     unsigned int number_of_documents = 50220538;
     unsigned int number_of_terms = 163629158;
-    unsigned int number_of_preresults = 200;
-    unsigned int number_of_results = 20;
-    unsigned int number_of_query = 198;
+    unsigned int number_of_preresults = 100;
+    unsigned int number_of_results = 10;
+    unsigned int number_of_query = 1;
     unsigned int div_algorithms[] = {MAX_SUM, SF};
     double div_lambdas[] = { 0.25, 0.5, 0.75 };
 
@@ -21,13 +21,17 @@ int main (int argc, char *argv[]) {
     /* It is convenient to gather some information from command line. */
     strcpy(preresults_path, argv[1]);
     strcpy(wordlist_path, argv[2]);
-    if (argc > 3) {
-        sscanf(argv[3], "%d", &number_of_results);
-    }
+    sscanf(argv[3], "%d", &number_of_query);
+
+    // if (argc > 3) {
+    //     sscanf(argv[3], "%d", &number_of_results);
+    // }
 
 #ifdef DEBUG
-    prinf("Wordlist: %s\n", wordlist_path);
-    prinf("Preresults: %s\n", preresults_path);
+    printf("Wordlist: %s\n", wordlist_path);
+    printf("Preresults: %s\n", preresults_path);
+    printf("Document info path (doc lengths): %s\n", document_info_path);
+    printf("Document vectors folder: %s\n", document_vectors_folder_path);
     printf("Number of preresults: %d\n", number_of_preresults);
     printf("Number of results: %d\n", number_of_results);
     printf("Number of query: %d\n", number_of_query);

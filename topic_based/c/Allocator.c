@@ -134,6 +134,7 @@ TermVectors getTermVectors (Document* document, double *tf_idfs) {
     }
     size_t read_length;
     off_t address = (long)document->offset * TERM_ID_TF_PAIR_SIZE;
+
     fseeko(fp, address, SEEK_SET);
     read_length = fread(term_vectors, TERM_ID_TF_PAIR_SIZE, (size_t)document->uterm_count, fp);
     if (read_length != (size_t)document->uterm_count) {
@@ -440,10 +441,19 @@ int openDocumentVectorsFiles () {
 
     for (i = 0; i < NUMBER_OF_DOCUMENT_VECTORS_FILES; i++) {
         char *document_vectors_filepath = getDocumentVectorsFilepath(i);
+#ifdef DEBUG
+        printf("%s", document_vectors_filepath);
+#endif
         if (!(document_vectors_files[i] = fopen(document_vectors_filepath, "r"))) {
             state = COULD_NOT_OPEN_DOCUMENT_VECTORS_FILE;
             return -1;
         }
+#ifdef DEBUG
+        else {
+            printf(" OK\n");
+            fflush(stdout);
+        }
+#endif
 
         free(document_vectors_filepath);
     }
@@ -456,7 +466,7 @@ void actState () {
     // TODO: state behaviourlari ayarla.
     printf("%s\n", state_messages[state]);
     fflush(stdout);
-    
+
     switch (state) {
         case SUCCESS:
             break;
