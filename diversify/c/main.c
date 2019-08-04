@@ -2,17 +2,17 @@
 #include <unistd.h>
 
 int main (int argc, char *argv[]) {
-    char wordlist_path[FILEPATH_LENGTH] = "";
-    char document_info_path[FILEPATH_LENGTH] = "/home1/grupef/ecank/data/doc_lengths";
-    char document_vectors_folder_path[FILEPATH_LENGTH] = "/home1/grupef/ecank/data/document_vectors";
-    char preresults_path[FILEPATH_LENGTH] = "";
-    unsigned int number_of_documents = 50220538;
-    unsigned int number_of_terms = 163629158;
-    unsigned int number_of_preresults = 100;
-    unsigned int number_of_results = 10;
-    unsigned int number_of_query = 1;
-    unsigned int div_algorithms[] = {MAX_SUM, SF};
-    double div_lambdas[] = { 0.25, 0.5, 0.75 };
+    char wordlist_path[FILEPATH_LENGTH] = "/home1/grupef/ecank/data/wordlist_IDF"; // DONTCHANGE
+    char document_info_path[FILEPATH_LENGTH] = "/home1/grupef/ecank/data/doc_lengths"; // DONTCHANGE
+    char document_vectors_folder_path[FILEPATH_LENGTH] = "/home1/grupef/ecank/data/document_vectors"; // DONTCHANGE
+    char preresults_path[FILEPATH_LENGTH] = ""; // CHANGE -> GET FROM ARGUMENTS
+    unsigned int number_of_documents = 50220538; // DONTCHANGE
+    unsigned int number_of_terms = 163629158; // DONTCHANGE
+    unsigned int number_of_preresults = 0;//100; // CHANGE -> GET FROM ARGUMENTS
+    unsigned int number_of_results = 0;//20; // CHANGE -> GET FROM ARGUMENTS
+    unsigned int number_of_query = 0;//198; // CHANGE -> GET FROM ARGUMENTS
+    unsigned int div_algorithms[] = {MAX_SUM, SF}; // DONTCHANGE
+    double div_lambdas[] = { 0.25, 0.5, 0.75 }; // DONTCHANGE
 
     int i, j;
     int div_len = sizeof(div_algorithms) / sizeof(unsigned int);
@@ -20,12 +20,9 @@ int main (int argc, char *argv[]) {
 
     /* It is convenient to gather some information from command line. */
     strcpy(preresults_path, argv[1]);
-    strcpy(wordlist_path, argv[2]);
-    sscanf(argv[3], "%d", &number_of_query);
-
-    // if (argc > 3) {
-    //     sscanf(argv[3], "%d", &number_of_results);
-    // }
+    sscanf(argv[2], "%d", &number_of_preresults);
+    sscanf(argv[3], "%d", &number_of_results);
+    sscanf(argv[4], "%d", &number_of_query);
 
 #ifdef DEBUG
     printf("Wordlist: %s\n", wordlist_path);

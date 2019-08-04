@@ -114,9 +114,11 @@ int maxsum_diverse (int q_no, int number_of_preresults, int number_of_results) {
 #endif
             results[q_no][result_size].doc_id = preresults[q_no][index1].doc_id;
             results[q_no][result_size].score = preresults[q_no][index1].score;
+            results[q_no][result_size].query_id = preresults[q_no][index1].query_id;
             result_size++;
             results[q_no][result_size].doc_id = preresults[q_no][index2].doc_id;
             results[q_no][result_size].score = preresults[q_no][index2].score;
+            results[q_no][result_size].query_id = preresults[q_no][index2].query_id;
             result_size++;
 
             for (i = 0; i < number_of_preresults; i++) {
@@ -160,12 +162,14 @@ int sf_diverse (int q_no, int number_of_preresults, int number_of_results) {
                 /* Remove result j. */
                 preresults[q_no][j].doc_id = 0;
                 preresults[q_no][j].score = 0;
+                preresults[q_no][j].query_id = 0;
             }
             j++;
         }
 
         results[q_no][result_size].doc_id = preresults[q_no][i].doc_id;
         results[q_no][result_size].score = preresults[q_no][i].score;
+        results[q_no][result_size].query_id = preresults[q_no][i].query_id;
         result_size++;
         i++;
     }
@@ -197,7 +201,7 @@ void diversifyQuery (int q_no, int algorithm, int number_of_preresults) {
 #ifdef DEBUG
     if (number_of_results == number_of_preresults) {
         printf("\nIMPORTANT WARNING\n");
-        printf("Diversified results has the same amount of results with preresults,\n");
+        printf("Diversified results has the same amount of results with preresults (%d),\n", number_of_preresults);
         printf("and if you are going to sort this list, final results will be the same as preresults.\n");
         fflush(stdout);
     }
@@ -259,8 +263,10 @@ void writeResults () {
 
     for (q_no = 0; q_no < config->number_of_query; q_no++)
         for (j = 0; j < config->number_of_results; j++)
-            if (results[q_no][j].doc_id != 0 && results[q_no][j].score != 0)
-                fprintf(fp, "%d\tQ0\t%d\t%d\t%lf\tfs\n", q_no + 1, results[q_no][j].doc_id, j + 1, results[q_no][j].score);
+            if (results[q_no][j].doc_id != 0 && results[q_no][j].score != 0) {
+                //fprintf(fp, "%d\tQ0\t%d\t%d\t%lf\tfs\n", q_no + 1, results[q_no][j].doc_id, j + 1, results[q_no][j].score);
+                fprintf(fp, "%d\tQ0\t%d\t%d\t%lf\tfs\n", results[q_no][j].query_id, results[q_no][j].doc_id, j + 1, results[q_no][j].score);
+            }
 
     fclose(fp);
     state = SUCCESS;
@@ -269,9 +275,9 @@ void writeResults () {
 void loadPreresults () {
     FILE *fp;
     char temp[100];
-    unsigned int query_id, query_counter = 1;
+    unsigned int query_id, query_counter = 1, prev_query_id = -1;
     unsigned int document_id;
-    unsigned int rank, previous_rank = 1;
+    unsigned int rank, previous_rank = 1, rank_counter = 1;
     double score;
 
     if (!(fp = fopen(config->preresults_path, "r"))) {
@@ -281,27 +287,57 @@ void loadPreresults () {
     while (!feof(fp)) {
         fscanf (fp, "%u %s %u %u %lf %s\n", &(query_id), temp, &(document_id),
                                            &(rank), &(score), temp);
-        if (rank > config->number_of_preresults) {
-            printf("!!! THIS SHOULD NOT HAPPEN, IF RESULT FILES ARE ALREADY TRUNCATED.\n");
-            printf("!!! query_id:%u, doc_id:%u, rank:%u, score:%lf\n", query_id, document_id, rank, score);
+
+#ifdef DEBUG
+        printf("query_id:%u, doc_id:%u, rank:%u, score:%lf\n", query_id, document_id, rank, score);
+        printf("prev_rank:%u, rank:%u, query_counter:%u, rank_counter:%u\n",
+                previous_rank, rank, query_counter, rank_counter);
+        fflush(stdout);
+#endif
+
+        // new query list
+        if (previous_rank > rank) {
+            query_counter++;
+            rank_counter = 1;
+#ifdef DEBUG
+            printf("New query list detected by RANK CHECK\n");
+            fflush(stdout);
+#endif
+        }
+
+#ifdef DEBUG
+        // new query list double check
+        if (prev_query_id != query_id && prev_query_id != -1) {
+            printf("New query list detected by QUERYID CHECK\n");
+            fflush(stdout);
+        }
+#endif
+
+        if (rank_counter > config->number_of_preresults) {
+            printf("!!! THIS SHOULD NOT HAPPEN! rank_counter > config->number_of_preresults\n");
+            printf("!!! query_id:%u, doc_id:%u, rank:%u, score:%lf\n", query_id, document_id, rank_counter, score);
+            printf("prev_rank:%u, rank:%u, query_counter:%u, rank_counter:%u\n",
+                    previous_rank, rank, query_counter, rank_counter);
             fflush(stdout);
             continue;
         }
 
-#ifdef DEBUG
-        printf("query_id:%u, doc_id:%u, rank:%u, score:%lf\n", query_id, document_id, rank, score);
-        printf("prev_rank:%u, rank:%u, query_counter:%u\n", previous_rank, rank, query_counter);
-        fflush(stdout);
-#endif
-        // new query list
-        if (previous_rank > rank) {
-            query_counter++;
+        if (query_counter > config->number_of_query) {
+            printf("!!! THIS SHOULD NOT HAPPEN! query_counter > config->number_of_query\n");
+            printf("!!! query_id:%u, doc_id:%u, rank:%u, score:%lf\n", query_id, document_id, rank_counter, score);
+            printf("prev_rank:%u, rank:%u, query_counter:%u, rank_counter:%u\n",
+                    previous_rank, rank, query_counter, rank_counter);
+            fflush(stdout);
+            continue;
         }
 
-        preresults[query_counter-1][rank-1].doc_id = document_id;
-        preresults[query_counter-1][rank-1].score = score;
+        preresults[query_counter-1][rank_counter-1].doc_id = document_id;
+        preresults[query_counter-1][rank_counter-1].score = score;
+        preresults[query_counter-1][rank_counter-1].query_id = query_id;
 
         previous_rank = rank;
+        prev_query_id = query_id;
+        rank_counter++;
     }
 
     fclose(fp);
@@ -360,11 +396,13 @@ int initDiversify (Conf *conf) {
         for (j = 0; j < config->number_of_preresults; j++) {
             preresults[i][j].doc_id = 0;
             preresults[i][j].score = 0;
+            preresults[i][j].query_id = 0;
         }
 
         for (j = 0; j < config->number_of_results; j++) {
             results[i][j].doc_id = 0;
             results[i][j].score = 0;
+            results[i][j].query_id = 0;
         }
     }
 

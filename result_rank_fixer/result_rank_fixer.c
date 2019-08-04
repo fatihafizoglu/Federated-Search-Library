@@ -42,6 +42,7 @@ void loadResults () {
         fscanf (fp, "%u %s %u %u %lf %s\n", &(query_id), temp, &(document_id),
                                            &(rank), &(score), temp);
 
+        // new query list
         if (prev_query_id != query_id) {
             rank_counter = 1;
         }

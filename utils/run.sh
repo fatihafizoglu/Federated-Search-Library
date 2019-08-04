@@ -36,9 +36,9 @@
 #############################################################################
 ## PATHS ##
 #############################################################################
-CSI_Top200_NoSpamFixed="results/CDIV/c200"
-MAIN_Top100k_NoSpamFixed="results/m100kns/m100kns_fixed"
-Doc2Cluster_Map="data/doc_to_cluster_map"
+CSI_Top200_NoSpamFixed="results/DDIV/c200"
+MAIN_Top100k_NoSpamFixed="results/m100kns/m100kns_fixed" # DONT CHANGE
+Doc2Cluster_Map="data/doc_to_cluster_map" # DONT CHANGE
 #Ground_Truth="ground_truth-2009-withA.txt"
 #############################################################################
 ## Possible options ##
@@ -54,11 +54,9 @@ divAlgorithms=(
     "maxsum0.25"
     "maxsum0.50"
     "maxsum0.75"
-    "maxsum1.00"
     "sf0.25"
     "sf0.50"
     "sf0.75"
-    "sf1.00"
 )
 #############################################################################
 ## Functions ## Do not change below functions.
@@ -226,8 +224,8 @@ generateEvalTables_DDIV () {
 #diversify_CSI
 #diversify_Rs
 #diversify_DivRs
-resourceSelection_CSI
-#resourceSelection_Div
+#resourceSelection_CSI
+resourceSelection_Div
 #evaluate_RsDiv
 #evaluate_DivRsDiv
 #generateEvalTables_BASELINE

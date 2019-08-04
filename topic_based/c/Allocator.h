@@ -110,6 +110,7 @@ typedef struct TermVector {
 typedef struct QueryResult {
     int doc_id;
     double score;
+    int query_id;
 } Result;
 
 typedef struct Posting {
