@@ -13,3 +13,4 @@ source ./run.sh
 generateEvalTables_BASELINE
 generateEvalTables_BDIV
 generateEvalTables_DDIV
+generateEvalTables_DDIVPP
