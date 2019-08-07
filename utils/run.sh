@@ -36,10 +36,14 @@
 #############################################################################
 ## PATHS ##
 #############################################################################
-CSI_Top200_NoSpamFixed="results/DDIV/c200"
+#CSI_Top200_NoSpamFixed="results/ACCESS/CDIV/c200" # CDIV First step.
+#CSI_Top200_NoSpamFixed="results/ACCESS/CDDIV/c200" # CDDIV Second step. First step is DDIV at CDDIV!
+#CSI_Top200_NoSpamFixed="results/ACCESS/DDIV/c200_div/c200" # DDIV Second step. First step is DDIV at DDIV!
+CSI_Top200_NoSpamFixed="results/ACCESS/pool/c200" # Pool run.
+
 MAIN_Top100k_NoSpamFixed="results/m100kns/m100kns_fixed" # DONT CHANGE
 Doc2Cluster_Map="data/doc_to_cluster_map" # DONT CHANGE
-#Ground_Truth="ground_truth-2009-withA.txt"
+#Ground_Truth="ground_truth-2009-withA.txt" # USE NDEVAL_WRAPPER
 #############################################################################
 ## Possible options ##
 #############################################################################
@@ -218,6 +222,26 @@ generateEvalTables_DDIV () {
     done
 }
 
+generateEvalTables_DDIVPP () {
+    local -a divFiles=()
+    divFiles=$(getMergedFilenames CSI_Top200_NoSpamFixed divAlgorithms[@])
+    local -a divRsFiles=()
+    divRsFiles=$(getMergedFilenames divFiles rsAlgorithms[@])
+    local -a divRsDivFiles=()
+    divRsDivFiles=$(getMergedFilenames divRsFiles divAlgorithms[@])
+    local -a divRsDivEvalFiles=()
+    local -a eval_suffix=("eval")
+    divRsDivEvalFiles=$(getMergedFilenames divRsDivFiles eval_suffix)
+
+    divRsDiv_eval_file="DDIVPP_eval"
+    echo "method,file,runid,topic,ERR-IA@5,ERR-IA@10,ERR-IA@20,nERR-IA@5,nERR-IA@10,nERR-IA@20,alpha-DCG@5,alpha-DCG@10,alpha-DCG@20,alpha-nDCG@5,alpha-nDCG@10,alpha-nDCG@20,NRBP,nNRBP,MAP-IA,P-IA@5,P-IA@10,P-IA@20,strec@5,strec@10,strec@20" > ${divRsDiv_eval_file}
+
+    for i in ${divRsDivEvalFiles[@]}; do
+       line=$(tail -1 $i)
+       echo "DDIV+",$i,$line >> ${divRsDiv_eval_file}
+    done
+}
+
 #############################################################################
 ## Main ## Comment-out the function you want to use
 #############################################################################
@@ -225,9 +249,10 @@ generateEvalTables_DDIV () {
 #diversify_Rs
 #diversify_DivRs
 #resourceSelection_CSI
-resourceSelection_Div
+#resourceSelection_Div
 #evaluate_RsDiv
 #evaluate_DivRsDiv
 #generateEvalTables_BASELINE
 #generateEvalTables_BDIV
 #generateEvalTables_DDIV
+#generateEvalTables_DDIVPP
