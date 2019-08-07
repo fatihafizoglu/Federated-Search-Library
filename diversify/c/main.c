@@ -49,24 +49,32 @@ int main (int argc, char *argv[]) {
         .DIVERSIFY = true,
         .number_of_preresults = number_of_preresults,
         .number_of_results = number_of_results,
-        .number_of_query = number_of_query
+        .number_of_query = number_of_query,
+        .real_number_of_query = 0
     };
+
+    initDiversify(&conf);
+    openDocumentVectorsFiles();
+    loadDocuments();
+    loadTerms();
+    loadPreresults();
+
+#ifdef DEBUG
+    printf("LOADING DONE\n");
+    fflush(stdout);
+#endif
 
     for (i = 0; i < div_len; i++) {
         for (j = 0; j < lambda_len; j++) {
             conf.diversification_algorithm = div_algorithms[i];
             conf.lambda = div_lambdas[j];
 
-            initDiversify(&conf);
-            openDocumentVectorsFiles();
-            loadDocuments();
-            loadTerms();
-            loadPreresults();
+            cleanResults();
             diversify();
             writeResults();
-            endProgram ();
         }
     }
+    endProgram();
 
     return 0;
 }

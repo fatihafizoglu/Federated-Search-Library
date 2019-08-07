@@ -23,6 +23,10 @@ void diversifyQuery (int, int, int);
 int getExactNumberOfPreresults (int);
 void diversify ();
 void writeResults ();
+void cleanPreresultsMarks();
+void cleanPreresults();
+void cleanResults();
+void cleanAllResults ();
 void loadPreresults ();
 int initDiversify (Conf *);
 
