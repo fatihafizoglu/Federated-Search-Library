@@ -52,8 +52,10 @@ typedef struct AllocatorConfiguration {
     unsigned int number_of_preresults;
     /* Total number of results per query in results. */
     unsigned int number_of_results;
-    /* Total number of query in preresults. */
+    /* Total expected number of query in preresults. */
     unsigned int number_of_query;
+    /* Real number of query in preresults. */
+    unsigned int real_number_of_query;
     /* Selected diversification algorithm. */
     unsigned int diversification_algorithm;
     /* Diversification lambda value */
@@ -110,6 +112,8 @@ typedef struct TermVector {
 typedef struct QueryResult {
     int doc_id;
     double score;
+    int query_id;
+    bool mark;
 } Result;
 
 typedef struct Posting {

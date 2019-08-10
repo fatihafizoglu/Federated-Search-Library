@@ -42,6 +42,7 @@ void loadResults () {
         fscanf (fp, "%u %s %u %u %lf %s\n", &(query_id), temp, &(document_id),
                                            &(rank), &(score), temp);
 
+        // new query list
         if (prev_query_id != query_id) {
             rank_counter = 1;
         }
@@ -98,8 +99,8 @@ int initFixer (Conf *conf) {
 }
 
 int main (int argc, char *argv[]) {
-    unsigned int number_of_preresults = 20;
-    unsigned int number_of_results = 20;
+    unsigned int number_of_preresults = 1000;
+    unsigned int number_of_results = 200;
     unsigned int number_of_query = 198;
     char results_path[FILEPATH_LENGTH] = "";
 
