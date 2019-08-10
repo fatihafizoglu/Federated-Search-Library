@@ -51,7 +51,7 @@ done
 # TODO: Retrieve scores from main index
 
 
-# Sort results wrt their scores
+# Sort results wrt their scores then crop first 20
 for entry in c200_rs_cdiv_qs/q*/*
 do
     sort -rg -k5,5 ${entry} -o ${entry}_sorted
