@@ -1,7 +1,10 @@
 #include "diversify.h"
 #include <unistd.h>
+#include <time.h>
 
 int main (int argc, char *argv[]) {
+    double time_spent = 0.0;
+    clock_t begin = clock();
     char wordlist_path[FILEPATH_LENGTH] = "/home1/grupef/ecank/data/wordlist_IDF"; // DONTCHANGE
     char document_info_path[FILEPATH_LENGTH] = "/home1/grupef/ecank/data/doc_lengths"; // DONTCHANGE
     char document_vectors_folder_path[FILEPATH_LENGTH] = "/home1/grupef/ecank/data/document_vectors"; // DONTCHANGE
@@ -75,6 +78,10 @@ int main (int argc, char *argv[]) {
         }
     }
     endProgram();
+    
+    clock_t end = clock();
+    time_spent += (double)(end - begin) / CLOCKS_PER_SEC;
+    printf("time %f seconds\n", time_spent);
 
     return 0;
 }
