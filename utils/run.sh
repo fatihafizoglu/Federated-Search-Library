@@ -37,9 +37,9 @@
 ## PATHS ##
 #############################################################################
 #CSI_Top200_NoSpamFixed="results/ACCESS/CDIV/c200" # CDIV First step.
-#CSI_Top200_NoSpamFixed="results/ACCESS/CDDIV/c200" # CDDIV Second step. First step is DDIV at CDDIV!
+CSI_Top200_NoSpamFixed="results/TOPIC/CDDIV/c200" # CDDIV Second step. First step is DDIV at CDDIV!
 #CSI_Top200_NoSpamFixed="results/ACCESS/DDIV/c200_div/c200" # DDIV Second step. First step is DDIV at DDIV!
-CSI_Top200_NoSpamFixed="results/ACCESS/pool/c200" # Pool run.
+#CSI_Top200_NoSpamFixed="results/ACCESS/pool/c200" # Pool run.
 
 MAIN_Top100k_NoSpamFixed="results/m100kns/m100kns_fixed" # DONT CHANGE
 Doc2Cluster_Map="data/doc_to_cluster_map" # DONT CHANGE
@@ -249,7 +249,7 @@ generateEvalTables_DDIVPP () {
 #diversify_Rs
 #diversify_DivRs
 #resourceSelection_CSI
-#resourceSelection_Div
+resourceSelection_Div
 #evaluate_RsDiv
 #evaluate_DivRsDiv
 #generateEvalTables_BASELINE

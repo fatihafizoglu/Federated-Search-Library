@@ -343,7 +343,7 @@ void loadPreresults () {
     unsigned int query_id, query_counter = 1, prev_query_id = -1;
     unsigned int document_id;
     unsigned int rank, previous_rank = 1, rank_counter = 1;
-    unsigned int cluster_id;
+    unsigned int cluster_id = -1, prev_cluster_id = -1;
     double score;
 
 
@@ -352,38 +352,34 @@ void loadPreresults () {
     }
 
     // CDIV TRICK
-    // while (!feof(fp)) {
-    //     fscanf (fp, "%u %s %u %u %lf %s %u\n", &(query_id), temp, &(document_id),
-    //                                        &(rank), &(score), temp, &(cluster_id));
-
     while (!feof(fp)) {
-        fscanf (fp, "%u %s %u %u %lf %s\n", &(query_id), temp, &(document_id),
-                                            &(rank), &(score), temp);
+        fscanf (fp, "%u %s %u %u %lf %s %u\n", &(query_id), temp, &(document_id),
+                                           &(rank), &(score), temp, &(cluster_id));
+
+    // while (!feof(fp)) {
+    //     fscanf (fp, "%u %s %u %u %lf %s\n", &(query_id), temp, &(document_id),
+    //                                         &(rank), &(score), temp);
 
 #ifdef DEBUG
         printf("query_id:%u, doc_id:%u, rank:%u, score:%lf\n", query_id, document_id, rank, score);
         printf("prev_rank:%u, rank:%u, query_counter:%u, rank_counter:%u\n",
                 previous_rank, rank, query_counter, rank_counter);
+        printf("cluster_id:%u, prev_cluster_id:%u\n", cluster_id, prev_cluster_id);
         fflush(stdout);
 #endif
 
-        // new query list
-        if (previous_rank > rank) {
+        // smart new query list detection
+        if ( ( (prev_cluster_id != cluster_id) && (prev_cluster_id != -1) ) ||
+             (  previous_rank > rank) ||
+             ( (prev_query_id != query_id) && (prev_query_id != -1)) ) {
             query_counter++;
             rank_counter = 1;
-#ifdef DEBUG
-            printf("New query list detected by RANK CHECK\n");
-            fflush(stdout);
-#endif
-        }
 
 #ifdef DEBUG
-        // new query list double check
-        if (prev_query_id != query_id && prev_query_id != -1) {
-            printf("New query list detected by QUERYID CHECK\n");
+            printf("New query list detected\n");
             fflush(stdout);
-        }
 #endif
+        }
 
         if (rank_counter > config->number_of_preresults) {
             printf("!!! THIS SHOULD NOT HAPPEN! rank_counter > config->number_of_preresults\n");
@@ -409,15 +405,15 @@ void loadPreresults () {
 
         previous_rank = rank;
         prev_query_id = query_id;
+        prev_cluster_id = cluster_id;
         rank_counter++;
     }
 
     config->real_number_of_query = query_counter;
 
-#ifdef DEBUG
     printf("REAL #QUERY:%u\n", config->real_number_of_query);
     fflush(stdout);
-#endif
+
     fclose(fp);
     state = SUCCESS;
 }
