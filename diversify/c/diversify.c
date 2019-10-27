@@ -147,7 +147,7 @@ int mmr_diverse (int q_no, int number_of_preresults, int number_of_results) {
     return 0;
 }
 
-int sf_diverse (int q_no, int number_of_preresults, int number_of_results) {
+int sy_diverse (int q_no, int number_of_preresults, int number_of_results) {
     int i = 0, j = 0;
     int result_size = 0;
 
@@ -204,8 +204,8 @@ void diversifyQuery (int q_no, int algorithm, int number_of_preresults) {
     } else if (algorithm == MMR) {
         result_size = mmr_diverse(q_no, number_of_preresults, number_of_results);
 
-    } else if (algorithm == SF) {
-        result_size = sf_diverse(q_no, number_of_preresults, number_of_results);
+    } else if (algorithm == SY) {
+        result_size = sy_diverse(q_no, number_of_preresults, number_of_results);
 
     } else {
         /* Let's implement one more algorithm. */
@@ -270,8 +270,8 @@ void writeResults () {
     if (config->diversification_algorithm == MAX_SUM) {
         memcpy(confstr, "_maxsum", 7);
         memcpy(confstr+7, lambdastr, 5);
-    } else if (config->diversification_algorithm == SF) {
-        memcpy(confstr, "_sf", 3);
+    } else if (config->diversification_algorithm == SY) {
+        memcpy(confstr, "_sy", 3);
         memcpy(confstr+3, lambdastr, 5);
     }
 

@@ -14,7 +14,7 @@ int main (int argc, char *argv[]) {
     unsigned int number_of_preresults = 0;//100; // CHANGE -> GET FROM ARGUMENTS
     unsigned int number_of_results = 0;//20; // CHANGE -> GET FROM ARGUMENTS
     unsigned int number_of_query = 0;//198; // CHANGE -> GET FROM ARGUMENTS
-    unsigned int div_algorithms[] = {MAX_SUM, SF}; // DONTCHANGE
+    unsigned int div_algorithms[] = {MAX_SUM, SY}; // DONTCHANGE
     double div_lambdas[] = { 0.25, 0.5, 0.75 }; // DONTCHANGE
 
     int i, j;
@@ -78,7 +78,7 @@ int main (int argc, char *argv[]) {
         }
     }
     endProgram();
-    
+
     clock_t end = clock();
     time_spent += (double)(end - begin) / CLOCKS_PER_SEC;
     printf("time %f seconds\n", time_spent);
