@@ -71,6 +71,35 @@ void getQueryScores(int q_no, int number_of_results, double *max_score, double *
     }
 }
 
+int xquad_diverse (int q_no, int number_of_preresults, int number_of_results) {
+    int i;
+    int result_size = 0, max_score_doc_index_from_preresults = 0;
+    double max_score = 0.0;
+
+    while (result_size < number_of_results) {
+
+        // find document that maximize Fxquad(doc)
+        for (i = 0; i < number_of_preresults; i++) {
+            // calculate Fxquad(doc)
+
+            if (local_score > max_score) {
+                max_score = score_local;
+                max_score_doc_index_from_preresults = i;
+                // mark max scored doc id
+
+            }
+
+        }
+
+        results[q_no][result_size].doc_id =
+        results[q_no][result_size].score =
+        results[q_no][result_size].query_id =
+        result_size++;
+    }
+
+    return result_size;
+}
+
 int maxsum_diverse (int q_no, int number_of_preresults, int number_of_results) {
     int i, j, index1, index2;
     int result_size = 0;
@@ -207,8 +236,10 @@ void diversifyQuery (int q_no, int algorithm, int number_of_preresults) {
     } else if (algorithm == SY) {
         result_size = sy_diverse(q_no, number_of_preresults, number_of_results);
 
+    } else if (algorithm == XQUAD) {
+        result_size = xquad_diverse(q_no, number_of_preresults, number_of_results);
     } else {
-        /* Let's implement one more algorithm. */
+      /* Let's implement one more algorithm. */
     }
 
 #ifdef DEBUG

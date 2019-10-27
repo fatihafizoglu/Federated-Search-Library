@@ -15,6 +15,7 @@ double dotProduct (TermVectors, int, double *, TermVectors, int, double *);
 double getVectorLength (int, double *);
 double cosineSimilarity (int, int);
 void getQueryScores(int, int, double *, double *);
+int xquad_diverse (int, int, int);
 int maxsum_diverse (int, int, int);
 int mmr_diverse (int, int, int);
 int sy_diverse (int, int, int);
