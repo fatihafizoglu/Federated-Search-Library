@@ -114,11 +114,19 @@ int maxsum_diverse (int q_no, int number_of_preresults, int number_of_results) {
 #endif
             results[q_no][result_size].doc_id = preresults[q_no][index1].doc_id;
             results[q_no][result_size].score = preresults[q_no][index1].score;
+            results[q_no][result_size].query_id = preresults[q_no][index1].query_id;
             result_size++;
-            results[q_no][result_size].doc_id = preresults[q_no][index2].doc_id;
-            results[q_no][result_size].score = preresults[q_no][index2].score;
-            result_size++;
+            if (index1 != index2) {
+                results[q_no][result_size].doc_id = preresults[q_no][index2].doc_id;
+                results[q_no][result_size].score = preresults[q_no][index2].score;
+                results[q_no][result_size].query_id = preresults[q_no][index2].query_id;
+            } else {
+                results[q_no][result_size].doc_id = 0;
+                results[q_no][result_size].score = 0;
+                results[q_no][result_size].query_id = 0;
+            }
 
+            result_size++;
             for (i = 0; i < number_of_preresults; i++) {
                 distances[i][index1] = 0;
                 distances[index1][i] = 0;
@@ -139,33 +147,42 @@ int mmr_diverse (int q_no, int number_of_preresults, int number_of_results) {
     return 0;
 }
 
-int sf_diverse (int q_no, int number_of_preresults, int number_of_results) {
+int sy_diverse (int q_no, int number_of_preresults, int number_of_results) {
     int i = 0, j = 0;
     int result_size = 0;
 
+    cleanPreresultsMarks();
+
     while (result_size < number_of_results && i < number_of_preresults) {
-        if (preresults[q_no][i].doc_id == 0) {
+        if (preresults[q_no][i].doc_id == 0 || preresults[q_no][i].mark == true) {
             i++;
             continue;
         }
 
         j = i + 1;
         while (j < number_of_preresults) {
-            if (preresults[q_no][j].doc_id == 0) {
+            if (preresults[q_no][j].doc_id == 0 || preresults[q_no][j].mark == true) {
                 j++;
                 continue;
             }
 
             if (cosineSimilarity(preresults[q_no][i].doc_id, preresults[q_no][j].doc_id) > (config->lambda)) {
-                /* Remove result j. */
-                preresults[q_no][j].doc_id = 0;
-                preresults[q_no][j].score = 0;
+                /* Mark result j. */
+                preresults[q_no][j].mark = true;
             }
             j++;
         }
 
-        results[q_no][result_size].doc_id = preresults[q_no][i].doc_id;
-        results[q_no][result_size].score = preresults[q_no][i].score;
+        if (preresults[q_no][i].mark == true) {
+            results[q_no][result_size].doc_id = 0;
+            results[q_no][result_size].score = 0;
+            results[q_no][result_size].query_id = 0;
+        } else {
+            results[q_no][result_size].doc_id = preresults[q_no][i].doc_id;
+            results[q_no][result_size].score = preresults[q_no][i].score;
+            results[q_no][result_size].query_id = preresults[q_no][i].query_id;
+        }
+
         result_size++;
         i++;
     }
@@ -187,8 +204,8 @@ void diversifyQuery (int q_no, int algorithm, int number_of_preresults) {
     } else if (algorithm == MMR) {
         result_size = mmr_diverse(q_no, number_of_preresults, number_of_results);
 
-    } else if (algorithm == SF) {
-        result_size = sf_diverse(q_no, number_of_preresults, number_of_results);
+    } else if (algorithm == SY) {
+        result_size = sy_diverse(q_no, number_of_preresults, number_of_results);
 
     } else {
         /* Let's implement one more algorithm. */
@@ -197,7 +214,7 @@ void diversifyQuery (int q_no, int algorithm, int number_of_preresults) {
 #ifdef DEBUG
     if (number_of_results == number_of_preresults) {
         printf("\nIMPORTANT WARNING\n");
-        printf("Diversified results has the same amount of results with preresults,\n");
+        printf("Diversified results has the same amount of results with preresults (%d),\n", number_of_preresults);
         printf("and if you are going to sort this list, final results will be the same as preresults.\n");
         fflush(stdout);
     }
@@ -223,19 +240,26 @@ int getExactNumberOfPreresults (int q_no) {
 void diversify () {
     int i;
 
-    printf("#Q:");
-    for (i = 0; i < config->number_of_query; i++) {
+#ifdef DEBUG
+    printf("%u_%f|#Q:", config->diversification_algorithm, config->lambda);
+#endif
+    for (i = 0; i < config->real_number_of_query; i++) {
+#ifdef DEBUG
         printf("%d.", i+1);
         fflush(stdout);
+#endif
         diversifyQuery(i, config->diversification_algorithm, getExactNumberOfPreresults(i));
     }
+#ifdef DEBUG
     printf("\n");
+#endif
     state = SUCCESS;
 }
 
 void writeResults () {
     FILE *fp;
     int q_no, j;
+    int exact_query_number = config->number_of_query;
     char results_path[FILEPATH_LENGTH] = "";
     char confstr[20] = "";
     char lambdastr[5] = "";
@@ -246,8 +270,8 @@ void writeResults () {
     if (config->diversification_algorithm == MAX_SUM) {
         memcpy(confstr, "_maxsum", 7);
         memcpy(confstr+7, lambdastr, 5);
-    } else if (config->diversification_algorithm == SF) {
-        memcpy(confstr, "_sf", 3);
+    } else if (config->diversification_algorithm == SY) {
+        memcpy(confstr, "_sy", 3);
         memcpy(confstr+3, lambdastr, 5);
     }
 
@@ -257,33 +281,138 @@ void writeResults () {
         return;
     }
 
-    for (q_no = 0; q_no < config->number_of_query; q_no++)
+    if (config->real_number_of_query != 0) {
+        exact_query_number = config->real_number_of_query;
+    }
+
+    for (q_no = 0; q_no < exact_query_number; q_no++)
         for (j = 0; j < config->number_of_results; j++)
-            if (results[q_no][j].doc_id != 0 && results[q_no][j].score != 0)
-                fprintf(fp, "%d\tQ0\t%d\t%d\t%lf\tfs\n", q_no + 1, results[q_no][j].doc_id, j + 1, results[q_no][j].score);
+            if (results[q_no][j].doc_id != 0 && results[q_no][j].score != 0) {
+                //fprintf(fp, "%d\tQ0\t%d\t%d\t%lf\tfs\n", q_no + 1, results[q_no][j].doc_id, j + 1, results[q_no][j].score);
+                fprintf(fp, "%d\tQ0\t%d\t%d\t%lf\tfs\n", results[q_no][j].query_id, results[q_no][j].doc_id, j + 1, results[q_no][j].score);
+            }
 
     fclose(fp);
     state = SUCCESS;
 }
 
+void cleanPreresultsMarks () {
+    int i, j;
+
+    for (i = 0; i < config->number_of_query; i++) {
+        for (j = 0; j < config->number_of_preresults; j++) {
+            preresults[i][j].mark = false;
+        }
+    }
+}
+
+void cleanPreresults () {
+    int i, j;
+
+    for (i = 0; i < config->number_of_query; i++) {
+        for (j = 0; j < config->number_of_preresults; j++) {
+            preresults[i][j].doc_id = 0;
+            preresults[i][j].score = 0;
+            preresults[i][j].query_id = 0;
+            preresults[i][j].mark = false;
+        }
+    }
+}
+
+void cleanResults () {
+    int i, j;
+
+    for (i = 0; i < config->number_of_query; i++) {
+        for (j = 0; j < config->number_of_results; j++) {
+            results[i][j].doc_id = 0;
+            results[i][j].score = 0;
+            results[i][j].query_id = 0;
+            results[i][j].mark = false;
+        }
+    }
+}
+
+void cleanAllResults () {
+    cleanPreresults();
+    cleanResults();
+}
+
 void loadPreresults () {
     FILE *fp;
     char temp[100];
-    unsigned int query_id;
+    unsigned int query_id, query_counter = 1, prev_query_id = -1;
     unsigned int document_id;
-    unsigned int rank;
+    unsigned int rank, previous_rank = 1, rank_counter = 1;
+    unsigned int cluster_id = -1, prev_cluster_id = -1;
     double score;
+
 
     if (!(fp = fopen(config->preresults_path, "r"))) {
         return;
     }
 
+    // CDIV TRICK
     while (!feof(fp)) {
-        fscanf (fp, "%u %s %u %u %lf %s\n", &(query_id), temp, &(document_id),
-                                           &(rank), &(score), temp);
-        preresults[query_id-1][rank-1].doc_id = document_id;
-        preresults[query_id-1][rank-1].score = score;
+        fscanf (fp, "%u %s %u %u %lf %s %u\n", &(query_id), temp, &(document_id),
+                                           &(rank), &(score), temp, &(cluster_id));
+
+    // while (!feof(fp)) {
+    //     fscanf (fp, "%u %s %u %u %lf %s\n", &(query_id), temp, &(document_id),
+    //                                         &(rank), &(score), temp);
+
+#ifdef DEBUG
+        printf("query_id:%u, doc_id:%u, rank:%u, score:%lf\n", query_id, document_id, rank, score);
+        printf("prev_rank:%u, rank:%u, query_counter:%u, rank_counter:%u\n",
+                previous_rank, rank, query_counter, rank_counter);
+        printf("cluster_id:%u, prev_cluster_id:%u\n", cluster_id, prev_cluster_id);
+        fflush(stdout);
+#endif
+
+        // smart new query list detection
+        if ( ( (prev_cluster_id != cluster_id) && (prev_cluster_id != -1) ) ||
+             (  previous_rank > rank) ||
+             ( (prev_query_id != query_id) && (prev_query_id != -1)) ) {
+            query_counter++;
+            rank_counter = 1;
+
+#ifdef DEBUG
+            printf("New query list detected\n");
+            fflush(stdout);
+#endif
+        }
+
+        if (rank_counter > config->number_of_preresults) {
+            printf("!!! THIS SHOULD NOT HAPPEN! rank_counter > config->number_of_preresults\n");
+            printf("!!! query_id:%u, doc_id:%u, rank:%u, score:%lf\n", query_id, document_id, rank_counter, score);
+            printf("prev_rank:%u, rank:%u, query_counter:%u, rank_counter:%u\n",
+                    previous_rank, rank, query_counter, rank_counter);
+            fflush(stdout);
+            continue;
+        }
+
+        if (query_counter > config->number_of_query) {
+            printf("!!! THIS SHOULD NOT HAPPEN! query_counter > config->number_of_query\n");
+            printf("!!! query_id:%u, doc_id:%u, rank:%u, score:%lf\n", query_id, document_id, rank_counter, score);
+            printf("prev_rank:%u, rank:%u, query_counter:%u, rank_counter:%u\n",
+                    previous_rank, rank, query_counter, rank_counter);
+            fflush(stdout);
+            continue;
+        }
+
+        preresults[query_counter-1][rank_counter-1].doc_id = document_id;
+        preresults[query_counter-1][rank_counter-1].score = score;
+        preresults[query_counter-1][rank_counter-1].query_id = query_id;
+
+        previous_rank = rank;
+        prev_query_id = query_id;
+        prev_cluster_id = cluster_id;
+        rank_counter++;
     }
+
+    config->real_number_of_query = query_counter;
+
+    printf("REAL #QUERY:%u\n", config->real_number_of_query);
+    fflush(stdout);
 
     fclose(fp);
     state = SUCCESS;
@@ -297,7 +426,7 @@ int initDiversify (Conf *conf) {
 
     config = conf;
 
-    int i, j;
+    int i;
     long term_alloc_size = config->number_of_terms * sizeof(Term);
     long documents_alloc_size = config->number_of_documents * sizeof(Document);
 
@@ -337,17 +466,7 @@ int initDiversify (Conf *conf) {
         }
     }
 
-    for (i = 0; i < config->number_of_query; i++) {
-        for (j = 0; j < config->number_of_preresults; j++) {
-            preresults[i][j].doc_id = 0;
-            preresults[i][j].score = 0;
-        }
-
-        for (j = 0; j < config->number_of_results; j++) {
-            results[i][j].doc_id = 0;
-            results[i][j].score = 0;
-        }
-    }
+    cleanAllResults();
 
     state = SUCCESS;
     return 0;

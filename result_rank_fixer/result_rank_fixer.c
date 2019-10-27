@@ -29,9 +29,9 @@ void writeResults () {
 void loadResults () {
     FILE *fp;
     char temp[100];
-    unsigned int query_id;
+    unsigned int query_id, prev_query_id = 1;
     unsigned int document_id;
-    unsigned int rank;
+    unsigned int rank, rank_counter = 1;
     double score;
 
     if (!(fp = fopen(config->results_path, "r"))) {
@@ -41,8 +41,24 @@ void loadResults () {
     while (!feof(fp)) {
         fscanf (fp, "%u %s %u %u %lf %s\n", &(query_id), temp, &(document_id),
                                            &(rank), &(score), temp);
-        results[query_id-1][rank-1].doc_id = document_id;
-        results[query_id-1][rank-1].score = score;
+
+        // new query list
+        if (prev_query_id != query_id) {
+            rank_counter = 1;
+        }
+
+        if (rank_counter > config->number_of_preresults) {
+            printf("!!! THIS SHOULD NOT HAPPEN!\n");
+            printf("!!! query_id:%u, doc_id:%u, rank:%u, score:%lf\n", query_id, document_id, rank_counter, score);
+            fflush(stdout);
+            continue;
+        }
+
+        results[query_id-1][rank_counter-1].doc_id = document_id;
+        results[query_id-1][rank_counter-1].score = score;
+
+        rank_counter++;
+        prev_query_id = query_id;
     }
 
     fclose(fp);
@@ -83,10 +99,12 @@ int initFixer (Conf *conf) {
 }
 
 int main (int argc, char *argv[]) {
-    unsigned int number_of_preresults = 500;
+    unsigned int number_of_preresults = 1000;
     unsigned int number_of_results = 200;
-    unsigned int number_of_query = 50;
-    char results_path[FILEPATH_LENGTH] = "/home/eckucukoglu/Dropbox/arcelik/arcelikTeam/results_nospam/c500ns";
+    unsigned int number_of_query = 198;
+    char results_path[FILEPATH_LENGTH] = "";
+
+    strcpy(results_path, argv[1]);
 
     Conf conf = {
         .number_of_preresults = number_of_preresults,

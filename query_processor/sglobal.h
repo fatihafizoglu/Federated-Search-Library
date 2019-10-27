@@ -6,9 +6,9 @@
 #define DOC_SIZE 600000
 #define DOC_NUM 50220539 /* exact number: 50220538 */ // get 1 more than exact value, so is word no
 #define BUFFERSIZE DOC_NUM
-#define QUERY_NO 50
+#define QUERY_NO 198
 
-#define DETAILED_LOG 1
+#define DETAILED_LOG 0
 
 #define TFIDF 1 // bnm orijinal measure, doc term wegits: tf ve IDF, query term: augmentd tf ve IDF, document vector length'e bolunur.
 #define MF8 2
