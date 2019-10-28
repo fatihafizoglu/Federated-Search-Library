@@ -72,28 +72,66 @@ void getQueryScores(int q_no, int number_of_results, double *max_score, double *
 }
 
 int xquad_diverse (int q_no, int number_of_preresults, int number_of_results) {
-    int i;
-    int result_size = 0, max_score_doc_index_from_preresults = 0;
-    double max_score = 0.0;
+    int i, j, index = -1;
+    int result_size = 0;
+    double sum_score = 0.0, max_score = 0.0;
 
+    // calculate sum of scores for preresults, it is needed for normalization
+    for (i = 0; i < number_of_preresults; i++) {
+        sum_score = sum_score + preresults[q_no][i].score;
+    }
+
+    if (sum_score == 0.0) {
+        state = UNSUCCESSFUL_DIVERSIFICATION;
+        return 0;
+    }
+
+    if (config->lambda != 0.0) {
+        loadSubqueryResults(q_no);
+    }
+
+    // collect results
     while (result_size < number_of_results) {
+        local_score = 0.0;
+        max_distance = 0.0;
+        index = -1;
 
         // find document that maximize Fxquad(doc)
         for (i = 0; i < number_of_preresults; i++) {
             // calculate Fxquad(doc)
 
-            if (local_score > max_score) {
-                max_score = score_local;
-                max_score_doc_index_from_preresults = i;
-                // mark max scored doc id
+            // relevance(query-doc) part
+            local_score = (1.0 - (config->lambda)) * (preresults[q_no][i].score / sum_score);
 
+            // diverse part
+            if (config->lambda != 0.0) {
+                double diverse_score = 0.0;
+                for (j = 0; j < number_of_subqueries; j++) {
+                    double likelihood, relevance, novelty;
+                    likelihood = 1.0 / number_of_subqueries;
+                    relevance = getSubqueryResult(j, preresults[q_no][i].doc_id);
+                    relevance = relevance / sum_score;
+                    novelty = 
+
+                    diverse_score = diverse_score + (likelihood * relevance * novelty);
+                }
+
+                local_score = local_score + ((config->lambda) * (diverse_score));
             }
 
+            if (local_score > max_score) {
+                max_score = score_local;
+                index = i;
+            }
         }
 
-        results[q_no][result_size].doc_id =
-        results[q_no][result_size].score =
-        results[q_no][result_size].query_id =
+        if (index < 0) {
+            break;
+        }
+
+        results[q_no][result_size].doc_id = preresults[q_no][index].doc_id;
+        results[q_no][result_size].score = preresults[q_no][index].score;
+        results[q_no][result_size].query_id = preresults[q_no][index].query_id;
         result_size++;
     }
 
@@ -366,6 +404,18 @@ void cleanResults () {
 void cleanAllResults () {
     cleanPreresults();
     cleanResults();
+
+    if (config->diversification_algorithm == XQUAD) {
+        cleanSubqueryResults();
+    }
+}
+
+void loadSubqueryResults(int query_id) {
+    state = SUCCESS;
+
+    number_of_subqueries = XXX;
+
+
 }
 
 void loadPreresults () {
@@ -495,6 +545,10 @@ int initDiversify (Conf *conf) {
         if (!(results[i] = malloc(results_alloc_size))) {
             return -1;
         }
+    }
+
+    if (config->diversification_algorithm == XQUAD) {
+
     }
 
     cleanAllResults();

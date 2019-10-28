@@ -48,6 +48,10 @@ void endProgram () {
 
         if (results != NULL)
             free(results);
+
+        if (config->diversification_algorithm == XQUAD) {
+            
+        }
     }
     state = SUCCESS;
 }

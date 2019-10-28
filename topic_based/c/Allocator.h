@@ -288,4 +288,8 @@ FILE *doc_to_cluster_map_for_c2_file;
 int *doc_to_cluster_map_for_c1;
 int *doc_to_cluster_map_for_c2;
 
+/* xQuad diversification algorithm */
+short number_of_subqueries;
+
+
 #endif  /* not defined _ALLOCATOR_H_ */

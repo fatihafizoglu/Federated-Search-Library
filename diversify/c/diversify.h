@@ -27,6 +27,7 @@ void cleanPreresultsMarks();
 void cleanPreresults();
 void cleanResults();
 void cleanAllResults ();
+void loadSubqueryResults(int query_id);
 void loadPreresults ();
 int initDiversify (Conf *);
 
