@@ -18,6 +18,7 @@ void getQueryScores(int, int, double *, double *);
 
 double getSubqueryResult (int, int);
 double getSubqueryNovelty (int, int, int);
+int getNumberOfSubqueries (int);
 
 int xquad_diverse (int, int, int);
 int maxsum_diverse (int, int, int);
@@ -36,7 +37,7 @@ void cleanPreresults();
 void cleanResults();
 void cleanAllResults ();
 
-void initloadSubqueryResults();
+int initloadSubqueryResults();
 void loadPreresults ();
 int initDiversify (Conf *);
 

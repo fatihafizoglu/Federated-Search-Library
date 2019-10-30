@@ -15,6 +15,7 @@ int main (int argc, char *argv[]) {
     unsigned int number_of_preresults = 0;//100; // CHANGE -> GET FROM ARGUMENTS
     unsigned int number_of_results = 0;//20; // CHANGE -> GET FROM ARGUMENTS
     unsigned int number_of_query = 0;//198; // CHANGE -> GET FROM ARGUMENTS
+    unsigned int max_possible_number_of_subquery = 8 // DONTCHANGE [09->12 Max is 8]
     unsigned int div_algorithms[] = {SY, XQUAD}; // DONTCHANGE
     double div_lambdas[] = { 0.25, 0.5, 0.75 }; // DONTCHANGE
 
@@ -50,6 +51,7 @@ int main (int argc, char *argv[]) {
         .subqueryresults_path = subqueryresults_path,
         .number_of_documents = number_of_documents,
         .number_of_terms = number_of_terms,
+        .max_possible_number_of_subquery = max_possible_number_of_subquery,
 
         .DIVERSIFY = true,
         .number_of_preresults = number_of_preresults,
@@ -71,7 +73,9 @@ int main (int argc, char *argv[]) {
 
     for (i = 0; i < div_len; i++) {
         if (div_algorithms[i] == XQUAD) {
-            initloadSubqueryResults();
+            if (initloadSubqueryResults() == -1) {
+                break;
+            }
         }
 
         for (j = 0; j < lambda_len; j++) {

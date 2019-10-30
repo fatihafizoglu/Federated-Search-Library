@@ -111,6 +111,11 @@ typedef struct TermVector {
     unsigned int term_frequency;
 } TermVector, *TermVectors;
 
+typedef struct SubqueryResult {
+    int doc_id;
+    double score;
+} SResult;
+
 typedef struct QueryResult {
     int doc_id;
     double score;
@@ -291,7 +296,6 @@ int *doc_to_cluster_map_for_c1;
 int *doc_to_cluster_map_for_c2;
 
 /* xQuad diversification algorithm */
-short number_of_subqueries;
-XXX
+SResult **subquery_results;
 
 #endif  /* not defined _ALLOCATOR_H_ */

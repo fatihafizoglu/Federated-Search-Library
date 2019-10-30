@@ -41,6 +41,10 @@ void endProgram () {
 
             if (results[i] != NULL)
                 free(results[i]);
+
+            if (config->diversification_algorithm == XQUAD) {
+                free(subquery_results[i]);
+            }
         }
 
         if (preresults != NULL)
@@ -50,7 +54,7 @@ void endProgram () {
             free(results);
 
         if (config->diversification_algorithm == XQUAD) {
-            XXX /* free subquery result */
+            free(subquery_results);
         }
     }
     state = SUCCESS;

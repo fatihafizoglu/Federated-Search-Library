@@ -74,7 +74,7 @@ void getQueryScores(int q_no, int number_of_results, double *max_score, double *
 double getSubqueryResult (int subquery_index, int doc_id) {
     double score = 0.0;
 
-    XXX
+    XXX /* find from loaded results correct results binary searh? */
 
     return score;
 }
@@ -89,6 +89,17 @@ double getSubqueryNovelty (int subquery_index, int result_size, int q_no) {
     }
 
     return novelty;
+}
+
+int getNumberOfSubqueries (int q_no) {
+    for (int i = 0; i < config->max_possible_number_of_subquery; i++) {
+        if (subquery_results[q_no][i].doc_id == 0 &&
+            subquery_results[q_no][i].score == 0.0) {
+            return i;
+        }
+    }
+
+    return config->max_possible_number_of_subquery;
 }
 
 int xquad_diverse (int q_no, int number_of_preresults, int number_of_results) {
@@ -121,6 +132,7 @@ int xquad_diverse (int q_no, int number_of_preresults, int number_of_results) {
             // diverse part
             if (config->lambda != 0.0) {
                 double diverse_score = 0.0;
+                int number_of_subqueries = getNumberOfSubqueries(q_no);
                 for (j = 0; j < number_of_subqueries; j++) {
                     double likelihood, relevance, novelty;
                     likelihood = 1.0 / number_of_subqueries;
@@ -382,7 +394,14 @@ void writeResults () {
 }
 
 void cleanSubqueryResults () {
-    XXX /* only needed for initilazation */
+    int i, j;
+
+    for (i = 0; i < config->number_of_query; i++) {
+        for (j = 0; j < config->max_possible_number_of_subquery; j++) {
+            subquery_results[i][j].doc_id = 0;
+            subquery_results[i][j].score = 0.0;
+        }
+    }
 }
 
 void cleanPreresultsMarks () {
@@ -426,14 +445,22 @@ void cleanAllResults () {
     cleanResults();
 }
 
-void initloadSubqueryResults() {
-    XXX /*allocate for subqeruy results */
+int initloadSubqueryResults() {
+    long subquery_results_pointer_alloc_size = config->number_of_query * sizeof(SResult *);
+    long subquery_results_alloc_size = config->max_possible_number_of_subquery * sizeof(SResult);
+    if (!(subquery_results = malloc(subquery_results_pointer_alloc_size))) {
+        return -1;
+    }
+
+    for (i = 0; i < config->number_of_query; i++) {
+        if (!(subquery_results[i] = malloc(subquery_results_alloc_size))) {
+            return -1;
+        }
+    }
 
     cleanSubqueryResults();
 
     XXX /* read from config->subqueryresults_path */
-    number_of_subqueries = ?
-
 
 }
 
