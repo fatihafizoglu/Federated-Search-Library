@@ -15,19 +15,28 @@ double dotProduct (TermVectors, int, double *, TermVectors, int, double *);
 double getVectorLength (int, double *);
 double cosineSimilarity (int, int);
 void getQueryScores(int, int, double *, double *);
+
+double getSubqueryResult (int, int);
+double getSubqueryNovelty (int, int, int);
+
 int xquad_diverse (int, int, int);
 int maxsum_diverse (int, int, int);
 int mmr_diverse (int, int, int);
 int sy_diverse (int, int, int);
+
 void diversifyQuery (int, int, int);
 int getExactNumberOfPreresults (int);
 void diversify ();
+
 void writeResults ();
+
+void cleanSubqueryResults ();
 void cleanPreresultsMarks();
 void cleanPreresults();
 void cleanResults();
 void cleanAllResults ();
-void loadSubqueryResults(int query_id);
+
+void initloadSubqueryResults();
 void loadPreresults ();
 int initDiversify (Conf *);
 

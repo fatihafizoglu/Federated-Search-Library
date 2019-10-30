@@ -50,7 +50,7 @@ void endProgram () {
             free(results);
 
         if (config->diversification_algorithm == XQUAD) {
-            
+            XXX /* free subquery result */
         }
     }
     state = SUCCESS;

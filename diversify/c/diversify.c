@@ -71,10 +71,30 @@ void getQueryScores(int q_no, int number_of_results, double *max_score, double *
     }
 }
 
+double getSubqueryResult (int subquery_index, int doc_id) {
+    double score = 0.0;
+
+    XXX
+
+    return score;
+}
+
+double getSubqueryNovelty (int subquery_index, int result_size, int q_no) {
+    int i;
+    double novelty = 1.0;
+
+    for (i = 0; i < result_size; i++) {
+        novelty = novelty *
+            (1 - getSubqueryResult(subquery_index, results[q_no][i].doc_id));
+    }
+
+    return novelty;
+}
+
 int xquad_diverse (int q_no, int number_of_preresults, int number_of_results) {
     int i, j, index = -1;
     int result_size = 0;
-    double sum_score = 0.0, max_score = 0.0;
+    double sum_score = 0.0, max_score = 0.0, local_score = 0.0;
 
     // calculate sum of scores for preresults, it is needed for normalization
     for (i = 0; i < number_of_preresults; i++) {
@@ -86,14 +106,9 @@ int xquad_diverse (int q_no, int number_of_preresults, int number_of_results) {
         return 0;
     }
 
-    if (config->lambda != 0.0) {
-        loadSubqueryResults(q_no);
-    }
-
     // collect results
     while (result_size < number_of_results) {
-        local_score = 0.0;
-        max_distance = 0.0;
+        max_score = 0.0;
         index = -1;
 
         // find document that maximize Fxquad(doc)
@@ -111,7 +126,7 @@ int xquad_diverse (int q_no, int number_of_preresults, int number_of_results) {
                     likelihood = 1.0 / number_of_subqueries;
                     relevance = getSubqueryResult(j, preresults[q_no][i].doc_id);
                     relevance = relevance / sum_score;
-                    novelty = 
+                    novelty = getSubqueryNovelty(j, result_size, q_no);
 
                     diverse_score = diverse_score + (likelihood * relevance * novelty);
                 }
@@ -120,7 +135,7 @@ int xquad_diverse (int q_no, int number_of_preresults, int number_of_results) {
             }
 
             if (local_score > max_score) {
-                max_score = score_local;
+                max_score = local_score;
                 index = i;
             }
         }
@@ -277,7 +292,8 @@ void diversifyQuery (int q_no, int algorithm, int number_of_preresults) {
     } else if (algorithm == XQUAD) {
         result_size = xquad_diverse(q_no, number_of_preresults, number_of_results);
     } else {
-      /* Let's implement one more algorithm. */
+        /* Let's implement one more algorithm. */
+        return;
     }
 
 #ifdef DEBUG
@@ -365,6 +381,10 @@ void writeResults () {
     state = SUCCESS;
 }
 
+void cleanSubqueryResults () {
+    XXX /* only needed for initilazation */
+}
+
 void cleanPreresultsMarks () {
     int i, j;
 
@@ -404,16 +424,15 @@ void cleanResults () {
 void cleanAllResults () {
     cleanPreresults();
     cleanResults();
-
-    if (config->diversification_algorithm == XQUAD) {
-        cleanSubqueryResults();
-    }
 }
 
-void loadSubqueryResults(int query_id) {
-    state = SUCCESS;
+void initloadSubqueryResults() {
+    XXX /*allocate for subqeruy results */
 
-    number_of_subqueries = XXX;
+    cleanSubqueryResults();
+
+    XXX /* read from config->subqueryresults_path */
+    number_of_subqueries = ?
 
 
 }
@@ -545,10 +564,6 @@ int initDiversify (Conf *conf) {
         if (!(results[i] = malloc(results_alloc_size))) {
             return -1;
         }
-    }
-
-    if (config->diversification_algorithm == XQUAD) {
-
     }
 
     cleanAllResults();

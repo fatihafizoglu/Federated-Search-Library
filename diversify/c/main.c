@@ -9,6 +9,7 @@ int main (int argc, char *argv[]) {
     char document_info_path[FILEPATH_LENGTH] = "/home1/grupef/ecank/data/doc_lengths"; // DONTCHANGE
     char document_vectors_folder_path[FILEPATH_LENGTH] = "/home1/grupef/ecank/data/document_vectors"; // DONTCHANGE
     char preresults_path[FILEPATH_LENGTH] = ""; // CHANGE -> GET FROM ARGUMENTS
+    char subqueryresults_path[FILEPATH_LENGTH] = "XXX";
     unsigned int number_of_documents = 50220538; // DONTCHANGE
     unsigned int number_of_terms = 163629158; // DONTCHANGE
     unsigned int number_of_preresults = 0;//100; // CHANGE -> GET FROM ARGUMENTS
@@ -46,6 +47,7 @@ int main (int argc, char *argv[]) {
         .document_info_path = document_info_path,
         .document_vectors_folder_path = document_vectors_folder_path,
         .preresults_path = preresults_path,
+        .subqueryresults_path = subqueryresults_path,
         .number_of_documents = number_of_documents,
         .number_of_terms = number_of_terms,
 
@@ -68,11 +70,16 @@ int main (int argc, char *argv[]) {
 #endif
 
     for (i = 0; i < div_len; i++) {
+        if (div_algorithms[i] == XQUAD) {
+            initloadSubqueryResults();
+        }
+
         for (j = 0; j < lambda_len; j++) {
             conf.diversification_algorithm = div_algorithms[i];
             conf.lambda = div_lambdas[j];
 
             cleanResults();
+
             diversify();
             writeResults();
         }

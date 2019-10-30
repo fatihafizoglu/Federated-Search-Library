@@ -60,7 +60,9 @@ typedef struct AllocatorConfiguration {
     unsigned int diversification_algorithm;
     /* Diversification lambda value */
     double lambda;
-    /* ___END___ */
+    /* XQUAD Explicit diversification subquery results. */
+    char *subqueryresults_path;
+    /* ___END_DIVERSIFICATION___ */
 
     /* ___CLUSTER_OCCURENCE_COMPARATOR___ */
     /* Files */
@@ -69,7 +71,7 @@ typedef struct AllocatorConfiguration {
     /* Number of clusters for both clusters {c1, c2}. */
     unsigned int number_of_clusters_for_c1;
     unsigned int number_of_clusters_for_c2;
-    /* ___END___ */
+    /* ___END_CLUSTER_OCCURENCE_COMPARATOR___ */
 } Conf;
 
 typedef struct Cluster {
@@ -290,6 +292,6 @@ int *doc_to_cluster_map_for_c2;
 
 /* xQuad diversification algorithm */
 short number_of_subqueries;
-
+XXX
 
 #endif  /* not defined _ALLOCATOR_H_ */
