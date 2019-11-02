@@ -43,7 +43,16 @@ void endProgram () {
                 free(results[i]);
 
             if (config->diversification_algorithm == XQUAD) {
-                free(subquery_results[i]);
+                int number_of_subqueries = getNumberOfSubqueries(q_no);
+                for (int j = 0; j < number_of_subqueries; j++) {
+                    if (subquery_results[i][j] != NULL) {
+                        free(subquery_results[i][j]);
+                    }
+                }
+
+                if (subquery_results[i] != NULL) {
+                    free(subquery_results[i]);
+                }
             }
         }
 

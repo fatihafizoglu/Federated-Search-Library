@@ -71,21 +71,44 @@ void getQueryScores(int q_no, int number_of_results, double *max_score, double *
     }
 }
 
-double getSubqueryResult (int subquery_index, int doc_id) {
+double getSubqueryResult (int q_no, int subquery_index, int doc_id, int preresults_index) {
     double score = 0.0;
 
-    XXX /* find from loaded results correct results binary searh? */
+    if (preresults_index != -1 &&
+        doc_id == subquery_results[q_no][subquery_index][preresults_index].doc_id) {
+
+        score = subquery_results[q_no][subquery_index][preresults_index].score;
+#ifdef DEBUG
+        printf("Index Match: %s\n", __FUNCTION__);
+        fflush(stdout);
+#endif
+        return score;
+    }
+
+    for (int i = 0; i < config->number_of_preresults; i++) {
+        if (doc_id == subquery_results[q_no][subquery_index][i].doc_id) {
+            score = subquery_results[q_no][subquery_index][i].score;
+        }
+    }
+
+#ifdef DEBUG
+    if (score == 0.0) {
+        printf("Score 0.0 for Q#%d SQ#%d DOC#%d INDEX#%d FNC:%s\n",
+            q_no, subquery_index, doc_id, preresults_index, __FUNCTION__);
+        fflush(stdout);
+    }
+#endif
 
     return score;
 }
 
-double getSubqueryNovelty (int subquery_index, int result_size, int q_no) {
+double getSubqueryNovelty (int q_no, int subquery_index, int result_size) {
     int i;
     double novelty = 1.0;
 
     for (i = 0; i < result_size; i++) {
         novelty = novelty *
-            (1 - getSubqueryResult(subquery_index, results[q_no][i].doc_id));
+            (1 - getSubqueryResult(q_no, subquery_index, results[q_no][i].doc_id, -1));
     }
 
     return novelty;
@@ -93,9 +116,10 @@ double getSubqueryNovelty (int subquery_index, int result_size, int q_no) {
 
 int getNumberOfSubqueries (int q_no) {
     for (int i = 0; i < config->max_possible_number_of_subquery; i++) {
-        if (subquery_results[q_no][i].doc_id == 0 &&
-            subquery_results[q_no][i].score == 0.0) {
-            return i;
+        /* Check only first result */
+        if (subquery_results[q_no][i][0].doc_id == 0 &&
+            subquery_results[q_no][i][0].score == 0.0) {
+                return i;
         }
     }
 
@@ -136,9 +160,9 @@ int xquad_diverse (int q_no, int number_of_preresults, int number_of_results) {
                 for (j = 0; j < number_of_subqueries; j++) {
                     double likelihood, relevance, novelty;
                     likelihood = 1.0 / number_of_subqueries;
-                    relevance = getSubqueryResult(j, preresults[q_no][i].doc_id);
+                    relevance = getSubqueryResult(q_no, j, preresults[q_no][i].doc_id, i);
                     relevance = relevance / sum_score;
-                    novelty = getSubqueryNovelty(j, result_size, q_no);
+                    novelty = getSubqueryNovelty(q_no, j, result_size);
 
                     diverse_score = diverse_score + (likelihood * relevance * novelty);
                 }
@@ -394,12 +418,14 @@ void writeResults () {
 }
 
 void cleanSubqueryResults () {
-    int i, j;
+    int i, j, k;
 
     for (i = 0; i < config->number_of_query; i++) {
         for (j = 0; j < config->max_possible_number_of_subquery; j++) {
-            subquery_results[i][j].doc_id = 0;
-            subquery_results[i][j].score = 0.0;
+            for (k = 0; k < config->number_of_preresults; k++) {
+                subquery_results[i][j][k].doc_id = 0;
+                subquery_results[i][j][k].score = 0.0;
+            }
         }
     }
 }
@@ -446,19 +472,31 @@ void cleanAllResults () {
 }
 
 int initloadSubqueryResults() {
-    long subquery_results_pointer_alloc_size = config->number_of_query * sizeof(SResult *);
-    long subquery_results_alloc_size = config->max_possible_number_of_subquery * sizeof(SResult);
-    if (!(subquery_results = malloc(subquery_results_pointer_alloc_size))) {
+    /* Initialize variables for Subqueries */
+    int i, j;
+    long subquery_results_per_query_alloc_size = config->number_of_query * sizeof(SResult **);
+    long subquery_results_per_subquery_alloc_size = config->max_possible_number_of_subquery * sizeof(SResult *);
+    long subquery_results_per_preresults_alloc_size = config->number_of_preresults * sizeof(SResult);
+
+    if (!(subquery_results = malloc(subquery_results_per_query_alloc_size))) {
         return -1;
     }
 
     for (i = 0; i < config->number_of_query; i++) {
-        if (!(subquery_results[i] = malloc(subquery_results_alloc_size))) {
+        if (!(subquery_results[i] = malloc(subquery_results_per_subquery_alloc_size))) {
             return -1;
+        }
+
+        for (j = 0; j < config->max_possible_number_of_subquery; i++) {
+            if (!(subquery_results[i][j] = malloc(subquery_results_per_preresults_alloc_size))) {
+                return -1;
+            }
         }
     }
 
     cleanSubqueryResults();
+
+    /* Load Subquery results */
 
     XXX /* read from config->subqueryresults_path */
 

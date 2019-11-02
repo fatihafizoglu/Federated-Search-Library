@@ -296,6 +296,6 @@ int *doc_to_cluster_map_for_c1;
 int *doc_to_cluster_map_for_c2;
 
 /* xQuad diversification algorithm */
-SResult **subquery_results;
+SResult ***subquery_results;
 
 #endif  /* not defined _ALLOCATOR_H_ */

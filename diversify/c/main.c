@@ -74,6 +74,8 @@ int main (int argc, char *argv[]) {
     for (i = 0; i < div_len; i++) {
         if (div_algorithms[i] == XQUAD) {
             if (initloadSubqueryResults() == -1) {
+                printf("XQUAD initloadSubqueryResults Failure!\n");
+                fflush(stdout);
                 break;
             }
         }
