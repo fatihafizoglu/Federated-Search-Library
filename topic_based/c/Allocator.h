@@ -8,6 +8,8 @@
 #include <time.h>
 #include <sys/time.h>
 #include <errno.h>
+
+/* Own Library Includes */
 #include "constants.h"
 #include "dictionary.h"
 
@@ -62,6 +64,8 @@ typedef struct AllocatorConfiguration {
     double lambda;
     /* XQUAD Explicit diversification subquery results. */
     char *subqueryresults_path;
+    unsigned int max_possible_number_of_subquery;
+
     /* ___END_DIVERSIFICATION___ */
 
     /* ___CLUSTER_OCCURENCE_COMPARATOR___ */

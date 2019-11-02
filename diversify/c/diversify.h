@@ -16,7 +16,7 @@ double getVectorLength (int, double *);
 double cosineSimilarity (int, int);
 void getQueryScores(int, int, double *, double *);
 
-double getSubqueryResult (int, int);
+double getSubqueryResult (int, int, int, int);
 double getSubqueryNovelty (int, int, int);
 int getNumberOfSubqueries (int);
 

@@ -41,10 +41,19 @@ void endProgram () {
 
             if (results[i] != NULL)
                 free(results[i]);
+        }
 
-            if (config->diversification_algorithm == XQUAD) {
-                int number_of_subqueries = getNumberOfSubqueries(q_no);
-                for (int j = 0; j < number_of_subqueries; j++) {
+        if (preresults != NULL)
+            free(preresults);
+
+        if (results != NULL)
+            free(results);
+
+        /* Free xquad variables */
+        if (subquery_results != NULL) {
+
+            for (i = 0; i < config->number_of_query; i++) {
+                for (int j = 0; j < config->max_possible_number_of_subquery; j++) {
                     if (subquery_results[i][j] != NULL) {
                         free(subquery_results[i][j]);
                     }
@@ -54,15 +63,7 @@ void endProgram () {
                     free(subquery_results[i]);
                 }
             }
-        }
 
-        if (preresults != NULL)
-            free(preresults);
-
-        if (results != NULL)
-            free(results);
-
-        if (config->diversification_algorithm == XQUAD) {
             free(subquery_results);
         }
     }

@@ -497,9 +497,36 @@ int initloadSubqueryResults() {
     cleanSubqueryResults();
 
     /* Load Subquery results */
+    FILE *fp;
+    unsigned int query_id, subquery_id, doc_id;
+    double score;
 
-    XXX /* read from config->subqueryresults_path */
+    unsigned int sresult_counter = 0;
 
+    if (!(fp = fopen(config->subqueryresults_path, "r"))) {
+        return -1;
+    }
+
+    while (!feof(fp)) {
+        fscanf (fp, "%u %u %u %lf\n", &(query_id), &(subquery_id),
+            &(doc_id), &(score));
+
+#ifdef DEBUG
+        if (doc_id != preresults[query_id-1][sresult_counter].doc_id) {
+            printf("Preresults[%u][%u].doc(%u) \nSubquery[%u][%u].doc(%u) Index Mismatch!\n",
+            (query_id-1), (sresult_counter), (preresults[query_id-1][sresult_counter].doc_id),
+            (subquery_id-1), (sresult_counter), doc_id);
+            fflush(stdout);
+        }
+#endif
+
+        subquery_results[query_id-1][subquery_id-1][sresult_counter].doc_id = doc_id;
+        subquery_results[query_id-1][subquery_id-1][sresult_counter].score = score;
+
+        sresult_counter++;
+    }
+
+    return 0;
 }
 
 void loadPreresults () {
