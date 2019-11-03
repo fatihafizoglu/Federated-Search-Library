@@ -1,9 +1,5 @@
 #include "fsmem18.h"
 
-int QUIT_STOP = 0; // stop condition with quit strategy is reached
-int CONT_STOP = 0; // stop condition with continue strategy is reached
-int nonzero_doc_acc = 0;
-
 struct staticMaxHeapStruct maxScoresHeap;
 timer process_time; // total time
 double t_sum = 0;
@@ -11,7 +7,6 @@ double t_sum = 0;
 Word *WordList;
 InvEntry *buffer;
 
-double score;
 int found = 0;
 int word_no_in_list=0;
 
@@ -22,15 +17,10 @@ int d_size=0; // length of current doc
 
 long int doc_no = 0; // total no_of docs in all files
 
-int err = 0;
-
 FILE * ifp, *eval_out;
 FILE /** out,*/ *entry_ifp, *out_trec;
 
 char tName2[MAX_TUPLE_LENGTH];
-
-int processing_R = 1;
-int processing_S = 0;
 
 char final_tokens [TOKEN_NO][TOKEN_SIZE];
 
@@ -59,7 +49,6 @@ double avg_unique;
 double avg_total_tf;
 double collection_total_tf;
 int REMAINING_DOC_NUM = 0;
-int total_no_of_terms_in_query = 0;
 
 int separator(char ch) {
     if (!isalnum(ch))
@@ -90,37 +79,6 @@ double v_length(Vector *Vect) {
         sum += Vect->VecElement[i].weight * Vect->VecElement[i].weight;
 
     return (sqrt(sum));
-}
-
-void v_normalize(Vector *v) {
-    int i;
-    double length = v_length(v);
-
-    for (i=0; i<v->nonzero_elements; i++)
-         v->VecElement[i].weight = v->VecElement[i].weight/length;
-}
-
-double v_dotProduct(Vector *v1, Vector *v2) {
-    int i,k;
-    double sum = 0;
-
-    // IMPORTANT: assuming each index appears only once in a vector
-    for (i=0; i<v1->nonzero_elements; i++)
-        for (k=0; k<v2->nonzero_elements; k++)
-            if (v1->VecElement[i].index == v2->VecElement[k].index) {
-                sum += v1->VecElement[i].weight * v2->VecElement[k].weight;
-                //break; // by assumption, no index (word) is duplicate in a vector
-            };
-
-    return (sum);
-}
-
-double v_VecCos( Vector *v1, Vector *v2) {
-    double t = v_dotProduct(v1, v2); // as i normalize, no need any more /(v_length(v1)*v_length(v2));
-
-    // fprintf(out, "dot %lf length %lf cos is %lf\n",v_dotProduct(v1, v2),v_length(v1)*v_length(v2), t);
-
-    return t;
 }
 
 int index_order(DV dvec1, DV dvec2) {
@@ -197,41 +155,39 @@ void process_tuple(char *line, long int tuple_no) {
             strcpy(tmp, tokens[i]);
             strcpy(final_tokens[tokens_left], tokens[i]);
             found=0;
-            if (processing_R) {
-                if (sword == NULL) {
-                    printf("could not allocate space\n");
+
+            if (sword == NULL) {
+                printf("could not allocate space\n");
+                exit(1);
+            }
+
+            strcpy(sword->a_word,tokens[i]);
+            word = (WP) bsearch(sword->a_word ,WordList, word_no_in_list+1, sizeof(WordList[0]), lex_order);
+
+            if (word) {
+                found = 1;
+                add1 = (off_t) WordList;
+                add2 = (off_t) word;
+                word_size = sizeof(Word);
+                // Note that, the expression gives exactly the array index of WordList, starting from 0 of course
+                index = (add2-add1)/word_size;
+                //free(sword);
+            } else {
+                printf("bsearch could not found\n");
+            }
+
+            if (found) { // will be surely found!!!
+                // now add this term to the current doc vector
+                strcpy(DVector[d_size].word, tokens[i]);
+                DVector[d_size].index = index;
+                d_size++;
+
+                if (d_size > DOC_SIZE) {
+                    printf("Doc size exceeds %d!\n", DOC_SIZE);
                     exit(1);
                 }
-
-                strcpy(sword->a_word,tokens[i]);
-                word = (WP) bsearch(sword->a_word ,WordList, word_no_in_list+1, sizeof(WordList[0]), lex_order);
-
-                if (word) {
-                    found = 1;
-                    add1 = (off_t) WordList;
-                    add2 = (off_t) word;
-                    word_size = sizeof(Word);
-                    // Note that, the expression gives exactly the array index of WordList, starting from 0 of course
-                    index = (add2-add1)/word_size;
-                    //free(sword);
-                } else {
-                    printf("bsearch could not found\n");
-                }
-
-                if (found) { // will be surely found!!!
-                    // now add this term to the current doc vector
-                    strcpy(DVector[d_size].word, tokens[i]);
-                    DVector[d_size].index = index;
-                    d_size++;
-
-                    if (d_size > DOC_SIZE) {
-                        printf("Doc size exceeds %d!\n", DOC_SIZE);
-                        exit(1);
-                    }
-                } else { // not found
-                    printf("!!!!!!!In the second pass, could not found an index %s in wordlist\n", tokens[i]);
-                    err++;
-                }
+            } else { // not found
+                printf("!!!!!!!In the second pass, could not found an index %s in wordlist\n", tokens[i]);
             }
 
             tokens_left++;
@@ -289,14 +245,6 @@ double dvec_length(int size) {
         sum += DVector[i].term_weight * DVector[i].term_weight;
 
     return (sqrt(sum));
-}
-
-void dvec_normalize (int size) {
-    int i;
-    double length = dvec_length(size);
-
-    for (i=0; i<size; i++)
-        DVector[i].term_weight = DVector[i].term_weight/length;
 }
 
 void initialize_accumulator() {
@@ -395,10 +343,6 @@ void run_ranking_query(DocVec *q_vec, int q_size, int q_no, char* original_q_no)
 
     // if (DETAILED_LOG)
     //     fprintf(out, "Processing Q %d\n", q_no);
-
-    QUIT_STOP = 0; // stop condition with quit strategy is reached
-    CONT_STOP = 0; // stop condition with continue strategy is reached
-    nonzero_doc_acc = 0;
 
     for (i = 0; i < q_size; i++) {
         u_stoptimer(&process_time);
@@ -499,7 +443,6 @@ void process_ranked_query(char *rel_name) {
     }
 
     tmp = 0;
-    processing_R = 1;
     fgets(line, MAX_TUPLE_LENGTH, ifp); // read blank line
 
     while (!feof(ifp)) {
@@ -699,6 +642,4 @@ void main(int argc,char *argv[]) {
 
     free(WordList);
     free(buffer);
-
-    // TODO: free allocated memory areas where it is possible.
 }
