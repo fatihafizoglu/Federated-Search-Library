@@ -182,26 +182,6 @@ void process_tuple(char *line, long int tuple_no) {
     free(sword);
 }
 
-void extract_content(char *line, char *content) {
-    char tmp[MAX_TUPLE_LENGTH];
-    int i, j = 0;
-    int opened = 0; // to denote if a tag is open or not
-
-    for (i=0; i<strlen(line); i++) {
-        if (line[i] == '<')
-            opened = 1;
-        else if (line[i] == '>')
-            opened = 0;
-        else if (!opened) {
-            tmp[j] = line[i];
-            j++;
-        }
-    }
-
-    tmp [j] = NULL;
-    strcpy(content, tmp);
-}
-
 void initialize_doc_vec(int d_size) {
     int i;
 
@@ -332,6 +312,10 @@ void run_ranking_query(DocVec *q_vec, int q_size, int q_no, char* original_q_no)
     for (j = 0; j < WRITE_BEST_N; j++) {
         fprintf(out_trec, "%d\tQ0\t%d\t%d\t%lf\tfs\n", q_no + 1, results[j].doc_index, j + 1, results[j].sim_rank);
     }
+
+    /* XXX  For q_no results are ready! Now gather subquery results. */
+
+
 }
 
 void process_ranked_query(char *rel_name) {
@@ -339,7 +323,6 @@ void process_ranked_query(char *rel_name) {
     long int tmp;
     int  i,j,k;
     char temp_line[MAX_TUPLE_LENGTH];
-    char content[MAX_TUPLE_LENGTH];
     int max_tf;
     DocVec q_vec[QSIZE];
     long int token_freq, next;
@@ -361,8 +344,7 @@ void process_ranked_query(char *rel_name) {
     while (!feof(ifp)) {
         sprintf(original_doc_id,"%ld", doc_no);
         line[strlen(line)-1] = NULL;
-        extract_content(line, content);
-        process_tuple(content, doc_no);
+        process_tuple(line, doc_no);
         qsort(DVector, d_size, sizeof(DVector[0]), index_order);
 
         count = 0;

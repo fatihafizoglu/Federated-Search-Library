@@ -59,8 +59,6 @@ void read_next_value(char *into);
  * field of the relatipn */
 void process_tuple(char *line, long int tuple_no);
 
-void extract_content(char *line, char *content);
-
 /* initializes the doc vector for the *current* doc */
 void initialize_doc_vec(int d_size);
 
