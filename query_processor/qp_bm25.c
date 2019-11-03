@@ -13,7 +13,7 @@ char stopwords[NOSTOPWORD][50] ; // to keep stop words
 DocVec *DVector; // [DOC_SIZE]; // to keep all term in a doc with dublications
 int d_size=0; // length of current doc
 
-long int doc_no = 0; // total no_of docs in all files
+long int q_no = 0; // total no_of docs in all files
 
 FILE * ifp, *eval_out;
 FILE *entry_ifp, *out_trec;
@@ -104,7 +104,7 @@ void read_next_value(char *into) {
     strcpy(tName2, tempo);
 }
 
-void process_tuple(char *line, long int tuple_no) {
+void process_tuple(char *line) {
     char *tName, *rName;
     int trie_key;
     char tokens[TOKEN_NO][TOKEN_SIZE];
@@ -119,7 +119,7 @@ void process_tuple(char *line, long int tuple_no) {
 
     read_next_value(str);
 
-    while  (  *str != NULL) {
+    while  (*str != NULL) {
         strcpy(tokens[token_found],str);
         token_found++;
         read_next_value(str);
@@ -257,7 +257,7 @@ void TOs4ExtractionSelectionSorting(int q_size) {
     freeMaxHeap(&maxScoresHeap);
 }
 
-void run_ranking_query(DocVec *q_vec, int q_size, int q_no, char* original_q_no) {
+void run_ranking_query(DocVec *q_vec, int q_size) {
     int i, j, k;
     off_t address;
     int s_pt, e_pt;
@@ -274,7 +274,6 @@ void run_ranking_query(DocVec *q_vec, int q_size, int q_no, char* original_q_no)
     nonzero_acc_nodes = 0;
 
     initialize_accumulator();
-
 
     for (i = 0; i < q_size; i++) {
         WordList[q_vec[i].index].postinglist = (InvEntry *) malloc(sizeof(InvEntry)*WordList[q_vec[i].index].occurs_in_docs);
@@ -313,9 +312,7 @@ void run_ranking_query(DocVec *q_vec, int q_size, int q_no, char* original_q_no)
         fprintf(out_trec, "%d\tQ0\t%d\t%d\t%lf\tfs\n", q_no + 1, results[j].doc_index, j + 1, results[j].sim_rank);
     }
 
-    /* XXX  For q_no results are ready! Now gather subquery results. */
-
-
+    /* XXX  Option1: For q_no results are ready! Now gather subquery results. */
 }
 
 void process_ranked_query(char *rel_name) {
@@ -330,8 +327,6 @@ void process_ranked_query(char *rel_name) {
     char header[30];
     char open_tag[30], close_tag[30];
     char doc_id[20];
-    char original_doc_id[10];
-    double avg_tf = 0; // for CARMEL
 
     if (!(ifp = fopen(rel_name, "rt"))) {
         printf("file not found!\n");
@@ -342,13 +337,12 @@ void process_ranked_query(char *rel_name) {
     fgets(line, MAX_TUPLE_LENGTH, ifp); // read blank line
 
     while (!feof(ifp)) {
-        sprintf(original_doc_id,"%ld", doc_no);
         line[strlen(line)-1] = NULL;
-        process_tuple(line, doc_no);
+        process_tuple(line);
         qsort(DVector, d_size, sizeof(DVector[0]), index_order);
 
         count = 0;
-        token_freq=1;   // the freq. of a given token is set to 1 initially
+        token_freq = 1;   // the freq. of a given token is set to 1 initially
         max_tf = -1;
 
         for (i=0; i < d_size; i++) {
@@ -366,23 +360,18 @@ void process_ranked_query(char *rel_name) {
                 max_tf = token_freq;
         }
 
-        avg_tf = 0;
-        for (i = 0; i < count; i++)
-            avg_tf += q_vec[i].rank_in_doc;
-
-        avg_tf /= count;
-
-        run_ranking_query(q_vec, count, doc_no, original_doc_id);
+        run_ranking_query(q_vec, count);
+        /* XXX  Option2: For q_no results are ready! Now gather subquery results. */
 
         initialize_doc_vec(d_size); // so I avoid fully initializing the doc vec each time
         d_size = 0;
-        doc_no++;
+        q_no++;
 
         fgets(line, MAX_TUPLE_LENGTH, ifp);// read either EOF or blank
     }
 
     fclose (ifp);
-    printf("Doc no: %ld %ld\n", doc_no, tmp);
+    printf("Query no: %ld %ld\n", q_no, tmp);
 }
 
 void main(int argc,char *argv[]) {

@@ -57,7 +57,7 @@ void read_next_value(char *into);
 /* this function would process TName field of a given tuple of a relation
  * processing means tokenzing the words in the TName and locating these in the tokens
  * field of the relatipn */
-void process_tuple(char *line, long int tuple_no);
+void process_tuple(char *line);
 
 /* initializes the doc vector for the *current* doc */
 void initialize_doc_vec(int d_size);
@@ -75,7 +75,7 @@ void sorting();
 /* Method TOs4: A min-heap is used for selecting accumulators */
 void TOs4ExtractionSelectionSorting(int q_size);
 
-void run_ranking_query(DocVec *q_vec, int q_size, int q_no, char* original_q_no);
+void run_ranking_query(DocVec *q_vec, int q_size);
 void process_ranked_query(char * rel_name);
 
 void main(int argc,char *argv[]);
