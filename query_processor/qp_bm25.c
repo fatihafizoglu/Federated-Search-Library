@@ -1,8 +1,6 @@
-#include "fsmem18.h"
+#include "qp_bm25.h"
 
 struct staticMaxHeapStruct maxScoresHeap;
-timer process_time; // total time
-double t_sum = 0;
 
 Word *WordList;
 InvEntry *buffer;
@@ -18,7 +16,7 @@ int d_size=0; // length of current doc
 long int doc_no = 0; // total no_of docs in all files
 
 FILE * ifp, *eval_out;
-FILE /** out,*/ *entry_ifp, *out_trec;
+FILE *entry_ifp, *out_trec;
 
 char tName2[MAX_TUPLE_LENGTH];
 
@@ -37,10 +35,6 @@ off_t sum_nonzero_acc_nodes = 0;
 
 double disk_read_time_per_query = 0;
 double sum_disk_read_time_per_query = 0;
-
-extern double total_disk_time;
-extern double total_sequential_access;
-extern double total_random_access;
 
 int *unique_terms;
 int *total_tf_per_doc;
@@ -69,16 +63,6 @@ int FindStopIndex(int start,int end,char word[50]) {
         return(FindStopIndex(index+1,end,word));
     else
         return(index);
-}
-
-double v_length(Vector *Vect) {
-    int i;
-    double sum = 0;
-
-    for (i=0; i<Vect->nonzero_elements; i++)
-        sum += Vect->VecElement[i].weight * Vect->VecElement[i].weight;
-
-    return (sqrt(sum));
 }
 
 int index_order(DV dvec1, DV dvec2) {
@@ -196,14 +180,6 @@ void process_tuple(char *line, long int tuple_no) {
     } //end_for
 
     free(sword);
-    // if (DETAILED_LOG) {
-    //     fprintf(out, "%ld ", tuple_no);
-    //     for (i=0; i<tokens_left; i++) {
-    //         fprintf (out,"%s ",final_tokens[i]); // debugging
-    //         fflush(out);
-    //     }
-    //     fprintf(out, "\n");
-    // }
 }
 
 void extract_content(char *line, char *content) {
@@ -237,16 +213,6 @@ void initialize_doc_vec(int d_size) {
     }
 }
 
-double dvec_length(int size) {
-    int i;
-    double sum = 0;
-
-    for (i=0; i<size; i++)
-        sum += DVector[i].term_weight * DVector[i].term_weight;
-
-    return (sqrt(sum));
-}
-
 void initialize_accumulator() {
     int i;
 
@@ -264,15 +230,6 @@ void initialize_results() {
         results[i].doc_index = 0;
         results[i].sim_rank = 0;
     }
-}
-
-int ordering (RP p, RP q) {
-    if (p->sim_rank > q->sim_rank)
-        return -1;
-    if (p->sim_rank < q->sim_rank)
-        return 1;
-
-    return 0;
 }
 
 void selection(double score, int docId) {
@@ -308,7 +265,7 @@ void sorting() {
 void TOs4ExtractionSelectionSorting(int q_size) {
     int i;
 
-    createMaxHeap(&maxScoresHeap, TOP_N);
+    createMaxHeap(&maxScoresHeap, BEST_DOCS);
     for (i = 1; i < DOC_NUM; i++)
         if (accumulator[i].sim_rank)
         {
@@ -338,25 +295,14 @@ void run_ranking_query(DocVec *q_vec, int q_size, int q_no, char* original_q_no)
 
     initialize_accumulator();
 
-    u_cleartimer(&process_time);
-    u_starttimer(&process_time);
-
-    // if (DETAILED_LOG)
-    //     fprintf(out, "Processing Q %d\n", q_no);
 
     for (i = 0; i < q_size; i++) {
-        u_stoptimer(&process_time);
-        t_sum += process_time.time;
         WordList[q_vec[i].index].postinglist = (InvEntry *) malloc(sizeof(InvEntry)*WordList[q_vec[i].index].occurs_in_docs);
         address = WordList[q_vec[i].index].disk_address;
         fseeko(entry_ifp, address, 0);
         fread(WordList[q_vec[i].index].postinglist, sizeof(InvEntry), WordList[q_vec[i].index].occurs_in_docs, entry_ifp);
 
-        u_cleartimer(&process_time);
-        u_starttimer(&process_time);
-
         total_list_length += WordList[q_vec[i].index].occurs_in_docs;
-        uncompressed_DISK_TIME(WordList[q_vec[i].index].occurs_in_docs);
 
         for (j = 0; j < WordList[q_vec[i].index].occurs_in_docs; j++) {
             doc_weight = 0;
@@ -371,39 +317,12 @@ void run_ranking_query(DocVec *q_vec, int q_size, int q_no, char* original_q_no)
         free(WordList[q_vec[i].index].postinglist);
     }
 
-    if (!USE_HEAP) {
-        s_pt = 0;
-        e_pt = DOC_NUM - 1;
-
-        while (s_pt < e_pt) {
-            while (accumulator[s_pt].sim_rank != 0)
-                s_pt++;
-
-            while (accumulator[e_pt].sim_rank == 0)
-                e_pt--;
-
-            if (s_pt < e_pt) {
-                accumulator[s_pt].doc_index = accumulator[e_pt].doc_index;
-                accumulator[s_pt].sim_rank = accumulator[e_pt].sim_rank;
-                accumulator[e_pt].doc_index = 0;
-                accumulator[e_pt].sim_rank = 0;
-            }
-        }
-        qsort(accumulator, s_pt, sizeof(accumulator[0]), ordering);
-
-    } else {
-        TOs4ExtractionSelectionSorting(q_size);
-    }
-
-    // TODO: diversify documents in results[BEST_DOCS] array
+    TOs4ExtractionSelectionSorting(q_size);
 
     sum_list_length += total_list_length;
     sum_node_access += total_node_access;
     sum_nonzero_acc_nodes += nonzero_acc_nodes;
     sum_disk_read_time_per_query += disk_read_time_per_query;
-
-    u_stoptimer(&process_time);
-    t_sum += process_time.time;
 
     for (j = 0; j < BEST_DOCS; j++)
         if (results[j].sim_rank == 0)
@@ -412,19 +331,13 @@ void run_ranking_query(DocVec *q_vec, int q_size, int q_no, char* original_q_no)
     WRITE_BEST_N = j;
     for (j = 0; j < WRITE_BEST_N; j++) {
         fprintf(out_trec, "%d\tQ0\t%d\t%d\t%lf\tfs\n", q_no + 1, results[j].doc_index, j + 1, results[j].sim_rank);
-        //accumulator[j].sim_rank = 0;
     }
-
-    // if (DETAILED_LOG) {
-    //     fprintf(out, "While processing %d:", q_no);
-    //     fprintf(out, "Computed disk access time: %11.3lf\n",disk_read_time_per_query);
-    // }
 }
 
 void process_ranked_query(char *rel_name) {
     char line[MAX_TUPLE_LENGTH];
     long int tmp;
-    int  i,j,k,p;
+    int  i,j,k;
     char temp_line[MAX_TUPLE_LENGTH];
     char content[MAX_TUPLE_LENGTH];
     int max_tf;
@@ -477,12 +390,7 @@ void process_ranked_query(char *rel_name) {
 
         avg_tf /= count;
 
-        for (p=0; p < RUN_NO; p++) {
-            run_ranking_query(q_vec, count, doc_no, original_doc_id);
-        }
-
-        // if (DETAILED_LOG)
-        //     fprintf(out,"query:%d process time: %11.3lf\n",doc_no, process_time.time);
+        run_ranking_query(q_vec, count, doc_no, original_doc_id);
 
         initialize_doc_vec(d_size); // so I avoid fully initializing the doc vec each time
         d_size = 0;
@@ -524,13 +432,8 @@ void main(int argc,char *argv[]) {
     char dummy[100];
     char look[10];
 
-    total_random_access = 0;
-    total_sequential_access = 0;
-    total_disk_time = 0;
-
     strcpy(query_file, argv[4]);
 
-    // out = fopen("log.txt", "wt");
     out_trec = fopen(argv[5], "wt");
     ifp = fopen("stopword.lst","rt");
 
@@ -538,9 +441,6 @@ void main(int argc,char *argv[]) {
         fscanf(ifp,"%s\n", stopwords[i]);
 
     fclose(ifp);
-
-    for (i = 1; i < DOC_NUM; i++)
-        doc_lengths[i] = 0;
 
     if (!(ifp = fopen(argv[3],"rt"))) {
         printf("CARMEL SMART doc_lengths file is not found!\n");
@@ -619,25 +519,6 @@ void main(int argc,char *argv[]) {
 
     process_ranked_query(query_file);
 
-    // if (DETAILED_LOG)
-    //     fprintf(out,"Total query process time: %11.3lf\n", t_sum/(float)(RUN_NO * QUERY_NO));
-
-    // fclose(out);
-
-    // eval_out = fopen("stats.txt", "wt");
-    //
-    // fprintf(eval_out,"no of results returned: top %d\n", TOP_N);
-    // fprintf(eval_out, "total and avg total list length (over all queries): %lld %lf\n",sum_list_length, sum_list_length/(double) (QUERY_NO*RUN_NO));
-    // fprintf(eval_out, "total and avg total node access (over all queries): %lld %lf\n",sum_node_access, sum_node_access/(double) (QUERY_NO*RUN_NO));
-    // fprintf(eval_out, "total and avg nonzero acc nodes(over all queries): %lld %lf\n",sum_nonzero_acc_nodes, sum_nonzero_acc_nodes/(double) (QUERY_NO*RUN_NO));
-    // fprintf(eval_out,"Total query process time: %11.3lf\n", t_sum/(float)(RUN_NO * QUERY_NO));
-    // fprintf(eval_out,"Computed (theoretically) disk read time per query (avg): %11.3lf\n", total_disk_time/(float)(RUN_NO*QUERY_NO));
-    // fprintf(eval_out,"Computed (theoretically) seq disk read time (avg): %11.3lf\n", total_sequential_access/(float)(RUN_NO*QUERY_NO));
-    // fprintf(eval_out,"Computed (theoretically) random disk read time (avg): %11.3lf\n", total_random_access/(float)(RUN_NO*QUERY_NO));
-    // fprintf(eval_out,"Total query process time: %11.3lf\n", t_sum/(float)(RUN_NO * QUERY_NO));
-    // fprintf(eval_out,"total and avg nonzero acc nodes(over all queries): %lld %lf\n",sum_nonzero_acc_nodes, sum_nonzero_acc_nodes/(double) (QUERY_NO*RUN_NO));
-    //
-    // fclose(eval_out);
     fclose(entry_ifp);
 
     free(WordList);

@@ -7,31 +7,27 @@
 #include <ctype.h>
 #include <math.h>
 
-#include "ulib.h"
-#include "sglobal.h"
 #include "staticMaxHeap.h"
 
-#define STOP_MODE 1 //if 1, remove stopwords form the query otherwise keep them
-#define USE_HEAP 1
-#define AND_MODE 0
+#define NOSTOPWORD 419
+#define MAX_TUPLE_LENGTH 300000 // wrt. the tuple definition below...
+#define WORD_NO 164000000  // SORUN: Bu  ne kadar buyuk olabilir? I hope it will work
+#define TOKEN_NO  20000 // max no of tokens in a field: now it is token no at each doc line
+#define TOKEN_SIZE 21 // max length of a token
+#define DOC_SIZE 600000
+#define DOC_NUM 50220539 /* exact number: 50220538 */ // get 1 more than exact value, so is word no
+#define BUFFERSIZE DOC_NUM
 
-#define NO_PRUNE 0
-#define STOP 1
-#define QUIT 2
-#define CONT 3
+#define QSIZE 3000
+#define BEST_DOCS 1000
 
-#define PRUNE_METHOD NO_PRUNE
-#define DOC_PRUNE_ACC 20000
+double BM25_K1_CONSTANT = 1.2;
+double BM25_B_CONSTANT = 0.5;
 
-typedef struct vec {
-    int index;
-    double weight;
-} *VP, VectorComp;
-
-typedef struct vec2 {
-    VectorComp VecElement[1];
-    int nonzero_elements;
-} Vector;
+typedef struct inv_ent {
+    int doc_id;
+    int weight;
+} InvEntry;
 
 typedef struct words {
     char a_word[TOKEN_SIZE]; // for handling queries
@@ -54,15 +50,6 @@ typedef struct doc_ve {
 int separator(char ch);
 int FindStopIndex(int start,int end,char word[50]);
 
-/* compute vector length */
-double v_length(Vector *Vect);
-
-void v_normalize(Vector *v);
-double v_dotProduct(Vector *v1, Vector *v2);
-
-/* compute the cosine of angle between two vectors */
-double v_VecCos( Vector *v1, Vector *v2);
-
 int index_order(DV dvec1, DV dvec2);
 int lex_order(char *s1, char *s2);
 void read_next_value(char *into);
@@ -77,15 +64,8 @@ void extract_content(char *line, char *content);
 /* initializes the doc vector for the *current* doc */
 void initialize_doc_vec(int d_size);
 
-/* compute vector length */
-double dvec_length(int size);
-
-void dvec_normalize (int size);
 void initialize_accumulator();
 void initialize_results();
-
-/* decreasing order */
-int ordering (RP p, RP q);
 
 /* inserts an accumulator into the set of top s accumulators,
  * if its score is higher than the minimum score in the heap */
