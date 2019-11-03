@@ -193,11 +193,7 @@ void process_tuple(char *line, long int tuple_no) {
         for (q=0; q<strlen(tokens[i]); q++)
             tokens[i][q] = tolower(tokens[i][q]);
 
-#if (STOP_MODE)
         if (FindStopIndex(0,NOSTOPWORD-1,tokens[i]) == -1) {
-#elif (!STOP_MODE)
-        if (1) {
-#endif
             strcpy(tmp, tokens[i]);
             strcpy(final_tokens[tokens_left], tokens[i]);
             found=0;
@@ -365,29 +361,12 @@ void TOs4ExtractionSelectionSorting(int q_size) {
     int i;
 
     createMaxHeap(&maxScoresHeap, TOP_N);
-
     for (i = 1; i < DOC_NUM; i++)
-#if (AND_MODE)
-        if (accumulator[i].sim_rank && accumulator[i].last_updated_by == q_size)
-#else
         if (accumulator[i].sim_rank)
-#endif
         {
             nonzero_acc_nodes++;
-
-#if ((SIM_MEASURE == TFIDF) || (SIM_MEASURE == MF8))
-            accumulator[i].sim_rank /= doc_lengths[i];
-#elif (SIM_MEASURE == CARMEL_SMART)
-            accumulator[i].sim_rank /= (double)(sqrt(0.8*avg_unique + 0.2 *unique_terms[i]));
-#elif (SIM_MEASURE == DIRICHLET)
-            accumulator[i].sim_rank += total_no_of_terms_in_query * (double) logf( DIRICHLET_CONSTANT /( (double) DIRICHLET_CONSTANT + total_tf_per_doc[i]));
-#endif
             selection(accumulator[i].sim_rank, i);
         }
-
-#if (AND_MODE)
-        else accumulator[i].sim_rank = 0;
-#endif
 
     sorting();
     freeMaxHeap(&maxScoresHeap);
@@ -432,118 +411,19 @@ void run_ranking_query(DocVec *q_vec, int q_size, int q_no, char* original_q_no)
         u_cleartimer(&process_time);
         u_starttimer(&process_time);
 
-#if (PRUNE_METHOD == NO_PRUNE)
         total_list_length += WordList[q_vec[i].index].occurs_in_docs;
         uncompressed_DISK_TIME(WordList[q_vec[i].index].occurs_in_docs);
-
-#if (SIM_MEASURE == DIRICHLET)
-        WordList[q_vec[i].index].term_tf_sum = 0;
-        for (j=0; j<WordList[q_vec[i].index].occurs_in_docs; j++)
-            WordList[q_vec[i].index].term_tf_sum += WordList[q_vec[i].index].postinglist[j].weight;
-#endif
 
         for (j = 0; j < WordList[q_vec[i].index].occurs_in_docs; j++) {
             doc_weight = 0;
-#if (SIM_MEASURE == TFIDF)
-            doc_weight= ((double)(WordList[q_vec[i].index].postinglist[j].weight) * WordList[q_vec[i].index].CFCweight);
-            accumulator[WordList[q_vec[i].index].postinglist[j]/*buffer[j]*/.doc_id].sim_rank += doc_weight * q_vec[i].term_weight;
-#elif (SIM_MEASURE == MF8)
-            doc_weight= 1 + (log((double)(WordList[q_vec[i].index].postinglist[j].weight)));
-            accumulator[WordList[q_vec[i].index].postinglist[j]/*buffer[j]*/.doc_id].sim_rank += doc_weight * q_vec[i].term_weight;
-#elif (SIM_MEASURE == CARMEL_SMART)
-            doc_id = WordList[q_vec[i].index].postinglist[j].doc_id;
-            //asagidakinin son kismi CFC ise formul daha efficient yazilabilir,ama biz CFC'yi log10 yapmis olabilirz
-            // orjinal formul aldik -0.5 var, o yuzden CFC kullanilamadi...ya da o da FIX hesaplanmali effciency dsgerekirse
-            doc_weight = (log2(1+WordList[q_vec[i].index].postinglist[j].weight) / (double) log2(1 + (total_tf_per_doc[doc_id]/(double) unique_terms[doc_id]))) * log2(DOC_NUM / (double)WordList[q_vec[i].index].occurs_in_docs);
-            accumulator[doc_id].sim_rank += doc_weight * q_vec[i].term_weight;
-            if (accumulator[doc_id].sim_rank == 0)
-                printf ("ehh %d %d %lf\n", doc_id, WordList[q_vec[i].index].postinglist[j].weight, doc_weight);
-#elif (SIM_MEASURE == BM25)
             doc_id = WordList[q_vec[i].index].postinglist[j].doc_id;
             doc_weight = WordList[q_vec[i].index].postinglist[j].weight;
             q_vec[i].term_weight = log( (REMAINING_DOC_NUM-WordList[q_vec[i].index].occurs_in_docs + 0.5) / (double)(WordList[q_vec[i].index].occurs_in_docs + 0.5));
-#if (AND_MODE)
-            if (accumulator[doc_id].last_updated_by == i) {
-                accumulator[doc_id].sim_rank += q_vec[i].term_weight * (doc_weight * (BM25_K1_CONSTANT + 1)) / (doc_weight + BM25_K1_CONSTANT *((1-BM25_B_CONSTANT)+(BM25_B_CONSTANT*(total_tf_per_doc[doc_id]/avg_total_tf ))));
-                accumulator[doc_id].last_updated_by++;
-            } else {
-                accumulator[doc_id].sim_rank=0;
-                accumulator[doc_id].last_updated_by = -1;
-            }
-#else
-            accumulator[doc_id].sim_rank += q_vec[i].term_weight * (doc_weight * (BM25_K1_CONSTANT + 1)) / (doc_weight + BM25_K1_CONSTANT *((1-BM25_B_CONSTANT)+(BM25_B_CONSTANT*(total_tf_per_doc[doc_id]/avg_total_tf ))));
-#endif
 
-#elif (SIM_MEASURE == DIRICHLET)
-            doc_id = WordList[q_vec[i].index].postinglist[j].doc_id;
-            doc_weight= (double)(collection_total_tf / (double) (WordList[q_vec[i].index].term_tf_sum * DIRICHLET_CONSTANT));
-            accumulator[doc_id].sim_rank += (double) logf (1 + WordList[q_vec[i].index].postinglist[j].weight * doc_weight) ;
-#endif
+            accumulator[doc_id].sim_rank += q_vec[i].term_weight * (doc_weight * (BM25_K1_CONSTANT + 1)) / (doc_weight + BM25_K1_CONSTANT *((1-BM25_B_CONSTANT)+(BM25_B_CONSTANT*(total_tf_per_doc[doc_id]/avg_total_tf ))));
             total_node_access++;
         }
 
-#elif (PRUNE_METHOD==QUIT)
-        if (!QUIT_STOP) {
-            total_list_length += WordList[q_vec[i].index].occurs_in_docs;
-            uncompressed_DISK_TIME(WordList[q_vec[i].index].occurs_in_docs);
-
-            for (j = 0; j<WordList[q_vec[i].index].occurs_in_docs; j++) {
-                doc_weight=0;
-
-#if (SIM_MEASURE == TFIDF)
-                doc_weight= ((double)(WordList[q_vec[i].index].postinglist[j].weight) * WordList[q_vec[i].index].CFCweight);
-#elif (SIM_MEASURE == MF8)
-                doc_weight= 1 + (log((double)(WordList[q_vec[i].index].postinglist[j].weight)));
-#endif
-                if (accumulator[WordList[q_vec[i].index].postinglist[j]/*buffer[j]*/.doc_id].sim_rank==0)
-                    nonzero_doc_acc++;
-
-                accumulator[WordList[q_vec[i].index].postinglist[j]/*buffer[j]*/.doc_id].sim_rank += doc_weight * q_vec[i].term_weight;
-                total_node_access++;
-            }
-        }
-#elif (PRUNE_METHOD==CONT)
-        total_list_length += WordList[q_vec[i].index].occurs_in_docs;
-        uncompressed_DISK_TIME(WordList[q_vec[i].index].occurs_in_docs);
-
-        for (j=0; j<WordList[q_vec[i].index].occurs_in_docs; j++) {
-            if (!CONT_STOP) {
-                doc_weight=0;
-
-#if (SIM_MEASURE == TFIDF)
-                doc_weight= ((double)(WordList[q_vec[i].index].postinglist[j].weight) * WordList[q_vec[i].index].CFCweight);
-#elif (SIM_MEASURE == MF8)
-                doc_weight= 1 + (log((double)(WordList[q_vec[i].index].postinglist[j].weight)));
-#endif
-                if (accumulator[WordList[q_vec[i].index].postinglist[j]/*buffer[j]*/.doc_id].sim_rank==0)
-                    nonzero_doc_acc++;
-
-                accumulator[WordList[q_vec[i].index].postinglist[j]/*buffer[j]*/.doc_id].sim_rank += doc_weight * q_vec[i].term_weight;
-                total_node_access++;
-
-            } else {
-                if (accumulator[WordList[q_vec[i].index].postinglist[j]/*buffer[j]*/.doc_id].sim_rank != 0) {
-                    doc_weight=0;
-
-#if (SIM_MEASURE == TFIDF)
-                    doc_weight= ((double)(WordList[q_vec[i].index].postinglist[j].weight) * WordList[q_vec[i].index].CFCweight);
-#elif (SIM_MEASURE == MF8)
-                    doc_weight= 1 + (log((double)(WordList[q_vec[i].index].postinglist[j].weight)));
-#endif
-
-                    accumulator[WordList[q_vec[i].index].postinglist[j]/*buffer[j]*/.doc_id].sim_rank += doc_weight * q_vec[i].term_weight;
-                }
-            }
-        }
-#endif
-
-#if (PRUNE_METHOD == QUIT)
-        if (nonzero_doc_acc>DOC_PRUNE_ACC)
-            QUIT_STOP = 1;  // or we could directly say break the loop!
-#elif (PRUNE_METHOD == CONT)
-        if (nonzero_doc_acc>DOC_PRUNE_ACC)
-            CONT_STOP = 1;
-#endif
         free(WordList[q_vec[i].index].postinglist);
     }
 
@@ -633,10 +513,6 @@ void process_ranked_query(char *rel_name) {
         token_freq=1;   // the freq. of a given token is set to 1 initially
         max_tf = -1;
 
-#if (SIM_MEASURE == DIRICHLET)
-        total_no_of_terms_in_query = 0;
-        total_no_of_terms_in_query = d_size;
-#endif
         for (i=0; i < d_size; i++) {
             next = i + 1;
             if (next<d_size && DVector[i].index == DVector[next].index)
@@ -657,28 +533,6 @@ void process_ranked_query(char *rel_name) {
             avg_tf += q_vec[i].rank_in_doc;
 
         avg_tf /= count;
-
-        // set query weights
-        for (i = 0; i < count; i++) {
-#if (SIM_MEASURE == TFIDF)
-            // Indeed a term with rank 0 can not be in this vector...
-            if (q_vec[i].rank_in_doc != 0)
-                q_vec[i].term_weight = (0.5 + 0.5 * (q_vec[i].rank_in_doc/max_tf)) * WordList[q_vec[i].index].CFCweight;
-            else
-                q_vec[i].term_weight = 0;
-#elif (SIM_MEASURE == MF8)
-            if (q_vec[i].rank_in_doc != 0)
-                q_vec[i].term_weight = q_vec[i].rank_in_doc * ((double)WordList[q_vec[i].index].CFCweight/*/  M_LOG2E*/);
-            else
-                q_vec[i].term_weight = 0;
-#elif (SIM_MEASURE == CARMEL_SMART)
-            if (q_vec[i].rank_in_doc != 0)
-                q_vec[i].term_weight = (log2(1+q_vec[i].rank_in_doc)) / (log2(1+avg_tf));
-            else
-                q_vec[i].term_weight = 0;
-#endif
-            // fflush(out);
-        }
 
         for (p=0; p < RUN_NO; p++) {
             run_ranking_query(q_vec, count, doc_no, original_doc_id);
@@ -745,41 +599,11 @@ void main(int argc,char *argv[]) {
     for (i = 1; i < DOC_NUM; i++)
         doc_lengths[i] = 0;
 
-#if (SIM_MEASURE == TFIDF)
-    if (!(ifp = fopen("../createIIS/doc_lengths.txt","rt"))) {
-        printf("doc_lengths file is not found!\n");
-        exit(1);
-    }
-#elif (SIM_MEASURE == MF8)
-    if (!(ifp = fopen("../dVector/doc_lengths_mf8.txt","rt"))) {
-        printf("doc_lengths file is not found!\n");
-        exit(1);
-    }
-#elif ((SIM_MEASURE == CARMEL_SMART) || (SIM_MEASURE == BM25) || (SIM_MEASURE == DIRICHLET) )
     if (!(ifp = fopen(argv[3],"rt"))) {
         printf("CARMEL SMART doc_lengths file is not found!\n");
         exit(1);
     }
-#endif
 
-#if ((SIM_MEASURE == TFIDF) || (SIM_MEASURE == MF8))
-    i = 0;
-    while (!feof(ifp)) {
-        fscanf (ifp, "%d %lf\n", &doc_id, &doc_length);
-        avg_doc_length += doc_length;
-#if (SIM_MEASURE == TFIDF)
-        doc_lengths[doc_id] = doc_length;
-#elif (SIM_MEASURE == MF8)
-        doc_lengths[doc_id] = sqrt (doc_length);
-#endif
-        i++;
-    }
-
-    printf("avg doc length (meaningful for MF8) is %lf\n", avg_doc_length/DOC_NUM);
-    printf("no of docs in doc_lengths file is %d\n", i);
-    printf("and last seen doc id is: %d\n", doc_id);
-
-#elif ((SIM_MEASURE == CARMEL_SMART) || (SIM_MEASURE == BM25) || (SIM_MEASURE == DIRICHLET))
     REMAINING_DOC_NUM = 0;
 
     unique_terms = (int *) malloc(sizeof(int)*DOC_NUM);
@@ -812,7 +636,6 @@ void main(int argc,char *argv[]) {
     avg_total_tf = collection_total_tf /(double)REMAINING_DOC_NUM;  //DOC_NUM;
 
     printf("unique sum %lld avg unique per doc %lf\n", unique_term_sum, avg_unique);
-#endif
 
     if (!(ifp = fopen(argv[1],"rt"))) {
         printf("wlist file not found! %s\n", argv[1]);
