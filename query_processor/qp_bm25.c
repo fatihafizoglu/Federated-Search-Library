@@ -1,49 +1,5 @@
 #include "qp_bm25.h"
 
-struct staticMaxHeapStruct maxScoresHeap;
-
-Word *WordList;
-InvEntry *buffer;
-
-int found = 0;
-int word_no_in_list=0;
-
-char stopwords[NOSTOPWORD][50] ; // to keep stop words
-
-DocVec *DVector; // [DOC_SIZE]; // to keep all term in a doc with dublications
-int d_size=0; // length of current doc
-
-long int q_no = 0; // total no_of docs in all files
-
-FILE * ifp, *eval_out;
-FILE *entry_ifp, *out_trec;
-
-char tName2[MAX_TUPLE_LENGTH];
-
-char final_tokens [TOKEN_NO][TOKEN_SIZE];
-
-Result *accumulator;
-Result *results;
-
-int total_list_length = 0;
-int total_node_access = 0;
-int nonzero_acc_nodes = 0;
-
-off_t sum_list_length = 0;
-off_t sum_node_access = 0;
-off_t sum_nonzero_acc_nodes = 0;
-
-double disk_read_time_per_query = 0;
-double sum_disk_read_time_per_query = 0;
-
-int *unique_terms;
-int *total_tf_per_doc;
-off_t unique_term_sum;
-double avg_unique;
-double avg_total_tf;
-double collection_total_tf;
-int REMAINING_DOC_NUM = 0;
-
 int separator(char ch) {
     if (!isalnum(ch))
         return(1);
@@ -73,7 +29,6 @@ int index_order(DV dvec1, DV dvec2) {
 
     return 0;
 }
-
 
 int lex_order(char *s1, char *s2) {
     return strcmp(s1, s2);
@@ -105,14 +60,13 @@ void read_next_value(char *into) {
 }
 
 void process_tuple(char *line) {
-    char *tName, *rName;
-    int trie_key;
     char tokens[TOKEN_NO][TOKEN_SIZE];
-    char str[MAX_TUPLE_LENGTH], temp[MAX_TUPLE_LENGTH], tmp[MAX_TUPLE_LENGTH];
+    char str[MAX_TUPLE_LENGTH];
     int token_found,i,q, tokens_left, index;
     WP word, sword;
     off_t add1, add2;
     int word_size;
+    int found = 0;
 
     strcpy(tName2, line); // DO NOT change tName2, read_next_val ona gore yazilmis!!!
     token_found = 0;
@@ -120,7 +74,7 @@ void process_tuple(char *line) {
     read_next_value(str);
 
     while  (*str != NULL) {
-        strcpy(tokens[token_found],str);
+        strcpy(tokens[token_found], str);
         token_found++;
         read_next_value(str);
     }
@@ -129,16 +83,14 @@ void process_tuple(char *line) {
 
     // omit the tokens that are found in the stop list
     tokens_left = 0;
-    for (i=0; i<token_found; i++) {
+    for (i = 0; i < token_found; i++) {
         word = NULL;
 
         for (q=0; q<strlen(tokens[i]); q++)
             tokens[i][q] = tolower(tokens[i][q]);
 
         if (FindStopIndex(0,NOSTOPWORD-1,tokens[i]) == -1) {
-            strcpy(tmp, tokens[i]);
-            strcpy(final_tokens[tokens_left], tokens[i]);
-            found=0;
+            found = 0;
 
             if (sword == NULL) {
                 printf("could not allocate space\n");
@@ -155,7 +107,6 @@ void process_tuple(char *line) {
                 word_size = sizeof(Word);
                 // Note that, the expression gives exactly the array index of WordList, starting from 0 of course
                 index = (add2-add1)/word_size;
-                //free(sword);
             } else {
                 printf("bsearch could not found\n");
             }
@@ -176,8 +127,7 @@ void process_tuple(char *line) {
 
             tokens_left++;
         }
-
-    } //end_for
+    }
 
     free(sword);
 }
@@ -199,7 +149,6 @@ void initialize_accumulator() {
     for (i = 0; i < DOC_NUM; i++) {
         accumulator[i].doc_index = i;
         accumulator[i].sim_rank = 0;
-        accumulator[i].last_updated_by = 0;
     }
 }
 
@@ -246,42 +195,30 @@ void TOs4ExtractionSelectionSorting(int q_size) {
     int i;
 
     createMaxHeap(&maxScoresHeap, BEST_DOCS);
-    for (i = 1; i < DOC_NUM; i++)
-        if (accumulator[i].sim_rank)
-        {
-            nonzero_acc_nodes++;
+    for (i = 1; i < DOC_NUM; i++) {
+        if (accumulator[i].sim_rank) {
             selection(accumulator[i].sim_rank, i);
         }
+    }
 
     sorting();
     freeMaxHeap(&maxScoresHeap);
 }
 
 void run_ranking_query(DocVec *q_vec, int q_size) {
-    int i, j, k;
+    int i, j;
     off_t address;
-    int s_pt, e_pt;
-    int saka;
-    int temp_ind;
-    double temp_sim;
     double doc_weight = 0;
     int WRITE_BEST_N;
     int doc_id;
 
-    disk_read_time_per_query  = 0;
-    total_list_length = 0;
-    total_node_access = 0;
-    nonzero_acc_nodes = 0;
-
     initialize_accumulator();
 
     for (i = 0; i < q_size; i++) {
-        WordList[q_vec[i].index].postinglist = (InvEntry *) malloc(sizeof(InvEntry)*WordList[q_vec[i].index].occurs_in_docs);
+        WordList[q_vec[i].index].postinglist = (InvEntry *) malloc(sizeof(InvEntry) * WordList[q_vec[i].index].occurs_in_docs);
         address = WordList[q_vec[i].index].disk_address;
         fseeko(entry_ifp, address, 0);
         fread(WordList[q_vec[i].index].postinglist, sizeof(InvEntry), WordList[q_vec[i].index].occurs_in_docs, entry_ifp);
-
-        total_list_length += WordList[q_vec[i].index].occurs_in_docs;
 
         for (j = 0; j < WordList[q_vec[i].index].occurs_in_docs; j++) {
             doc_weight = 0;
@@ -290,18 +227,12 @@ void run_ranking_query(DocVec *q_vec, int q_size) {
             q_vec[i].term_weight = log( (REMAINING_DOC_NUM-WordList[q_vec[i].index].occurs_in_docs + 0.5) / (double)(WordList[q_vec[i].index].occurs_in_docs + 0.5));
 
             accumulator[doc_id].sim_rank += q_vec[i].term_weight * (doc_weight * (BM25_K1_CONSTANT + 1)) / (doc_weight + BM25_K1_CONSTANT *((1-BM25_B_CONSTANT)+(BM25_B_CONSTANT*(total_tf_per_doc[doc_id]/avg_total_tf ))));
-            total_node_access++;
         }
 
         free(WordList[q_vec[i].index].postinglist);
     }
 
     TOs4ExtractionSelectionSorting(q_size);
-
-    sum_list_length += total_list_length;
-    sum_node_access += total_node_access;
-    sum_nonzero_acc_nodes += nonzero_acc_nodes;
-    sum_disk_read_time_per_query += disk_read_time_per_query;
 
     for (j = 0; j < BEST_DOCS; j++)
         if (results[j].sim_rank == 0)
@@ -312,28 +243,27 @@ void run_ranking_query(DocVec *q_vec, int q_size) {
         fprintf(out_trec, "%d\tQ0\t%d\t%d\t%lf\tfs\n", q_no + 1, results[j].doc_index, j + 1, results[j].sim_rank);
     }
 
-    /* XXX  Option1: For q_no results are ready! Now gather subquery results. */
+    /* XXX  For q_no results are ready! Now gather subquery results. */
+
+    // Before coming here, read subqueries (<q_id> <sq_text>), therefore they will b'ready.
+
+
+
 }
 
 void process_ranked_query(char *rel_name) {
     char line[MAX_TUPLE_LENGTH];
-    long int tmp;
-    int  i,j,k;
-    char temp_line[MAX_TUPLE_LENGTH];
+    int  i;
     int max_tf;
     DocVec q_vec[QSIZE];
     long int token_freq, next;
     int count;
-    char header[30];
-    char open_tag[30], close_tag[30];
-    char doc_id[20];
 
     if (!(ifp = fopen(rel_name, "rt"))) {
         printf("file not found!\n");
         return;
     }
 
-    tmp = 0;
     fgets(line, MAX_TUPLE_LENGTH, ifp); // read blank line
 
     while (!feof(ifp)) {
@@ -361,7 +291,6 @@ void process_ranked_query(char *rel_name) {
         }
 
         run_ranking_query(q_vec, count);
-        /* XXX  Option2: For q_no results are ready! Now gather subquery results. */
 
         initialize_doc_vec(d_size); // so I avoid fully initializing the doc vec each time
         d_size = 0;
@@ -371,23 +300,15 @@ void process_ranked_query(char *rel_name) {
     }
 
     fclose (ifp);
-    printf("Query no: %ld %ld\n", q_no, tmp);
+    printf("Query no: %ld\n", q_no);
 }
 
-void main(int argc,char *argv[]) {
-    int i,j,k, t, q;
-    char file_name[15], file_name2[15];
-    char *f,*r, *m, pre, end;
-    int FileNumber[13];
-    int file_index;
-    char line[MAX_TUPLE_LENGTH];
+int main(int argc,char *argv[]) {
+    int i, q;
     char str[TOKEN_SIZE];
-    int rank;
     int check_doc_num = 0;
-    off_t address;
 
     WordList = (Word *) malloc(sizeof(Word)*WORD_NO);
-    buffer = (InvEntry *) malloc(sizeof(InvEntry) * BUFFERSIZE);
     accumulator = (Result*) malloc(sizeof(Result) * DOC_NUM);
     DVector = (DocVec *) malloc(sizeof(DocVec) * DOC_SIZE);
     results = (Result*) malloc(sizeof(Result)* BEST_DOCS);
@@ -396,12 +317,7 @@ void main(int argc,char *argv[]) {
         printf("could not allocate???\n");
 
     int doc_id;
-    double doc_length;
     char query_file[1000];
-    int total_no_of_postings =0 ;
-    double avg_doc_length;
-    char dummy[100];
-    char look[10];
 
     strcpy(query_file, argv[4]);
 
@@ -468,11 +384,11 @@ void main(int argc,char *argv[]) {
             WordList[word_no_in_list].a_word[q] = tolower(WordList[word_no_in_list].a_word[q]);
 
         if (word_no_in_list>1)
-            WordList[word_no_in_list].disk_address = WordList[word_no_in_list-1].disk_address+(sizeof(InvEntry)*WordList[word_no_in_list-1].occurs_in_docs);
+            WordList[word_no_in_list].disk_address = WordList[word_no_in_list-1].disk_address +
+                                                     (sizeof(InvEntry) * WordList[word_no_in_list-1].occurs_in_docs);
         else
             WordList[word_no_in_list].disk_address = 0;
 
-        total_no_of_postings += WordList[word_no_in_list].occurs_in_docs;
         word_no_in_list++;
     }
 
@@ -480,7 +396,6 @@ void main(int argc,char *argv[]) {
 
     // here word_no_in_list-1 as I start from 1
     printf("i initialized the word list with %d words.\n", word_no_in_list-1);
-    printf ("there are %d postings in the IIS\n", total_no_of_postings);
 
     initialize_doc_vec(DOC_SIZE);
     if (!(entry_ifp = fopen(argv[2],"rb"))) {
@@ -493,5 +408,6 @@ void main(int argc,char *argv[]) {
     fclose(entry_ifp);
 
     free(WordList);
-    free(buffer);
+
+    return 0;
 }

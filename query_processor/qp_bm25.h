@@ -1,5 +1,5 @@
-#ifndef _FSMEM18_H_
-#define _FSMEM18_H_
+#ifndef _QP_BM25_H_
+#define _QP_BM25_H_
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -16,7 +16,6 @@
 #define TOKEN_SIZE 21 // max length of a token
 #define DOC_SIZE 600000
 #define DOC_NUM 50220539 /* exact number: 50220538 */ // get 1 more than exact value, so is word no
-#define BUFFERSIZE DOC_NUM
 
 #define QSIZE 3000
 #define BEST_DOCS 1000
@@ -61,7 +60,6 @@ void process_tuple(char *line);
 
 /* initializes the doc vector for the *current* doc */
 void initialize_doc_vec(int d_size);
-
 void initialize_accumulator();
 void initialize_results();
 
@@ -78,6 +76,35 @@ void TOs4ExtractionSelectionSorting(int q_size);
 void run_ranking_query(DocVec *q_vec, int q_size);
 void process_ranked_query(char * rel_name);
 
-void main(int argc,char *argv[]);
+/* Global variables */
+struct staticMaxHeapStruct maxScoresHeap;
+
+Word *WordList;
+
+int word_no_in_list = 0;
+
+char stopwords[NOSTOPWORD][50] ; // to keep stop words
+
+DocVec *DVector; // [DOC_SIZE]; // to keep all term in a doc with dublications
+int d_size=0; // length of current doc
+
+long int q_no = 0; // total no_of docs in all files
+
+FILE * ifp, *eval_out;
+FILE *entry_ifp, *out_trec;
+
+char tName2[MAX_TUPLE_LENGTH];
+
+Result *accumulator;
+Result *results;
+
+int *unique_terms;
+int *total_tf_per_doc;
+off_t unique_term_sum;
+double avg_unique;
+double avg_total_tf;
+double collection_total_tf;
+int REMAINING_DOC_NUM = 0;
+
 
 #endif

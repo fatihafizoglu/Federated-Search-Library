@@ -3,6 +3,7 @@
 
 CC = gcc
 CFLAGS = -g -Wall -D_FILE_OFFSET_BITS=64 -w
+# Here we are using -w to inhibit warning messages
 
 # ****************************************************
 
