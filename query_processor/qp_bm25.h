@@ -20,6 +20,10 @@
 #define QSIZE 3000
 #define BEST_DOCS 1000
 
+#define NOF_Q 198
+#define MAX_SQ_PER_Q 8
+#define MAX_SQ_LENGTH 1000
+
 double BM25_K1_CONSTANT = 1.2;
 double BM25_B_CONSTANT = 0.5;
 
@@ -46,37 +50,46 @@ typedef struct doc_ve {
     long int address; // address of where to start reading;
 } DocVec, *DV;
 
+/****************************************/
+/**************** Functions *************/
+/****************************************/
+
 int separator(char ch);
 int FindStopIndex(int start,int end,char word[50]);
 
-int index_order(DV dvec1, DV dvec2);
-int lex_order(char *s1, char *s2);
-void read_next_value(char *into);
+int index_order(DV, DV);
+int lex_order(char *, char *);
+void read_next_value(char *);
 
 /* this function would process TName field of a given tuple of a relation
  * processing means tokenzing the words in the TName and locating these in the tokens
  * field of the relatipn */
-void process_tuple(char *line);
+void process_tuple(char *);
 
 /* initializes the doc vector for the *current* doc */
-void initialize_doc_vec(int d_size);
+void initialize_doc_vec(int);
 void initialize_accumulator();
 void initialize_results();
 
 /* inserts an accumulator into the set of top s accumulators,
  * if its score is higher than the minimum score in the heap */
-void selection(double score, int docId);
+void selection(double, int);
 
 /* sorts a given heap of accumulators in decreasing order of their scores */
 void sorting();
 
 /* Method TOs4: A min-heap is used for selecting accumulators */
-void TOs4ExtractionSelectionSorting(int q_size);
+void TOs4ExtractionSelectionSorting(int);
 
-void run_ranking_query(DocVec *q_vec, int q_size);
-void process_ranked_query(char * rel_name);
+void run_ranking_query(DocVec *, int);
+void process_ranked_query(char *);
 
-/* Global variables */
+int load_subqueries(char *);
+
+/****************************************/
+/************ Global variables **********/
+/****************************************/
+
 struct staticMaxHeapStruct maxScoresHeap;
 
 Word *WordList;
@@ -106,5 +119,6 @@ double avg_total_tf;
 double collection_total_tf;
 int REMAINING_DOC_NUM = 0;
 
+char subqueries[NOF_Q][MAX_SQ_PER_Q][MAX_SQ_LENGTH];
 
 #endif
