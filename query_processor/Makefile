@@ -14,14 +14,12 @@ all: staticMaxHeap.o stopword.lst
 debug: CFLAGS += $(DEBUG)
 debug: all
 
+tester: tester.c
+	$(CC) $(CFLAGS) -g tester.c -o qp_tester
+
 staticMaxHeap.o: staticMaxHeap.c staticMaxHeap.h
-	$(CC) -g -c staticMaxHeap.c
 
 clean:
 	rm -f *.o
 	rm -f qp_bm25
-
-distclean:
-	rm -f *.o
-	rm -f qp_bm25
-# currently there is no known output
+	rm -f qp_tester

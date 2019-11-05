@@ -20,7 +20,7 @@
 #define QSIZE 3000
 #define BEST_DOCS 1000
 
-#define NOF_Q 198
+#define NOF_Q 50 // TODO CHANGE IT 198 ? 200
 #define MAX_SQ_PER_Q 8
 #define MAX_SQ_LENGTH 1000
 
