@@ -8,18 +8,16 @@ DEBUG = -g -DDEBUG
 
 # ****************************************************
 
-all: staticMaxHeap.o stopword.lst
-	$(CC) $(CFLAGS) qp_bm25.c -o qp_bm25 staticMaxHeap.o -lm
+all: qp_bm25.c qp_bm25.h staticMaxHeap.c staticMaxHeap.h stopword.lst
+	$(CC) $(CFLAGS) qp_bm25.c staticMaxHeap.c -lm -o qp_bm25
 
 debug: CFLAGS += $(DEBUG)
 debug: all
 
-tester: tester.c
-	$(CC) $(CFLAGS) -g tester.c -o qp_tester
-
-staticMaxHeap.o: staticMaxHeap.c staticMaxHeap.h
+tester: tester.c qp_bm25.c qp_bm25.h staticMaxHeap.c staticMaxHeap.h stopword.lst
+	$(CC) $(CFLAGS) -DTESTER -DDEBUG -g tester.c qp_bm25.c staticMaxHeap.c -lm -o tester
 
 clean:
 	rm -f *.o
 	rm -f qp_bm25
-	rm -f qp_tester
+	rm -f tester

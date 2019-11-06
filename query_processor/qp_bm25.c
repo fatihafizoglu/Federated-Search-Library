@@ -313,7 +313,8 @@ int load_subqueries(char *sq_filename) {
     FILE *sq_file;
     unsigned int q_no, q_no_prev = -1;
     unsigned int sq_no = 0;
-    char temp[MAX_SQ_LENGTH] = "";
+    char line[MAX_SQ_LENGTH+2] = "";
+    char subquery[MAX_SQ_LENGTH] = "";
 
     if (!(sq_file = fopen(sq_filename, "r"))) {
         printf("Subqueries file not found.\n");
@@ -321,34 +322,29 @@ int load_subqueries(char *sq_filename) {
     }
 
     memset(subqueries, 0, NOF_Q*MAX_SQ_PER_Q*MAX_SQ_LENGTH);
-    // for (int i = 0; i < NOF_Q; i++) {
-    //     for (int j = 0; j < MAX_SQ_PER_Q; j++) {
-    //         subqueries[i][j] = '\0';
-    //     }
-    // }
 
-    while (!feof(sq_file)) {
-        fscanf (sq_file, "%u\t%s\n", &(q_no), temp);
-
+    do {
+        if (fgets(line, MAX_SQ_LENGTH+2, sq_file) == NULL) {
+            break;
+        }
+        sscanf(line, "%u\t%[^\n]", &(q_no), subquery);
         if (q_no != q_no_prev) {
             sq_no = 0;
         }
-
-        strcpy(subqueries[q_no-1][sq_no], temp);
-
+        strcpy(subqueries[q_no-1][sq_no], subquery);
 #ifdef DEBUG
         printf("subqueries[%u][%u]: %s\n", q_no-1, sq_no, subqueries[q_no-1][sq_no]);
         fflush(stdout);
 #endif
-
         q_no_prev = q_no;
         sq_no++;
-    }
+    } while (!feof(sq_file));
 
     fclose(sq_file);
     return 0;
 }
 
+#ifndef TESTER
 int main(int argc,char *argv[]) {
     int i, q;
     char str[TOKEN_SIZE];
@@ -462,3 +458,4 @@ int main(int argc,char *argv[]) {
 
     return 0;
 }
+#endif
