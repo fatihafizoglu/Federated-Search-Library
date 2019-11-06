@@ -82,13 +82,12 @@ int load_subqueries(char *);
 struct staticMaxHeapStruct maxScoresHeap;
 
 Word *WordList;
-
 int word_no_in_list = 0;
 
 char stopwords[NOSTOPWORD][50] ; // to keep stop words
 
 long int *DVector; // [DOC_SIZE]; // to keep all term in a doc with dublications
-int d_size=0; // length of current doc
+int d_size = 0; // length of current doc
 
 long int q_no = 0; // total no_of docs in all files
 

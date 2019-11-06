@@ -13,10 +13,10 @@ int FindStopIndex(int start,int end,char word[50]) {
 
     if (length<=0)
         return (-1);
-    else if (strcmp(word,stopwords[index])<0)
-        return(FindStopIndex(start,index-1,word));
-    else if (strcmp(word,stopwords[index])>0)
-        return(FindStopIndex(index+1,end,word));
+    else if (strcmp(word, stopwords[index]) < 0)
+        return(FindStopIndex(start, index-1, word));
+    else if (strcmp(word, stopwords[index]) > 0)
+        return(FindStopIndex(index+1, end, word));
     else
         return(index);
 }
@@ -81,7 +81,7 @@ void process_tuple(char *line) {
     for (i = 0; i < token_found; i++) {
         word = NULL;
 
-        for (q=0; q<strlen(tokens[i]); q++)
+        for (q = 0; q < strlen(tokens[i]); q++)
             tokens[i][q] = tolower(tokens[i][q]);
 
         if (FindStopIndex(0,NOSTOPWORD-1,tokens[i]) == -1) {
@@ -93,7 +93,7 @@ void process_tuple(char *line) {
             }
 
             strcpy(sword->a_word, tokens[i]);
-            word = (Word*) bsearch(sword->a_word ,WordList, word_no_in_list+1, sizeof(WordList[0]), lex_order);
+            word = (Word*) bsearch(sword->a_word, WordList, (word_no_in_list + 1), sizeof(WordList[0]), lex_order);
 
             if (word) {
                 found = 1;
@@ -111,6 +111,7 @@ void process_tuple(char *line) {
                 DVector[d_size] = index;
                 d_size++;
 
+                printf("d_size:%d\n", d_size);
                 if (d_size > DOC_SIZE) {
                     printf("Doc size exceeds %d!\n", DOC_SIZE);
                     exit(1);
@@ -129,7 +130,7 @@ void process_tuple(char *line) {
 void initialize_doc_vec(int d_size) {
     int i;
 
-    for (i=0; i<=d_size; i++) {
+    for (i = 0; i <= d_size; i++) {
         DVector[i] = -1;
     }
 }
@@ -352,7 +353,7 @@ int main(int argc,char *argv[]) {
     char str[TOKEN_SIZE];
     int check_doc_num = 0;
 
-    WordList = (Word*) malloc(sizeof(Word)*WORD_NO);
+    WordList = (Word*) malloc(sizeof(Word) * WORD_NO);
     accumulator = (Result*) malloc(sizeof(Result) * DOC_NUM);
     DVector = (long int*) malloc(sizeof(long int) * DOC_SIZE);
     results = (Result*) malloc(sizeof(Result)* BEST_DOCS);
@@ -368,7 +369,7 @@ int main(int argc,char *argv[]) {
     out_trec = fopen(argv[5], "wt");
     ifp = fopen("stopword.lst","rt");
 
-    for (i=0; i < NOSTOPWORD; i++)
+    for (i = 0; i < NOSTOPWORD; i++)
         fscanf(ifp,"%s\n", stopwords[i]);
 
     fclose(ifp);
@@ -425,10 +426,10 @@ int main(int argc,char *argv[]) {
             &(CFCweight));
         strcpy(WordList[word_no_in_list].a_word, str);
 
-        for (q=0; q<strlen(WordList[word_no_in_list].a_word); q++)
+        for (q = 0; q < strlen(WordList[word_no_in_list].a_word); q++)
             WordList[word_no_in_list].a_word[q] = tolower(WordList[word_no_in_list].a_word[q]);
 
-        if (word_no_in_list>1)
+        if (word_no_in_list > 1)
             WordList[word_no_in_list].disk_address = WordList[word_no_in_list-1].disk_address +
                                                      (sizeof(InvEntry) * WordList[word_no_in_list-1].occurs_in_docs);
         else
