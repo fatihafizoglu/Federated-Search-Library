@@ -97,7 +97,7 @@ void process_tuple(char *line) {
                 exit(1);
             }
 
-            strcpy(sword->a_word,tokens[i]);
+            strcpy(sword->a_word, tokens[i]);
             word = (Word*) bsearch(sword->a_word ,WordList, word_no_in_list+1, sizeof(WordList[0]), lex_order);
 
             if (word) {
@@ -220,9 +220,9 @@ void run_ranking_query(DocVec *q_vec, int q_size) {
             doc_weight = 0;
             doc_id = WordList[q_vec[i].index].postinglist[j].doc_id;
             doc_weight = WordList[q_vec[i].index].postinglist[j].weight;
-            q_vec[i].term_weight = log( (REMAINING_DOC_NUM-WordList[q_vec[i].index].occurs_in_docs + 0.5) / (double)(WordList[q_vec[i].index].occurs_in_docs + 0.5));
-
-            accumulator[doc_id].sim_rank += q_vec[i].term_weight * (doc_weight * (BM25_K1_CONSTANT + 1)) / (doc_weight + BM25_K1_CONSTANT *((1-BM25_B_CONSTANT)+(BM25_B_CONSTANT*(total_tf_per_doc[doc_id]/avg_total_tf ))));
+            // don't need to store term weights
+            double term_weight_of_q_vec_i = log( (REMAINING_DOC_NUM-WordList[q_vec[i].index].occurs_in_docs + 0.5) / (double)(WordList[q_vec[i].index].occurs_in_docs + 0.5));
+            accumulator[doc_id].sim_rank += term_weight_of_q_vec_i * (doc_weight * (BM25_K1_CONSTANT + 1)) / (doc_weight + BM25_K1_CONSTANT *((1-BM25_B_CONSTANT)+(BM25_B_CONSTANT*(total_tf_per_doc[doc_id]/avg_total_tf ))));
         }
 
         free(WordList[q_vec[i].index].postinglist);

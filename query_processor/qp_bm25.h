@@ -41,7 +41,6 @@ typedef struct words {
 
 typedef struct doc_ve {
     long int index;
-    double term_weight; //INDEXER5//
 } DocVec;
 
 /****************************************/
