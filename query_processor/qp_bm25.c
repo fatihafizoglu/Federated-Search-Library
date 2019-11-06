@@ -238,6 +238,7 @@ void run_ranking_query(DocVec *q_vec, int q_size) {
     for (j = 0; j < WRITE_BEST_N; j++) {
         fprintf(out_trec, "%d\tQ0\t%d\t%d\t%lf\tfs\n", q_no + 1, results[j].doc_index, j + 1, results[j].sim_rank);
     }
+#ifdef XQUAD
 
     /* XXX Gather subquery results */
     for (i = 0; i < MAX_SQ_PER_Q; i++) {
@@ -260,6 +261,8 @@ void run_ranking_query(DocVec *q_vec, int q_size) {
     /* XXX Write collected subquery results */
     /* "%u %u %u %lf\n"=<query_id subquery_id doc_id score> */
 
+
+#endif
 }
 
 void process_ranked_query(char *rel_name) {
@@ -450,11 +453,13 @@ int main(int argc,char *argv[]) {
         exit(1);
     }
 
+#ifdef XQUAD
     /* For xQuad, read subqueries. */
     if (load_subqueries(argv[6]) != 0) {
         printf("load_subqueries failed.\n");
         exit(1);
     }
+#endif
 
     process_ranked_query(query_file);
 
