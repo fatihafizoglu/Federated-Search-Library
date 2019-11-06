@@ -21,7 +21,7 @@ int FindStopIndex(int start,int end,char word[50]) {
         return(index);
 }
 
-int index_order(DV dvec1, DV dvec2) {
+int index_order(DocVec* dvec1, DocVec* dvec2) {
     if (dvec1->index > dvec2->index)
         return 1;
     if (dvec1->index < dvec2->index)
@@ -63,7 +63,7 @@ void process_tuple(char *line) {
     char tokens[TOKEN_NO][TOKEN_SIZE];
     char str[MAX_TUPLE_LENGTH];
     int token_found,i,q, tokens_left, index;
-    WP word, sword;
+    Word *word, *sword;
     off_t add1, add2;
     int word_size;
     int found = 0;
@@ -79,7 +79,7 @@ void process_tuple(char *line) {
         read_next_value(str);
     }
 
-    sword = (WP) malloc(sizeof(Word));
+    sword = (Word*) malloc(sizeof(Word));
 
     // omit the tokens that are found in the stop list
     tokens_left = 0;
@@ -98,7 +98,7 @@ void process_tuple(char *line) {
             }
 
             strcpy(sword->a_word,tokens[i]);
-            word = (WP) bsearch(sword->a_word ,WordList, word_no_in_list+1, sizeof(WordList[0]), lex_order);
+            word = (Word*) bsearch(sword->a_word ,WordList, word_no_in_list+1, sizeof(WordList[0]), lex_order);
 
             if (word) {
                 found = 1;
@@ -113,7 +113,6 @@ void process_tuple(char *line) {
 
             if (found) { // will be surely found!!!
                 // now add this term to the current doc vector
-                strcpy(DVector[d_size].word, tokens[i]);
                 DVector[d_size].index = index;
                 d_size++;
 
@@ -136,10 +135,7 @@ void initialize_doc_vec(int d_size) {
     int i;
 
     for (i=0; i<=d_size; i++) {
-        strcpy(DVector[i].word,"");
         DVector[i].index = -1;
-        DVector[i].rank_in_doc = -1;
-        DVector[i].address = -1;
     }
 }
 
@@ -243,20 +239,34 @@ void run_ranking_query(DocVec *q_vec, int q_size) {
         fprintf(out_trec, "%d\tQ0\t%d\t%d\t%lf\tfs\n", q_no + 1, results[j].doc_index, j + 1, results[j].sim_rank);
     }
 
-    /* XXX  For q_no, results are ready! Now gather subquery results. */
+    /* XXX Gather subquery results */
+    for (int i = 0; i < MAX_SQ_PER_Q; i++) {
+        if (strcmp(subqueries[q_no][i], "") == 0) {
+            break;
+        }
+#ifdef DEBUG
+        printf("Processing subquery: %s\n", subqueries[q_no][i]);
+        fflush(stdout);
+#endif
 
-    // Before coming here, read subqueries (<q_id> <sq_text>), therefore they will b'ready.
 
 
+
+
+    }
+
+
+
+    /* XXX Write collected subquery results */
+    /* "%u %u %u %lf\n"=<query_id subquery_id doc_id score> */
 
 }
 
 void process_ranked_query(char *rel_name) {
     char line[MAX_TUPLE_LENGTH];
     int  i;
-    int max_tf;
     DocVec q_vec[QSIZE];
-    long int token_freq, next;
+    long int next;
     int count;
 
     if (!(ifp = fopen(rel_name, "rt"))) {
@@ -272,22 +282,16 @@ void process_ranked_query(char *rel_name) {
         qsort(DVector, d_size, sizeof(DVector[0]), index_order);
 
         count = 0;
-        token_freq = 1;   // the freq. of a given token is set to 1 initially
-        max_tf = -1;
 
-        for (i=0; i < d_size; i++) {
+        for (i = 0; i < d_size; i++) {
             next = i + 1;
-            if (next<d_size && DVector[i].index == DVector[next].index)
-                token_freq++;
+            if (next < d_size && DVector[i].index == DVector[next].index) {
+
+            }
             else {
                 q_vec[count].index = DVector[i].index;
-                q_vec[count].rank_in_doc = token_freq;
                 count++;
-                token_freq = 1;
             }
-
-            if (token_freq > max_tf)
-                max_tf = token_freq;
         }
 
         run_ranking_query(q_vec, count);
@@ -416,11 +420,12 @@ int main(int argc,char *argv[]) {
 
     word_no_in_list = 1;
 
-    while (!feof(ifp)) {
-        fscanf (ifp, "%s %d %lf\n", str, &(WordList[word_no_in_list].occurs_in_docs), &(WordList[word_no_in_list].CFCweight));
-        strcpy(WordList[word_no_in_list].a_word, str);
+    double CFCweight; // unused data
 
-        WordList[word_no_in_list].term_tf_sum = 0;
+    while (!feof(ifp)) {
+        fscanf (ifp, "%s %d %lf\n", str, &(WordList[word_no_in_list].occurs_in_docs),
+            &(CFCweight));
+        strcpy(WordList[word_no_in_list].a_word, str);
 
         for (q=0; q<strlen(WordList[word_no_in_list].a_word); q++)
             WordList[word_no_in_list].a_word[q] = tolower(WordList[word_no_in_list].a_word[q]);

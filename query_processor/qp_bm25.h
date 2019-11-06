@@ -36,19 +36,13 @@ typedef struct words {
     char a_word[TOKEN_SIZE]; // for handling queries
     int occurs_in_docs; // to retrieve inv entires and also weight queries
     off_t disk_address; // address to access in binary file
-    double CFCweight; // CFC weight of the word
     InvEntry *postinglist;
-    double term_tf_sum; // for dirichlet
-    int real_occurs_in_docs; // FOR EXACT RANKING IN PRUNED CASES
-} *WP, Word;
+} Word;
 
 typedef struct doc_ve {
     long int index;
-    char word[70];
-    long int rank_in_doc;
-    double term_weight; //INDEXER5
-    long int address; // address of where to start reading;
-} DocVec, *DV;
+    double term_weight; //INDEXER5//
+} DocVec;
 
 /****************************************/
 /**************** Functions *************/
@@ -57,7 +51,7 @@ typedef struct doc_ve {
 int separator(char ch);
 int FindStopIndex(int start,int end,char word[50]);
 
-int index_order(DV, DV);
+int index_order(DocVec*, DocVec*);
 int lex_order(char *, char *);
 void read_next_value(char *);
 

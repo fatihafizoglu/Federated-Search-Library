@@ -5,4 +5,8 @@ int main(int argc,char *argv[]) {
         printf("load_subqueries failed.\n");
         exit(1);
     }
+
+
+
+    return 0;
 }
