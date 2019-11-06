@@ -240,7 +240,7 @@ void run_ranking_query(DocVec *q_vec, int q_size) {
     }
 
     /* XXX Gather subquery results */
-    for (int i = 0; i < MAX_SQ_PER_Q; i++) {
+    for (i = 0; i < MAX_SQ_PER_Q; i++) {
         if (strcmp(subqueries[q_no][i], "") == 0) {
             break;
         }
