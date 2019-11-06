@@ -21,13 +21,8 @@ int FindStopIndex(int start,int end,char word[50]) {
         return(index);
 }
 
-int index_order(DocVec* dvec1, DocVec* dvec2) {
-    if (dvec1->index > dvec2->index)
-        return 1;
-    if (dvec1->index < dvec2->index)
-        return -1;
-
-    return 0;
+int cmpfunc (const void *a, const void *b) {
+   return ( *(long int*)a - *(long int*)b );
 }
 
 int lex_order(char *s1, char *s2) {
@@ -113,7 +108,7 @@ void process_tuple(char *line) {
 
             if (found) { // will be surely found!!!
                 // now add this term to the current doc vector
-                DVector[d_size].index = index;
+                DVector[d_size] = index;
                 d_size++;
 
                 if (d_size > DOC_SIZE) {
@@ -135,7 +130,7 @@ void initialize_doc_vec(int d_size) {
     int i;
 
     for (i=0; i<=d_size; i++) {
-        DVector[i].index = -1;
+        DVector[i] = -1;
     }
 }
 
@@ -201,7 +196,7 @@ void TOs4ExtractionSelectionSorting(int q_size) {
     freeMaxHeap(&maxScoresHeap);
 }
 
-void run_ranking_query(DocVec *q_vec, int q_size) {
+void run_ranking_query(long int *q_vec, int q_size) {
     int i, j;
     off_t address;
     double doc_weight = 0;
@@ -211,21 +206,21 @@ void run_ranking_query(DocVec *q_vec, int q_size) {
     initialize_accumulator();
 
     for (i = 0; i < q_size; i++) {
-        WordList[q_vec[i].index].postinglist = (InvEntry *) malloc(sizeof(InvEntry) * WordList[q_vec[i].index].occurs_in_docs);
-        address = WordList[q_vec[i].index].disk_address;
+        WordList[q_vec[i]].postinglist = (InvEntry *) malloc(sizeof(InvEntry) * WordList[q_vec[i]].occurs_in_docs);
+        address = WordList[q_vec[i]].disk_address;
         fseeko(entry_ifp, address, 0);
-        fread(WordList[q_vec[i].index].postinglist, sizeof(InvEntry), WordList[q_vec[i].index].occurs_in_docs, entry_ifp);
+        fread(WordList[q_vec[i]].postinglist, sizeof(InvEntry), WordList[q_vec[i]].occurs_in_docs, entry_ifp);
 
-        for (j = 0; j < WordList[q_vec[i].index].occurs_in_docs; j++) {
+        for (j = 0; j < WordList[q_vec[i]].occurs_in_docs; j++) {
             doc_weight = 0;
-            doc_id = WordList[q_vec[i].index].postinglist[j].doc_id;
-            doc_weight = WordList[q_vec[i].index].postinglist[j].weight;
+            doc_id = WordList[q_vec[i]].postinglist[j].doc_id;
+            doc_weight = WordList[q_vec[i]].postinglist[j].weight;
             // don't need to store term weights
-            double term_weight_of_q_vec_i = log( (REMAINING_DOC_NUM-WordList[q_vec[i].index].occurs_in_docs + 0.5) / (double)(WordList[q_vec[i].index].occurs_in_docs + 0.5));
+            double term_weight_of_q_vec_i = log( (REMAINING_DOC_NUM-WordList[q_vec[i]].occurs_in_docs + 0.5) / (double)(WordList[q_vec[i]].occurs_in_docs + 0.5));
             accumulator[doc_id].sim_rank += term_weight_of_q_vec_i * (doc_weight * (BM25_K1_CONSTANT + 1)) / (doc_weight + BM25_K1_CONSTANT *((1-BM25_B_CONSTANT)+(BM25_B_CONSTANT*(total_tf_per_doc[doc_id]/avg_total_tf ))));
         }
 
-        free(WordList[q_vec[i].index].postinglist);
+        free(WordList[q_vec[i]].postinglist);
     }
 
     TOs4ExtractionSelectionSorting(q_size);
@@ -268,7 +263,7 @@ void run_ranking_query(DocVec *q_vec, int q_size) {
 void process_ranked_query(char *rel_name) {
     char line[MAX_TUPLE_LENGTH];
     int  i;
-    DocVec q_vec[QSIZE];
+    long int q_vec[QSIZE];
     long int next;
     int count;
 
@@ -282,17 +277,17 @@ void process_ranked_query(char *rel_name) {
     while (!feof(ifp)) {
         line[strlen(line)-1] = NULL;
         process_tuple(line);
-        qsort(DVector, d_size, sizeof(DVector[0]), index_order);
+        qsort(DVector, d_size, sizeof(DVector[0]), cmpfunc);
 
         count = 0;
 
         for (i = 0; i < d_size; i++) {
             next = i + 1;
-            if (next < d_size && DVector[i].index == DVector[next].index) {
+            if (next < d_size && DVector[i] == DVector[next]) {
 
             }
             else {
-                q_vec[count].index = DVector[i].index;
+                q_vec[count] = DVector[i];
                 count++;
             }
         }
@@ -357,9 +352,9 @@ int main(int argc,char *argv[]) {
     char str[TOKEN_SIZE];
     int check_doc_num = 0;
 
-    WordList = (Word *) malloc(sizeof(Word)*WORD_NO);
+    WordList = (Word*) malloc(sizeof(Word)*WORD_NO);
     accumulator = (Result*) malloc(sizeof(Result) * DOC_NUM);
-    DVector = (DocVec *) malloc(sizeof(DocVec) * DOC_SIZE);
+    DVector = (long int*) malloc(sizeof(long int) * DOC_SIZE);
     results = (Result*) malloc(sizeof(Result)* BEST_DOCS);
 
     if (!WordList)

@@ -39,10 +39,6 @@ typedef struct words {
     InvEntry *postinglist;
 } Word;
 
-typedef struct doc_ve {
-    long int index;
-} DocVec;
-
 /****************************************/
 /**************** Functions *************/
 /****************************************/
@@ -50,7 +46,7 @@ typedef struct doc_ve {
 int separator(char ch);
 int FindStopIndex(int start,int end,char word[50]);
 
-int index_order(DocVec*, DocVec*);
+int cmpfunc(const void *, const void *);
 int lex_order(char *, char *);
 void read_next_value(char *);
 
@@ -74,7 +70,7 @@ void sorting();
 /* Method TOs4: A min-heap is used for selecting accumulators */
 void TOs4ExtractionSelectionSorting(int);
 
-void run_ranking_query(DocVec *, int);
+void run_ranking_query(long int*, int);
 void process_ranked_query(char *);
 
 int load_subqueries(char *);
@@ -91,7 +87,7 @@ int word_no_in_list = 0;
 
 char stopwords[NOSTOPWORD][50] ; // to keep stop words
 
-DocVec *DVector; // [DOC_SIZE]; // to keep all term in a doc with dublications
+long int *DVector; // [DOC_SIZE]; // to keep all term in a doc with dublications
 int d_size=0; // length of current doc
 
 long int q_no = 0; // total no_of docs in all files
