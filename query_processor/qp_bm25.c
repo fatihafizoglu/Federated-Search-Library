@@ -54,7 +54,7 @@ void read_next_value(char *into) {
     strcpy(tName2, tempo);
 }
 
-void process_tuple(char *line) {
+int process_tuple(char *line) {
     char tokens[TOKEN_NO][TOKEN_SIZE];
     char str[MAX_TUPLE_LENGTH];
     int token_found,i,q, tokens_left, index;
@@ -62,6 +62,7 @@ void process_tuple(char *line) {
     off_t add1, add2;
     int word_size;
     int found = 0;
+    int nof_words_in_query = 0;
 
     strcpy(tName2, line); // DO NOT change tName2, read_next_val ona gore yazilmis!!!
     token_found = 0;
@@ -108,11 +109,11 @@ void process_tuple(char *line) {
 
             if (found) { // will be surely found!!!
                 // now add this term to the current doc vector
-                DVector[d_size] = index;
-                d_size++;
+                DVector[nof_words_in_query] = index;
+                nof_words_in_query++;
 
-                if (d_size > MAX_WORD_PER_QUERY) {
-                    printf("Doc size exceeds %d!\n", d_size);
+                if (nof_words_in_query > MAX_WORD_PER_QUERY) {
+                    printf("Doc size exceeds %d!\n", nof_words_in_query);
                     printf("THIS SHOULD NOT HAPPEN!\n");
                     exit(1);
                 }
@@ -125,12 +126,14 @@ void process_tuple(char *line) {
     }
 
     free(sword);
+
+    return nof_words_in_query;
 }
 
-void initialize_doc_vec(int d_size) {
+void initialize_doc_vec() {
     int i;
 
-    for (i = 0; i <= d_size; i++) {
+    for (i = 0; i <= MAX_WORD_PER_QUERY; i++) {
         DVector[i] = -1;
     }
 }
@@ -277,14 +280,14 @@ void process_ranked_query(char *rel_name) {
 
     while (!feof(ifp)) {
         line[strlen(line)-1] = NULL;
-        process_tuple(line);
-        qsort(DVector, d_size, sizeof(DVector[0]), cmpfunc);
+        int nof_words_in_query = process_tuple(line);
+        qsort(DVector, nof_words_in_query, sizeof(DVector[0]), cmpfunc);
 
         count = 0;
 
-        for (i = 0; i < d_size; i++) {
+        for (i = 0; i < nof_words_in_query; i++) {
             next = i + 1;
-            if (next < d_size && DVector[i] == DVector[next]) {
+            if (next < nof_words_in_query && DVector[i] == DVector[next]) {
 
             }
             else {
@@ -295,8 +298,7 @@ void process_ranked_query(char *rel_name) {
 
         run_ranking_query(q_vec, count);
 
-        initialize_doc_vec(d_size); // so I avoid fully initializing the doc vec each time
-        d_size = 0;
+        initialize_doc_vec();
         q_no++;
 
         fgets(line, MAX_TUPLE_LENGTH, ifp);// read either EOF or blank
@@ -443,7 +445,7 @@ int main(int argc,char *argv[]) {
     // here word_no_in_list-1 as I start from 1
     printf("i initialized the word list with %d words.\n", word_no_in_list-1);
 
-    initialize_doc_vec(MAX_WORD_PER_QUERY);
+    initialize_doc_vec();
     if (!(entry_ifp = fopen(argv[2],"rb"))) {
         printf("Inverted Index file not found!\n");
         exit(1);

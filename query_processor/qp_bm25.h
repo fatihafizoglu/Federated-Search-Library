@@ -53,10 +53,9 @@ void read_next_value(char *);
 /* this function would process TName field of a given tuple of a relation
  * processing means tokenzing the words in the TName and locating these in the tokens
  * field of the relatipn */
-void process_tuple(char *);
+int process_tuple(char *);
 
-/* initializes the doc vector for the *current* doc */
-void initialize_doc_vec(int);
+void initialize_doc_vec();
 void initialize_accumulator();
 void initialize_results();
 
@@ -86,8 +85,9 @@ int word_no_in_list = 0;
 
 char stopwords[NOSTOPWORD][50] ; // to keep stop words
 
-long int *DVector; // [DOC_SIZE]; // to keep all term in a doc with dublications
-int d_size = 0; // length of current doc
+// Keep track of query's words indexes,
+// term_weight will be computed on-the-fly
+long int *DVector;
 
 long int q_no = 0; // total no_of docs in all files
 
