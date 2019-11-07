@@ -14,7 +14,7 @@
 #define WORD_NO 164000000  // SORUN: Bu  ne kadar buyuk olabilir? I hope it will work
 #define TOKEN_NO  20000 // max no of tokens in a field: now it is token no at each doc line
 #define TOKEN_SIZE 21 // max length of a token
-#define DOC_SIZE 600000
+#define MAX_WORD_PER_QUERY 50
 #define DOC_NUM 50220539 /* exact number: 50220538 */ // get 1 more than exact value, so is word no
 
 #define QSIZE 3000

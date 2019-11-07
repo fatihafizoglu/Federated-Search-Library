@@ -111,9 +111,9 @@ void process_tuple(char *line) {
                 DVector[d_size] = index;
                 d_size++;
 
-                printf("d_size:%d\n", d_size);
-                if (d_size > DOC_SIZE) {
-                    printf("Doc size exceeds %d!\n", DOC_SIZE);
+                if (d_size > MAX_WORD_PER_QUERY) {
+                    printf("Doc size exceeds %d!\n", d_size);
+                    printf("THIS SHOULD NOT HAPPEN!\n");
                     exit(1);
                 }
             } else { // not found
@@ -355,7 +355,7 @@ int main(int argc,char *argv[]) {
 
     WordList = (Word*) malloc(sizeof(Word) * WORD_NO);
     accumulator = (Result*) malloc(sizeof(Result) * DOC_NUM);
-    DVector = (long int*) malloc(sizeof(long int) * DOC_SIZE);
+    DVector = (long int*) malloc(sizeof(long int) * MAX_WORD_PER_QUERY);
     results = (Result*) malloc(sizeof(Result)* BEST_DOCS);
 
     if (!WordList)
@@ -443,7 +443,7 @@ int main(int argc,char *argv[]) {
     // here word_no_in_list-1 as I start from 1
     printf("i initialized the word list with %d words.\n", word_no_in_list-1);
 
-    initialize_doc_vec(DOC_SIZE);
+    initialize_doc_vec(MAX_WORD_PER_QUERY);
     if (!(entry_ifp = fopen(argv[2],"rb"))) {
         printf("Inverted Index file not found!\n");
         exit(1);
