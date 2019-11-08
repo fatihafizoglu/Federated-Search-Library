@@ -43,13 +43,6 @@ typedef struct words {
 /**************** Functions *************/
 /****************************************/
 
-int separator(char ch);
-int FindStopIndex(int start,int end,char word[50]);
-
-int cmpfunc(const void *, const void *);
-int lex_order(char *, char *);
-void read_next_value(char *);
-
 /* this function would process TName field of a given tuple of a relation
  * processing means tokenzing the words in the TName and locating these in the tokens
  * field of the relatipn */
@@ -79,34 +72,35 @@ int load_subqueries(char *);
 /****************************************/
 
 struct staticMaxHeapStruct maxScoresHeap;
+char stopwords[NOSTOPWORD][50];
 
+/* Wordlist, and number of words in Wordlist */
 Word *WordList;
 int word_no_in_list = 0;
 
-char stopwords[NOSTOPWORD][50] ; // to keep stop words
-
 // Keep track of query's words indexes,
 // term_weight will be computed on-the-fly
-long int *DVector;
+long int *QueryWordsIndexes;
 
-long int q_no = 0; // total no_of docs in all files
+// Global query no being processed
+long int q_no = 0;
 
-FILE * ifp, *eval_out;
-FILE *entry_ifp, *out_trec;
+FILE *ifp;
+FILE *inverted_index_fp;
+FILE *output_fp;
 
 char tName2[MAX_TUPLE_LENGTH];
 
 Result *accumulator;
 Result *results;
 
-int *unique_terms;
 int *total_tf_per_doc;
-off_t unique_term_sum;
-double avg_unique;
 double avg_total_tf;
-double collection_total_tf;
 int REMAINING_DOC_NUM = 0;
 
+
 char subqueries[NOF_Q][MAX_SQ_PER_Q][MAX_SQ_LENGTH];
+
+
 
 #endif

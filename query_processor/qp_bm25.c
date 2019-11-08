@@ -7,11 +7,11 @@ int separator(char ch) {
         return(0);
 }
 
-int FindStopIndex(int start,int end,char word[50]) {
+int FindStopIndex(int start, int end, char word[50]) {
     int length = end - start + 1;
     int index = start + (length/2);
 
-    if (length<=0)
+    if (length <= 0)
         return (-1);
     else if (strcmp(word, stopwords[index]) < 0)
         return(FindStopIndex(start, index-1, word));
@@ -37,15 +37,15 @@ void read_next_value(char *into) {
     while (separator(tName2[i]) && tName2[i] != NULL ) i++;
 
     while (!separator(tName2[i]) && tName2[i] != NULL) {
-        into[j++]=tName2[i];
+        into[j++] = tName2[i];
         i++;
     }
 
     into[j] = NULL; /* into contains a value as a string */
 
     j = 0;
-    while(tName2[i]!=NULL) {
-        tempo[j]=tName2[i];
+    while(tName2[i] != NULL) {
+        tempo[j] = tName2[i];
         i++;
         j++;
     }
@@ -64,7 +64,7 @@ int process_tuple(char *line) {
     int found = 0;
     int nof_words_in_query = 0;
 
-    strcpy(tName2, line); // DO NOT change tName2, read_next_val ona gore yazilmis!!!
+    strcpy(tName2, line); // DO NOT change tName 2, read_next_val ona gore yazilmis!!!
     token_found = 0;
 
     read_next_value(str);
@@ -85,7 +85,7 @@ int process_tuple(char *line) {
         for (q = 0; q < strlen(tokens[i]); q++)
             tokens[i][q] = tolower(tokens[i][q]);
 
-        if (FindStopIndex(0,NOSTOPWORD-1,tokens[i]) == -1) {
+        if (FindStopIndex(0, NOSTOPWORD-1, tokens[i]) == -1) {
             found = 0;
 
             if (sword == NULL) {
@@ -108,8 +108,8 @@ int process_tuple(char *line) {
             }
 
             if (found) { // will be surely found!!!
-                // now add this term to the current doc vector
-                DVector[nof_words_in_query] = index;
+                // now add this term to the current query vector
+                QueryWordsIndexes[nof_words_in_query] = index;
                 nof_words_in_query++;
 
                 if (nof_words_in_query > MAX_WORD_PER_QUERY) {
@@ -134,7 +134,7 @@ void initialize_doc_vec() {
     int i;
 
     for (i = 0; i <= MAX_WORD_PER_QUERY; i++) {
-        DVector[i] = -1;
+        QueryWordsIndexes[i] = -1;
     }
 }
 
@@ -212,8 +212,8 @@ void run_ranking_query(long int *q_vec, int q_size) {
     for (i = 0; i < q_size; i++) {
         WordList[q_vec[i]].postinglist = (InvEntry *) malloc(sizeof(InvEntry) * WordList[q_vec[i]].occurs_in_docs);
         address = WordList[q_vec[i]].disk_address;
-        fseeko(entry_ifp, address, 0);
-        fread(WordList[q_vec[i]].postinglist, sizeof(InvEntry), WordList[q_vec[i]].occurs_in_docs, entry_ifp);
+        fseeko(inverted_index_fp, address, 0);
+        fread(WordList[q_vec[i]].postinglist, sizeof(InvEntry), WordList[q_vec[i]].occurs_in_docs, inverted_index_fp);
 
         for (j = 0; j < WordList[q_vec[i]].occurs_in_docs; j++) {
             doc_weight = 0;
@@ -235,8 +235,10 @@ void run_ranking_query(long int *q_vec, int q_size) {
 
     WRITE_BEST_N = j;
     for (j = 0; j < WRITE_BEST_N; j++) {
-        fprintf(out_trec, "%d\tQ0\t%d\t%d\t%lf\tfs\n", q_no + 1, results[j].doc_index, j + 1, results[j].sim_rank);
+        fprintf(output_fp, "%d\tQ0\t%d\t%d\t%lf\tfs\n", q_no + 1, results[j].doc_index, j + 1, results[j].sim_rank);
     }
+
+
 #ifdef XQUAD
 
     /* XXX Gather subquery results */
@@ -268,7 +270,6 @@ void process_ranked_query(char *rel_name) {
     char line[MAX_TUPLE_LENGTH];
     int  i;
     long int q_vec[QSIZE];
-    long int next;
     int count;
 
     if (!(ifp = fopen(rel_name, "rt"))) {
@@ -281,17 +282,17 @@ void process_ranked_query(char *rel_name) {
     while (!feof(ifp)) {
         line[strlen(line)-1] = NULL;
         int nof_words_in_query = process_tuple(line);
-        qsort(DVector, nof_words_in_query, sizeof(DVector[0]), cmpfunc);
+        qsort(QueryWordsIndexes, nof_words_in_query, sizeof(QueryWordsIndexes[0]), cmpfunc);
 
         count = 0;
 
+        // Eleminate duplicate words from query
         for (i = 0; i < nof_words_in_query; i++) {
-            next = i + 1;
-            if (next < nof_words_in_query && DVector[i] == DVector[next]) {
+            if ((i + 1) < nof_words_in_query && QueryWordsIndexes[i] == QueryWordsIndexes[i + 1]) {
 
             }
             else {
-                q_vec[count] = DVector[i];
+                q_vec[count] = QueryWordsIndexes[i];
                 count++;
             }
         }
@@ -301,7 +302,7 @@ void process_ranked_query(char *rel_name) {
         initialize_doc_vec();
         q_no++;
 
-        fgets(line, MAX_TUPLE_LENGTH, ifp);// read either EOF or blank
+        fgets(line, MAX_TUPLE_LENGTH, ifp);
     }
 
     fclose (ifp);
@@ -310,13 +311,13 @@ void process_ranked_query(char *rel_name) {
 
 /*
  * Subquery files are in format of:
- * <q_no>\t<subquery>
- * q_no starts from 1
+ * <query_no>\t<subquery>
+ * query_no starts from 1
  * subqueries are already stop-word eleminated.
  */
 int load_subqueries(char *sq_filename) {
     FILE *sq_file;
-    unsigned int q_no, q_no_prev = -1;
+    unsigned int query_no, q_no_prev = -1;
     unsigned int sq_no = 0;
     char line[MAX_SQ_LENGTH+2] = "";
     char subquery[MAX_SQ_LENGTH] = "";
@@ -332,16 +333,16 @@ int load_subqueries(char *sq_filename) {
         if (fgets(line, MAX_SQ_LENGTH+2, sq_file) == NULL) {
             break;
         }
-        sscanf(line, "%u\t%[^\n]", &(q_no), subquery);
-        if (q_no != q_no_prev) {
+        sscanf(line, "%u\t%[^\n]", &(query_no), subquery);
+        if (query_no != q_no_prev) {
             sq_no = 0;
         }
-        strcpy(subqueries[q_no-1][sq_no], subquery);
+        strcpy(subqueries[query_no-1][sq_no], subquery);
 #ifdef DEBUG
-        printf("subqueries[%u][%u]: %s\n", q_no-1, sq_no, subqueries[q_no-1][sq_no]);
+        printf("subqueries[%u][%u]: %s\n", query_no-1, sq_no, subqueries[query_no-1][sq_no]);
         fflush(stdout);
 #endif
-        q_no_prev = q_no;
+        q_no_prev = query_no;
         sq_no++;
     } while (!feof(sq_file));
 
@@ -357,7 +358,7 @@ int main(int argc,char *argv[]) {
 
     WordList = (Word*) malloc(sizeof(Word) * WORD_NO);
     accumulator = (Result*) malloc(sizeof(Result) * DOC_NUM);
-    DVector = (long int*) malloc(sizeof(long int) * MAX_WORD_PER_QUERY);
+    QueryWordsIndexes = (long int*) malloc(sizeof(long int) * MAX_WORD_PER_QUERY);
     results = (Result*) malloc(sizeof(Result)* BEST_DOCS);
 
     if (!WordList)
@@ -368,7 +369,7 @@ int main(int argc,char *argv[]) {
 
     strcpy(query_file, argv[4]);
 
-    out_trec = fopen(argv[5], "wt");
+    output_fp = fopen(argv[5], "wt");
     ifp = fopen("stopword.lst","rt");
 
     for (i = 0; i < NOSTOPWORD; i++)
@@ -383,23 +384,20 @@ int main(int argc,char *argv[]) {
 
     REMAINING_DOC_NUM = 0;
 
-    unique_terms = (int *) malloc(sizeof(int)*DOC_NUM);
+    int unique_terms = 0;
     total_tf_per_doc = (int *) malloc(sizeof(int)*DOC_NUM);
 
-    unique_term_sum = 0;
-    collection_total_tf  = 0;
-
-    for (i=1; i < DOC_NUM; i++) {
-        fscanf(ifp, "%d %d %d\n", &doc_id, &(unique_terms[i]), &(total_tf_per_doc[i]));
+    double collection_total_tf = 0;
+    for (i = 1; i < DOC_NUM; i++) {
+        fscanf(ifp, "%d %d %d\n", &doc_id, &(unique_terms), &(total_tf_per_doc[i]));
         if (doc_id != i) {
-            printf("hata var %d %d %d %d\n", i, doc_id,unique_terms[i], total_tf_per_doc[i] );
+            printf("hata var %d %d %d %d\n", i, doc_id, unique_terms, total_tf_per_doc[i]);
             exit(1);
         }
 
-        if (unique_terms[i] > 0)
+        if (unique_terms > 0)
             REMAINING_DOC_NUM++;
 
-        unique_term_sum += unique_terms[i];
         collection_total_tf += total_tf_per_doc[i];
         check_doc_num++;
     }
@@ -409,10 +407,7 @@ int main(int argc,char *argv[]) {
         exit(1);
     }
 
-    avg_unique = unique_term_sum /(double)REMAINING_DOC_NUM; //DOC_NUM;
-    avg_total_tf = collection_total_tf /(double)REMAINING_DOC_NUM;  //DOC_NUM;
-
-    printf("unique sum %lld avg unique per doc %lf\n", unique_term_sum, avg_unique);
+    avg_total_tf = collection_total_tf / (double)REMAINING_DOC_NUM;  //DOC_NUM;
 
     if (!(ifp = fopen(argv[1],"rt"))) {
         printf("wlist file not found! %s\n", argv[1]);
@@ -446,7 +441,7 @@ int main(int argc,char *argv[]) {
     printf("i initialized the word list with %d words.\n", word_no_in_list-1);
 
     initialize_doc_vec();
-    if (!(entry_ifp = fopen(argv[2],"rb"))) {
+    if (!(inverted_index_fp = fopen(argv[2],"rb"))) {
         printf("Inverted Index file not found!\n");
         exit(1);
     }
@@ -461,7 +456,7 @@ int main(int argc,char *argv[]) {
 
     process_ranked_query(query_file);
 
-    fclose(entry_ifp);
+    fclose(inverted_index_fp);
     free(WordList);
 
     return 0;
