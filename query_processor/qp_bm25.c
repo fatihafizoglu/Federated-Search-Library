@@ -130,7 +130,7 @@ int process_tuple(char *line) {
     return nof_words_in_query;
 }
 
-void initialize_doc_vec() {
+void initialize_query_word_indexes() {
     int i;
 
     for (i = 0; i <= MAX_WORD_PER_QUERY; i++) {
@@ -144,6 +144,15 @@ void initialize_accumulator() {
     for (i = 0; i < DOC_NUM; i++) {
         accumulator[i].doc_index = i;
         accumulator[i].sim_rank = 0;
+    }
+}
+
+void initialize_subquery_results() {
+    int i;
+
+    for (i = 0; i < BEST_DOCS; i++) {
+        subquery_results[i].doc_index = 0;
+        subquery_results[i].sim_rank = 0;
     }
 }
 
@@ -240,29 +249,53 @@ void run_ranking_query(long int *q_vec, int q_size) {
 
 
 #ifdef XQUAD
+    int subquery_index = 0;
+    FILE *subquery_output_fp = fopen(SUBQUERY_OUTPUT, "wt");
+    subquery_results = (Result*) malloc(sizeof(Result)* BEST_DOCS);
 
-    /* XXX Gather subquery results */
-    for (i = 0; i < MAX_SQ_PER_Q; i++) {
-        if (strcmp(subqueries[q_no][i], "") == 0) {
+    /* Gather subquery results */
+    for (subquery_index = 0; subquery_index < MAX_SQ_PER_Q; subquery_index++) {
+        if (strcmp(subqueries[q_no][subquery_index], "") == 0) {
             break;
         }
 #ifdef DEBUG
-        printf("Processing subquery: %s\n", subqueries[q_no][i]);
+        printf("Processing subquery: %s\n", subqueries[q_no][subquery_index]);
         fflush(stdout);
 #endif
+        initialize_subquery_results();
+        initialize_query_word_indexes();
+        int nof_words_in_subquery = process_tuple(subqueries[q_no][subquery_index]);
+        qsort(QueryWordsIndexes, nof_words_in_subquery, sizeof(QueryWordsIndexes[0]), cmpfunc);
+
+        int sq_count = 0;
+        long int sq_vec[MAX_WORD_PER_QUERY];
+
+        // Eleminate duplicate words from subquery
+        for (int word_index = 0; word_index < nof_words_in_subquery; word_index++) {
+            if ((word_index + 1) < nof_words_in_subquery &&
+                QueryWordsIndexes[word_index] == QueryWordsIndexes[word_index + 1]) {
+
+            }
+            else {
+                sq_vec[sq_count] = QueryWordsIndexes[word_index];
+                sq_count++;
+            }
+        }
+
+        /* XXX Compute scores for top WRITE_BEST_N docs */
+        // run_ranking_subquery(sq_vec, sq_count);
 
 
-
-
-
+        /* Write collected subquery results as: */
+        /* <query_id subquery_id doc_id score>\n */
+        // for (j = 0; j < WRITE_BEST_N; j++) {
+            fprintf(subquery_output_fp, "%u %u %u %lf\n",
+                    q_no + 1, subquery_index, sq_count, /*subquery_results[j].doc_index, */subquery_results[0].sim_rank);
+        // }
     }
 
-
-
-    /* XXX Write collected subquery results */
-    /* "%u %u %u %lf\n"=<query_id subquery_id doc_id score> */
-
-
+    fclose(subquery_output_fp);
+    free(subquery_results);
 #endif
 }
 
@@ -299,7 +332,7 @@ void process_ranked_query(char *rel_name) {
 
         run_ranking_query(q_vec, count);
 
-        initialize_doc_vec();
+        initialize_query_word_indexes();
         q_no++;
 
         fgets(line, MAX_QUERY_LENGTH, ifp);
@@ -440,7 +473,7 @@ int main(int argc,char *argv[]) {
     // here word_no_in_list-1 as I start from 1
     printf("i initialized the word list with %d words.\n", word_no_in_list-1);
 
-    initialize_doc_vec();
+    initialize_query_word_indexes();
     if (!(inverted_index_fp = fopen(argv[2],"rb"))) {
         printf("Inverted Index file not found!\n");
         exit(1);

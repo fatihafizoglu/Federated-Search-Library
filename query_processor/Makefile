@@ -2,7 +2,7 @@
 # Parameters to control Makefile operation
 
 CC = gcc
-CFLAGS = -Wall -D_FILE_OFFSET_BITS=64 -w
+CFLAGS = -Wall -D_FILE_OFFSET_BITS=64 #-w
 # Here we are using -w to inhibit warning messages
 DEBUG = -g -DDEBUG
 
@@ -14,7 +14,7 @@ all: qp_bm25.c qp_bm25.h staticMaxHeap.c staticMaxHeap.h stopword.lst
 debug: CFLAGS += $(DEBUG)
 debug: all
 
-xquad: CFLAGS += -DXQUAD 
+xquad: CFLAGS += -DXQUAD $(DEBUG)
 xquad: all
 
 tester: tester.c qp_bm25.c qp_bm25.h staticMaxHeap.c staticMaxHeap.h stopword.lst

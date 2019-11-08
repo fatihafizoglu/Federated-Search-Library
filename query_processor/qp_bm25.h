@@ -22,6 +22,8 @@
 #define MAX_SQ_PER_Q 8
 #define MAX_SQ_LENGTH 1000
 
+#define SUBQUERY_OUTPUT "subquery_results"
+
 double BM25_K1_CONSTANT = 1.2;
 double BM25_B_CONSTANT = 0.5;
 
@@ -46,8 +48,9 @@ typedef struct words {
  * field of the relatipn */
 int process_tuple(char *);
 
-void initialize_doc_vec();
+void initialize_query_word_indexes();
 void initialize_accumulator();
+void initialize_subquery_results();
 void initialize_results();
 
 /* inserts an accumulator into the set of top s accumulators,
@@ -89,6 +92,7 @@ char rest_of_query[MAX_QUERY_LENGTH];
 
 Result *accumulator;
 Result *results;
+Result *subquery_results;
 
 int *total_tf_per_doc;
 double avg_total_tf;
