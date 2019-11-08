@@ -10,14 +10,12 @@
 #include "staticMaxHeap.h"
 
 #define NOSTOPWORD 419
-#define MAX_TUPLE_LENGTH 300000 // wrt. the tuple definition below...
+#define MAX_QUERY_LENGTH 1000 // as a character, total of all words
 #define WORD_NO 164000000  // SORUN: Bu  ne kadar buyuk olabilir? I hope it will work
-#define TOKEN_NO  20000 // max no of tokens in a field: now it is token no at each doc line
-#define TOKEN_SIZE 21 // max length of a token
+#define MAX_TOKEN_SIZE 21
 #define MAX_WORD_PER_QUERY 50
 #define DOC_NUM 50220539 /* exact number: 50220538 */ // get 1 more than exact value, so is word no
 
-#define QSIZE 3000
 #define BEST_DOCS 1000
 
 #define NOF_Q 50 // TODO CHANGE IT 198 ? 200
@@ -33,7 +31,7 @@ typedef struct inv_ent {
 } InvEntry;
 
 typedef struct words {
-    char a_word[TOKEN_SIZE]; // for handling queries
+    char a_word[MAX_TOKEN_SIZE]; // for handling queries
     int occurs_in_docs; // to retrieve inv entires and also weight queries
     off_t disk_address; // address to access in binary file
     InvEntry *postinglist;
@@ -56,8 +54,6 @@ void initialize_results();
  * if its score is higher than the minimum score in the heap */
 void selection(double, int);
 
-/* sorts a given heap of accumulators in decreasing order of their scores */
-void sorting();
 
 /* Method TOs4: A min-heap is used for selecting accumulators */
 void TOs4ExtractionSelectionSorting(int);
@@ -89,7 +85,7 @@ FILE *ifp;
 FILE *inverted_index_fp;
 FILE *output_fp;
 
-char tName2[MAX_TUPLE_LENGTH];
+char rest_of_query[MAX_QUERY_LENGTH];
 
 Result *accumulator;
 Result *results;

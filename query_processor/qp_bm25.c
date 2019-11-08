@@ -31,32 +31,32 @@ int lex_order(char *s1, char *s2) {
 
 void read_next_value(char *into) {
     int i = 0, j = 0;
-    char tempo[MAX_TUPLE_LENGTH];
+    char tempo[MAX_QUERY_LENGTH];
 
     /* skip separators */
-    while (separator(tName2[i]) && tName2[i] != NULL ) i++;
+    while (separator(rest_of_query[i]) && rest_of_query[i] != NULL ) i++;
 
-    while (!separator(tName2[i]) && tName2[i] != NULL) {
-        into[j++] = tName2[i];
+    while (!separator(rest_of_query[i]) && rest_of_query[i] != NULL) {
+        into[j++] = rest_of_query[i];
         i++;
     }
 
     into[j] = NULL; /* into contains a value as a string */
 
     j = 0;
-    while(tName2[i] != NULL) {
-        tempo[j] = tName2[i];
+    while(rest_of_query[i] != NULL) {
+        tempo[j] = rest_of_query[i];
         i++;
         j++;
     }
 
     tempo[j] = NULL;
-    strcpy(tName2, tempo);
+    strcpy(rest_of_query, tempo);
 }
 
 int process_tuple(char *line) {
-    char tokens[TOKEN_NO][TOKEN_SIZE];
-    char str[MAX_TUPLE_LENGTH];
+    char tokens[MAX_WORD_PER_QUERY][MAX_TOKEN_SIZE];
+    char str[MAX_QUERY_LENGTH];
     int token_found,i,q, tokens_left, index;
     Word *word, *sword;
     off_t add1, add2;
@@ -64,7 +64,7 @@ int process_tuple(char *line) {
     int found = 0;
     int nof_words_in_query = 0;
 
-    strcpy(tName2, line); // DO NOT change tName 2, read_next_val ona gore yazilmis!!!
+    strcpy(rest_of_query, line);
     token_found = 0;
 
     read_next_value(str);
@@ -267,9 +267,9 @@ void run_ranking_query(long int *q_vec, int q_size) {
 }
 
 void process_ranked_query(char *rel_name) {
-    char line[MAX_TUPLE_LENGTH];
+    char line[MAX_QUERY_LENGTH];
     int  i;
-    long int q_vec[QSIZE];
+    long int q_vec[MAX_WORD_PER_QUERY];
     int count;
 
     if (!(ifp = fopen(rel_name, "rt"))) {
@@ -277,7 +277,7 @@ void process_ranked_query(char *rel_name) {
         return;
     }
 
-    fgets(line, MAX_TUPLE_LENGTH, ifp); // read blank line
+    fgets(line, MAX_QUERY_LENGTH, ifp); // read blank line
 
     while (!feof(ifp)) {
         line[strlen(line)-1] = NULL;
@@ -302,7 +302,7 @@ void process_ranked_query(char *rel_name) {
         initialize_doc_vec();
         q_no++;
 
-        fgets(line, MAX_TUPLE_LENGTH, ifp);
+        fgets(line, MAX_QUERY_LENGTH, ifp);
     }
 
     fclose (ifp);
@@ -353,7 +353,7 @@ int load_subqueries(char *sq_filename) {
 #ifndef TESTER
 int main(int argc,char *argv[]) {
     int i, q;
-    char str[TOKEN_SIZE];
+    char str[MAX_TOKEN_SIZE];
     int check_doc_num = 0;
 
     WordList = (Word*) malloc(sizeof(Word) * WORD_NO);
