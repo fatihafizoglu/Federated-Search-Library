@@ -267,11 +267,11 @@ void run_ranking_query(long int *q_vec, int q_size) {
         int nof_words_in_subquery = process_tuple(subqueries[q_no][subquery_index]);
         qsort(QueryWordsIndexes, nof_words_in_subquery, sizeof(QueryWordsIndexes[0]), cmpfunc);
 
-        int sq_count = 0;
+        int sq_count = 0, word_index = 0;
         long int sq_vec[MAX_WORD_PER_QUERY];
 
         // Eleminate duplicate words from subquery
-        for (int word_index = 0; word_index < nof_words_in_subquery; word_index++) {
+        for (word_index = 0; word_index < nof_words_in_subquery; word_index++) {
             if ((word_index + 1) < nof_words_in_subquery &&
                 QueryWordsIndexes[word_index] == QueryWordsIndexes[word_index + 1]) {
 
