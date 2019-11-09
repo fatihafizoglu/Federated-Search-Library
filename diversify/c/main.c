@@ -15,7 +15,7 @@ int main (int argc, char *argv[]) {
     unsigned int number_of_preresults = 0;//100; // CHANGE -> GET FROM ARGUMENTS
     unsigned int number_of_results = 0;//20; // CHANGE -> GET FROM ARGUMENTS
     unsigned int number_of_query = 0;//198; // CHANGE -> GET FROM ARGUMENTS
-    unsigned int div_algorithms[] = {XQUAD}; // DONTCHANGE
+    unsigned int div_algorithms[] = {SY, XQUAD}; // DONTCHANGE
     double div_lambdas[] = { 0.25, 0.5, 0.75 }; // DONTCHANGE
 
     // XQUAD
