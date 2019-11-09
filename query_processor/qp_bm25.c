@@ -366,18 +366,19 @@ int load_subqueries(char *sq_filename) {
     FILE *sq_file;
     unsigned int query_no, q_no_prev = -1;
     unsigned int sq_no = 0;
-    char line[MAX_SQ_LENGTH+2] = "";
-    char subquery[MAX_SQ_LENGTH] = "";
+    char line[MAX_QUERY_LENGTH+2] = "";
+    char subquery[MAX_QUERY_LENGTH] = "";
 
     if (!(sq_file = fopen(sq_filename, "r"))) {
         printf("Subqueries file not found.\n");
         return -1;
     }
 
-    memset(subqueries, 0, NOF_Q*MAX_SQ_PER_Q*MAX_SQ_LENGTH);
+    memset(subqueries, 0, MAX_NOF_QUERY *
+            MAX_SQ_PER_Q * MAX_QUERY_LENGTH);
 
     do {
-        if (fgets(line, MAX_SQ_LENGTH+2, sq_file) == NULL) {
+        if (fgets(line, MAX_QUERY_LENGTH+2, sq_file) == NULL) {
             break;
         }
         sscanf(line, "%u\t%[^\n]", &(query_no), subquery);

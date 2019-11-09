@@ -10,17 +10,17 @@
 #include "staticMaxHeap.h"
 
 #define NOSTOPWORD 419
-#define MAX_QUERY_LENGTH 1000 // as a character, total of all words
-#define WORD_NO 164000000  // SORUN: Bu  ne kadar buyuk olabilir? I hope it will work
+#define WORD_NO 164000000
 #define MAX_TOKEN_SIZE 21
 #define MAX_WORD_PER_QUERY 50
-#define DOC_NUM 50220539 /* exact number: 50220538 */ // get 1 more than exact value, so is word no
+#define DOC_NUM 50220539 /* exact number: 50220538 */
+// get 1 more than exact value, so is word no
 
-#define BEST_DOCS 1000
+#define BEST_DOCS 10000
 
-#define NOF_Q 198
-#define MAX_SQ_PER_Q 8
-#define MAX_SQ_LENGTH 1000
+#define MAX_NOF_QUERY 200
+#define MAX_QUERY_LENGTH 1000 // as a character, total of all words, apply also subqueries
+#define MAX_SQ_PER_Q 10 // It is 8 actually
 
 #define SUBQUERY_OUTPUT "subquery_results"
 
@@ -98,8 +98,7 @@ int *total_tf_per_doc;
 double avg_total_tf;
 int REMAINING_DOC_NUM;
 
-
-char subqueries[NOF_Q][MAX_SQ_PER_Q][MAX_SQ_LENGTH];
+char subqueries[MAX_NOF_QUERY][MAX_SQ_PER_Q][MAX_QUERY_LENGTH];
 
 
 
