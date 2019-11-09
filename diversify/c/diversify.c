@@ -508,7 +508,7 @@ int initloadSubqueryResults() {
     }
 
     while (!feof(fp)) {
-        fscanf (fp, "%u %u %u %lf\n", &(query_id), &(subquery_id),
+        fscanf (fp, "%u\t%u\t%u\t%lf\n", &(query_id), &(subquery_id),
             &(doc_id), &(score));
 
 #ifdef DEBUG
