@@ -14,8 +14,11 @@ all: qp_bm25.c qp_bm25.h staticMaxHeap.c staticMaxHeap.h stopword.lst
 debug: CFLAGS += $(DEBUG)
 debug: all
 
-xquad: CFLAGS += -DXQUAD $(DEBUG)
+xquad: CFLAGS += -DXQUAD
 xquad: all
+
+debugxquad: CFLAGS += -DXQUAD $(DEBUG)
+debugxquad: all
 
 tester: tester.c qp_bm25.c qp_bm25.h staticMaxHeap.c staticMaxHeap.h stopword.lst
 	$(CC) $(CFLAGS) -DTESTER -DDEBUG -g tester.c qp_bm25.c staticMaxHeap.c -lm -o tester

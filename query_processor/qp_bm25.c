@@ -147,15 +147,6 @@ void initialize_accumulator() {
     }
 }
 
-void initialize_subquery_results() {
-    int i;
-
-    for (i = 0; i < BEST_DOCS; i++) {
-        subquery_results[i].doc_index = 0;
-        subquery_results[i].sim_rank = 0;
-    }
-}
-
 void initialize_results() {
     int i;
 
@@ -209,6 +200,33 @@ void TOs4ExtractionSelectionSorting(int q_size) {
     freeMaxHeap(&maxScoresHeap);
 }
 
+void run_ranking_subquery(long int *sq_vec, int sq_size) {
+    int i, j;
+    off_t address;
+    double doc_weight = 0;
+    int doc_id;
+
+    initialize_accumulator();
+
+    for (i = 0; i < sq_size; i++) {
+        WordList[sq_vec[i]].postinglist = (InvEntry *) malloc(sizeof(InvEntry) * WordList[sq_vec[i]].occurs_in_docs);
+        address = WordList[sq_vec[i]].disk_address;
+        fseeko(inverted_index_fp, address, 0);
+        fread(WordList[sq_vec[i]].postinglist, sizeof(InvEntry), WordList[sq_vec[i]].occurs_in_docs, inverted_index_fp);
+
+        for (j = 0; j < WordList[sq_vec[i]].occurs_in_docs; j++) {
+            doc_weight = 0;
+            doc_id = WordList[sq_vec[i]].postinglist[j].doc_id;
+            doc_weight = WordList[sq_vec[i]].postinglist[j].weight;
+            // don't need to store term weights
+            double term_weight_of_q_vec_i = log( (REMAINING_DOC_NUM-WordList[sq_vec[i]].occurs_in_docs + 0.5) / (double)(WordList[sq_vec[i]].occurs_in_docs + 0.5));
+            accumulator[doc_id].sim_rank += term_weight_of_q_vec_i * (doc_weight * (BM25_K1_CONSTANT + 1)) / (doc_weight + BM25_K1_CONSTANT *((1-BM25_B_CONSTANT)+(BM25_B_CONSTANT*(total_tf_per_doc[doc_id]/avg_total_tf ))));
+        }
+
+        free(WordList[sq_vec[i]].postinglist);
+    }
+}
+
 void run_ranking_query(long int *q_vec, int q_size) {
     int i, j;
     off_t address;
@@ -250,18 +268,17 @@ void run_ranking_query(long int *q_vec, int q_size) {
 
 #ifdef XQUAD
     int subquery_index = 0;
-    subquery_results = (Result*) malloc(sizeof(Result)* BEST_DOCS);
 
     /* Gather subquery results */
     for (subquery_index = 0; subquery_index < MAX_SQ_PER_Q; subquery_index++) {
         if (strcmp(subqueries[q_no][subquery_index], "") == 0) {
             break;
         }
+
 #ifdef DEBUG
         printf("Processing subquery: %s\n", subqueries[q_no][subquery_index]);
         fflush(stdout);
 #endif
-        initialize_subquery_results();
         initialize_query_word_indexes();
         int nof_words_in_subquery = process_tuple(subqueries[q_no][subquery_index]);
         qsort(QueryWordsIndexes, nof_words_in_subquery, sizeof(QueryWordsIndexes[0]), cmpfunc);
@@ -281,19 +298,17 @@ void run_ranking_query(long int *q_vec, int q_size) {
             }
         }
 
-        /* XXX Compute scores for top WRITE_BEST_N docs */
-        // run_ranking_subquery(sq_vec, sq_count);
+        run_ranking_subquery(sq_vec, sq_count);
 
-
+        /* accumulator is ready with subquery results */
         /* Write collected subquery results as: */
         /* <query_id subquery_id doc_id score>\n */
-        // for (j = 0; j < WRITE_BEST_N; j++) {
+        for (j = 0; j < WRITE_BEST_N; j++) {
             fprintf(subquery_output_fp, "%lu\t%u\t%u\t%lf\n",
-                    q_no + 1, subquery_index, sq_count, /*subquery_results[j].doc_index, */subquery_results[0].sim_rank);
-        // }
+                    q_no + 1, subquery_index, results[j].doc_index, accumulator[results[j].doc_index].sim_rank);
+        }
     }
 
-    free(subquery_results);
 #endif
 }
 
@@ -417,7 +432,7 @@ int main(int argc,char *argv[]) {
     REMAINING_DOC_NUM = 0;
 
     int unique_terms = 0;
-    total_tf_per_doc = (int *) malloc(sizeof(int)*DOC_NUM);
+    total_tf_per_doc = (int *) malloc(sizeof(int) * DOC_NUM);
 
     double collection_total_tf = 0;
     for (i = 1; i < DOC_NUM; i++) {

@@ -50,7 +50,6 @@ int process_tuple(char *);
 
 void initialize_query_word_indexes();
 void initialize_accumulator();
-void initialize_subquery_results();
 void initialize_results();
 
 /* inserts an accumulator into the set of top s accumulators,
@@ -61,6 +60,7 @@ void selection(double, int);
 /* Method TOs4: A min-heap is used for selecting accumulators */
 void TOs4ExtractionSelectionSorting(int);
 
+void run_ranking_subquery(long int *, int);
 void run_ranking_query(long int*, int);
 void process_ranked_query(char *);
 
@@ -93,7 +93,6 @@ char rest_of_query[MAX_QUERY_LENGTH];
 
 Result *accumulator;
 Result *results;
-Result *subquery_results;
 
 int *total_tf_per_doc;
 double avg_total_tf;
