@@ -74,16 +74,19 @@ void getQueryScores(int q_no, int number_of_results, double *max_score, double *
 double getSubqueryResult (int q_no, int subquery_index, int doc_id, int preresults_index) {
     double score = 0.0;
 
+    /* Preresult index is -1 when caller is not traversing over preresults */
     if (preresults_index != -1 &&
         doc_id == subquery_results[q_no][subquery_index][preresults_index].doc_id) {
 
         score = subquery_results[q_no][subquery_index][preresults_index].score;
-#ifdef DEBUG
-        printf("Index Match: %s\n", __FUNCTION__);
-        fflush(stdout);
-#endif
         return score;
     }
+#ifdef DEBUG
+    else if (preresults_index != -1) {
+        printf("Unexpected Index MISMatch: %s\n", __FUNCTION__);
+        fflush(stdout);
+    }
+#endif
 
     for (int i = 0; i < config->number_of_preresults; i++) {
         if (doc_id == subquery_results[q_no][subquery_index][i].doc_id) {
@@ -130,6 +133,7 @@ int xquad_diverse (int q_no, int number_of_preresults, int number_of_results) {
     int i, j, index = -1;
     int result_size = 0;
     double sum_score = 0.0, max_score = 0.0, local_score = 0.0;
+    int number_of_subqueries = 0;
 
     // calculate sum of scores for preresults, it is needed for normalization
     for (i = 0; i < number_of_preresults; i++) {
@@ -140,6 +144,14 @@ int xquad_diverse (int q_no, int number_of_preresults, int number_of_results) {
         state = UNSUCCESSFUL_DIVERSIFICATION;
         return 0;
     }
+
+    number_of_subqueries = getNumberOfSubqueries(q_no);
+
+#ifdef DEBUG
+    printf("#Subqueries: %d\n", number_of_subqueries);
+    printf("Sum of scores: %lf (for normalization)\n", sum_score);
+    fflush(stdout);
+#endif
 
     // collect results
     while (result_size < number_of_results) {
@@ -156,7 +168,7 @@ int xquad_diverse (int q_no, int number_of_preresults, int number_of_results) {
             // diverse part
             if (config->lambda != 0.0) {
                 double diverse_score = 0.0;
-                int number_of_subqueries = getNumberOfSubqueries(q_no);
+
                 for (j = 0; j < number_of_subqueries; j++) {
                     double likelihood, relevance, novelty;
                     likelihood = 1.0 / number_of_subqueries;
@@ -168,6 +180,7 @@ int xquad_diverse (int q_no, int number_of_preresults, int number_of_results) {
                 }
 
                 local_score = local_score + ((config->lambda) * (diverse_score));
+
             }
 
             if (local_score > max_score) {
@@ -394,6 +407,9 @@ void writeResults () {
     } else if (config->diversification_algorithm == SY) {
         memcpy(confstr, "_sy", 3);
         memcpy(confstr+3, lambdastr, 5);
+    }  else if (config->diversification_algorithm == XQUAD) {
+        memcpy(confstr, "_xquad", 6);
+        memcpy(confstr+6, lambdastr, 5);
     }
 
     memcpy(results_path+len1, confstr, 20);
@@ -529,7 +545,7 @@ int initloadSubqueryResults() {
     return 0;
 }
 
-void loadPreresults () {
+void loadPreresults_forCDIV () {
     FILE *fp;
     char temp[100];
     unsigned int query_id, query_counter = 1, prev_query_id = -1;
@@ -538,19 +554,13 @@ void loadPreresults () {
     unsigned int cluster_id = -1, prev_cluster_id = -1;
     double score;
 
-
     if (!(fp = fopen(config->preresults_path, "r"))) {
         return;
     }
 
-    // CDIV TRICK
     while (!feof(fp)) {
         fscanf (fp, "%u %s %u %u %lf %s %u\n", &(query_id), temp, &(document_id),
                                            &(rank), &(score), temp, &(cluster_id));
-
-    // while (!feof(fp)) {
-    //     fscanf (fp, "%u %s %u %u %lf %s\n", &(query_id), temp, &(document_id),
-    //                                         &(rank), &(score), temp);
 
 #ifdef DEBUG
         printf("query_id:%u, doc_id:%u, rank:%u, score:%lf\n", query_id, document_id, rank, score);
@@ -560,7 +570,7 @@ void loadPreresults () {
         fflush(stdout);
 #endif
 
-        // smart new query list detection
+        // new smart query list detection
         if ( ( (prev_cluster_id != cluster_id) && (prev_cluster_id != -1) ) ||
              (  previous_rank > rank) ||
              ( (prev_query_id != query_id) && (prev_query_id != -1)) ) {
@@ -608,6 +618,82 @@ void loadPreresults () {
 
     fclose(fp);
     state = SUCCESS;
+}
+
+void loadPreresults () {
+#ifdef CDIV
+    loadPreresults_forCDIV();
+    return;
+#else
+    FILE *fp;
+    char temp[100];
+    unsigned int query_id, query_counter = 1, prev_query_id = -1;
+    unsigned int document_id;
+    unsigned int rank, previous_rank = 1, rank_counter = 1;
+    double score;
+
+
+    if (!(fp = fopen(config->preresults_path, "r"))) {
+        return;
+    }
+
+    while (!feof(fp)) {
+        fscanf (fp, "%u %s %u %u %lf %s\n", &(query_id), temp, &(document_id),
+                                            &(rank), &(score), temp);
+
+#ifdef DEBUG
+        printf("query_id:%u, doc_id:%u, rank:%u, score:%lf\n", query_id, document_id, rank, score);
+        printf("prev_rank:%u, query_counter:%u, rank_counter:%u, prev_query_id:%u\n",
+                previous_rank, query_counter, rank_counter, prev_query_id);
+        fflush(stdout);
+#endif
+
+        // smart query list detection
+        if ( (  previous_rank > rank) ||
+             ( (prev_query_id != query_id) && (prev_query_id != -1)) ) {
+            query_counter++;
+            rank_counter = 1;
+
+#ifdef DEBUG
+            printf("New query list detected\n");
+            fflush(stdout);
+#endif
+        }
+
+        if ((query_counter > config->number_of_query) ||
+            (rank_counter > config->number_of_preresults) ||
+            (query_counter != query_id) ||
+            (rank_counter != rank)) {
+
+            printf("!!! THIS SHOULD NOT HAPPEN! 1=(%d)||(%d)||(%d)||(%d)\n",
+                (query_counter > config->number_of_query),
+                (rank_counter > config->number_of_preresults),
+                (query_counter != query_id),
+                (rank_counter != rank));
+            printf("!!! query_id:%u, doc_id:%u, rank:%u, score:%lf\n", query_id, document_id, rank, score);
+            printf("prev_rank:%u, query_counter:%u, rank_counter:%u, prev_query_id:%u\n",
+                    previous_rank, query_counter, rank_counter, prev_query_id);
+            fflush(stdout);
+            continue;
+        }
+
+        preresults[query_counter-1][rank_counter-1].doc_id = document_id;
+        preresults[query_counter-1][rank_counter-1].score = score;
+        preresults[query_counter-1][rank_counter-1].query_id = query_id;
+
+        previous_rank = rank;
+        prev_query_id = query_id;
+        rank_counter++;
+    }
+
+    config->real_number_of_query = query_counter;
+
+    printf("REAL #QUERY:%u\n", config->real_number_of_query);
+    fflush(stdout);
+
+    fclose(fp);
+    state = SUCCESS;
+#endif
 }
 
 int initDiversify (Conf *conf) {

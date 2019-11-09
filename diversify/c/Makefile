@@ -9,26 +9,21 @@ DEBUG = -g -DDEBUG
 RAP = ../../topic_based/c/
 # ****************************************************
 
-all: main.o diversify.o Allocator.o constants.o dictionary.o
-	$(CC) $(CFLAGS) -o diversify main.o diversify.o Allocator.o constants.o dictionary.o -lm
+all: main.c diversify.c diversify.h $(RAP)Allocator.c
+	$(CC) $(CFLAGS) main.c diversify.c $(RAP)Allocator.c $(RAP)constants.c $(RAP)dictionary.c -lm -o diversify
 
 debug: CFLAGS += $(DEBUG)
 debug: all
 
-main.o: main.c diversify.h
-	$(CC) $(CFLAGS) -c main.c
+cdiv: CFLAGS += -DCDIV
+cdiv: all
 
-diversify.o: diversify.c diversify.h
-	$(CC) $(CFLAGS) -c diversify.c
+debugcdiv: CFLAGS += -DCDIV $(DEBUG)
+debugcdiv: all
 
-Allocator.o: $(RAP)Allocator.c $(RAP)Allocator.h
-	$(CC) $(CFLAGS) -c $(RAP)Allocator.c
+# tester: tester.c main.c diversify.c diversify.h $(RAP)Allocator.c
+# 	$(CC) $(CFLAGS) -DTESTER -DDEBUG -g tester.c main.c diversify.c $(RAP)Allocator.c $(RAP)constants.c $(RAP)dictionary.c -lm -o tester
 
-constants.o: $(RAP)constants.c $(RAP)constants.h
-	$(CC) $(CFLAGS) -c $(RAP)constants.c
-
-dictionary.o: $(RAP)dictionary.c $(RAP)dictionary.h
-	$(CC) $(CFLAGS) -c $(RAP)dictionary.c
 
 clean:
 	rm -f *.o

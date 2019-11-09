@@ -5,6 +5,7 @@
 int main (int argc, char *argv[]) {
     double time_spent = 0.0;
     clock_t begin = clock();
+
     char wordlist_path[FILEPATH_LENGTH] = "/home1/grupef/ecank/data/wordlist_IDF"; // DONTCHANGE
     char document_info_path[FILEPATH_LENGTH] = "/home1/grupef/ecank/data/doc_lengths"; // DONTCHANGE
     char dvectors_folder_path[FILEPATH_LENGTH] = "/home1/grupef/ecank/data/document_vectors"; // DONTCHANGE
@@ -14,11 +15,12 @@ int main (int argc, char *argv[]) {
     unsigned int number_of_preresults = 0;//100; // CHANGE -> GET FROM ARGUMENTS
     unsigned int number_of_results = 0;//20; // CHANGE -> GET FROM ARGUMENTS
     unsigned int number_of_query = 0;//198; // CHANGE -> GET FROM ARGUMENTS
-    unsigned int div_algorithms[] = {SY, XQUAD}; // DONTCHANGE
+    unsigned int div_algorithms[] = {XQUAD}; // DONTCHANGE
     double div_lambdas[] = { 0.25, 0.5, 0.75 }; // DONTCHANGE
+
     // XQUAD
     unsigned int max_possible_number_of_subquery = 8; // DONTCHANGE [09->12 Max is 8]
-    char subqueryresults_path[FILEPATH_LENGTH] = "XXX";
+    char subqueryresults_path[FILEPATH_LENGTH] = ""; // CHANGE -> GET FROM ARGUMENTS
 
     int i, j;
     int div_len = sizeof(div_algorithms) / sizeof(unsigned int);
@@ -29,10 +31,12 @@ int main (int argc, char *argv[]) {
     sscanf(argv[2], "%d", &number_of_preresults);
     sscanf(argv[3], "%d", &number_of_results);
     sscanf(argv[4], "%d", &number_of_query);
+    strcpy(subqueryresults_path, argv[5]);
 
 #ifdef DEBUG
     printf("Wordlist: %s\n", wordlist_path);
     printf("Preresults: %s\n", preresults_path);
+    printf("Subqueryresults: %s\n", subqueryresults_path);
     printf("Document info path (doc lengths): %s\n", document_info_path);
     printf("Document vectors folder: %s\n", dvectors_folder_path);
     printf("Number of preresults: %d\n", number_of_preresults);
@@ -58,6 +62,7 @@ int main (int argc, char *argv[]) {
         .number_of_query = number_of_query,
         .real_number_of_query = 0,
 
+        /* xQuad */
         .subqueryresults_path = subqueryresults_path,
         .max_possible_number_of_subquery = max_possible_number_of_subquery
     };
@@ -79,6 +84,9 @@ int main (int argc, char *argv[]) {
                 printf("XQUAD initloadSubqueryResults Failure!\n");
                 fflush(stdout);
                 break;
+            } else {
+                printf("XQUAD Initialized!\n");
+                fflush(stdout);
             }
         }
 
