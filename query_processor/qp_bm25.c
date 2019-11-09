@@ -310,7 +310,7 @@ void process_ranked_query(char *rel_name) {
 
     fgets(line, MAX_QUERY_LENGTH, ifp); // read blank line
     q_no = 0;
-    
+
     while (!feof(ifp)) {
         line[strlen(line)-1] = '\0';
         int nof_words_in_query = process_tuple(line);
@@ -440,6 +440,7 @@ int main(int argc,char *argv[]) {
     }
 
     avg_total_tf = collection_total_tf / (double)REMAINING_DOC_NUM;  //DOC_NUM;
+    fclose(ifp);
 
     if (!(ifp = fopen(argv[1],"rt"))) {
         printf("wlist file not found! %s\n", argv[1]);
@@ -494,8 +495,13 @@ int main(int argc,char *argv[]) {
         fclose(subquery_output_fp);
     }
 
+    fclose(output_fp);
     fclose(inverted_index_fp);
     free(WordList);
+    free(accumulator);
+    free(QueryWordsIndexes);
+    free(results);
+    free(total_tf_per_doc);
 
     return 0;
 }
