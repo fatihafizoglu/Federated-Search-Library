@@ -87,6 +87,7 @@ long int q_no = 0;
 FILE *ifp;
 FILE *inverted_index_fp;
 FILE *output_fp;
+FILE *subquery_output_fp;
 
 char rest_of_query[MAX_QUERY_LENGTH];
 

@@ -250,7 +250,6 @@ void run_ranking_query(long int *q_vec, int q_size) {
 
 #ifdef XQUAD
     int subquery_index = 0;
-    FILE *subquery_output_fp = fopen(SUBQUERY_OUTPUT, "wt");
     subquery_results = (Result*) malloc(sizeof(Result)* BEST_DOCS);
 
     /* Gather subquery results */
@@ -289,12 +288,11 @@ void run_ranking_query(long int *q_vec, int q_size) {
         /* Write collected subquery results as: */
         /* <query_id subquery_id doc_id score>\n */
         // for (j = 0; j < WRITE_BEST_N; j++) {
-            fprintf(subquery_output_fp, "%u %u %u %lf\n",
+            fprintf(subquery_output_fp, "%u\t%u\t%u\t%lf\n",
                     q_no + 1, subquery_index, sq_count, /*subquery_results[j].doc_index, */subquery_results[0].sim_rank);
         // }
     }
 
-    fclose(subquery_output_fp);
     free(subquery_results);
 #endif
 }
@@ -485,9 +483,15 @@ int main(int argc,char *argv[]) {
         printf("load_subqueries failed.\n");
         exit(1);
     }
+
+    subquery_output_fp = fopen(SUBQUERY_OUTPUT, "wt");
 #endif
 
     process_ranked_query(query_file);
+
+    if (subquery_output_fp != NULL) {
+        fclose(subquery_output_fp);
+    }
 
     fclose(inverted_index_fp);
     free(WordList);
