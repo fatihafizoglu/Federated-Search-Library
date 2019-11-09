@@ -404,6 +404,11 @@ int main(int argc,char *argv[]) {
     char str[MAX_TOKEN_SIZE];
     int check_doc_num = 0;
 
+    if (argc < 6) {
+        printf("missing arg\n");
+        exit(1);
+    }
+
     WordList = (Word*) malloc(sizeof(Word) * WORD_NO);
     accumulator = (Result*) malloc(sizeof(Result) * DOC_NUM);
     QueryWordsIndexes = (long int*) malloc(sizeof(long int) * MAX_WORD_PER_QUERY);
