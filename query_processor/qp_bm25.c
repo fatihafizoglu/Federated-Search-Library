@@ -25,8 +25,8 @@ int cmpfunc (const void *a, const void *b) {
    return ( *(long int*)a - *(long int*)b );
 }
 
-int lex_order(char *s1, char *s2) {
-    return strcmp(s1, s2);
+int lex_order(const void *s1, const void *s2) {
+    return strcmp((char *)s1, (char *)s2);
 }
 
 void read_next_value(char *into) {
@@ -34,23 +34,23 @@ void read_next_value(char *into) {
     char tempo[MAX_QUERY_LENGTH];
 
     /* skip separators */
-    while (separator(rest_of_query[i]) && rest_of_query[i] != NULL ) i++;
+    while (separator(rest_of_query[i]) && rest_of_query[i] != '\0' ) i++;
 
-    while (!separator(rest_of_query[i]) && rest_of_query[i] != NULL) {
+    while (!separator(rest_of_query[i]) && rest_of_query[i] != '\0') {
         into[j++] = rest_of_query[i];
         i++;
     }
 
-    into[j] = NULL; /* into contains a value as a string */
+    into[j] = '\0'; /* into contains a value as a string */
 
     j = 0;
-    while(rest_of_query[i] != NULL) {
+    while(rest_of_query[i] != '\0') {
         tempo[j] = rest_of_query[i];
         i++;
         j++;
     }
 
-    tempo[j] = NULL;
+    tempo[j] = '\0';
     strcpy(rest_of_query, tempo);
 }
 
@@ -69,7 +69,7 @@ int process_tuple(char *line) {
 
     read_next_value(str);
 
-    while  (*str != NULL) {
+    while  (*str != '\0') {
         strcpy(tokens[token_found], str);
         token_found++;
         read_next_value(str);
@@ -244,7 +244,7 @@ void run_ranking_query(long int *q_vec, int q_size) {
 
     WRITE_BEST_N = j;
     for (j = 0; j < WRITE_BEST_N; j++) {
-        fprintf(output_fp, "%d\tQ0\t%d\t%d\t%lf\tfs\n", q_no + 1, results[j].doc_index, j + 1, results[j].sim_rank);
+        fprintf(output_fp, "%lu\tQ0\t%d\t%d\t%lf\tfs\n", q_no + 1, results[j].doc_index, j + 1, results[j].sim_rank);
     }
 
 
@@ -288,7 +288,7 @@ void run_ranking_query(long int *q_vec, int q_size) {
         /* Write collected subquery results as: */
         /* <query_id subquery_id doc_id score>\n */
         // for (j = 0; j < WRITE_BEST_N; j++) {
-            fprintf(subquery_output_fp, "%u\t%u\t%u\t%lf\n",
+            fprintf(subquery_output_fp, "%lu\t%u\t%u\t%lf\n",
                     q_no + 1, subquery_index, sq_count, /*subquery_results[j].doc_index, */subquery_results[0].sim_rank);
         // }
     }
@@ -311,7 +311,7 @@ void process_ranked_query(char *rel_name) {
     fgets(line, MAX_QUERY_LENGTH, ifp); // read blank line
 
     while (!feof(ifp)) {
-        line[strlen(line)-1] = NULL;
+        line[strlen(line)-1] = '\0';
         int nof_words_in_query = process_tuple(line);
         qsort(QueryWordsIndexes, nof_words_in_query, sizeof(QueryWordsIndexes[0]), cmpfunc);
 
