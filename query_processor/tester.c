@@ -1,3 +1,4 @@
+#include "qp_bm25.h"
 
 int main(int argc,char *argv[]) {
 

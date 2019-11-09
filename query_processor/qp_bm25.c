@@ -309,7 +309,8 @@ void process_ranked_query(char *rel_name) {
     }
 
     fgets(line, MAX_QUERY_LENGTH, ifp); // read blank line
-
+    q_no = 0;
+    
     while (!feof(ifp)) {
         line[strlen(line)-1] = '\0';
         int nof_words_in_query = process_tuple(line);

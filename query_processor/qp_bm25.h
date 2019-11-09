@@ -24,8 +24,8 @@
 
 #define SUBQUERY_OUTPUT "subquery_results"
 
-double BM25_K1_CONSTANT = 1.2;
-double BM25_B_CONSTANT = 0.5;
+#define BM25_K1_CONSTANT 1.2
+#define BM25_B_CONSTANT 0.5
 
 typedef struct inv_ent {
     int doc_id;
@@ -75,14 +75,14 @@ char stopwords[NOSTOPWORD][50];
 
 /* Wordlist, and number of words in Wordlist */
 Word *WordList;
-int word_no_in_list = 0;
+int word_no_in_list;
 
 // Keep track of query's words indexes,
 // term_weight will be computed on-the-fly
 long int *QueryWordsIndexes;
 
 // Global query no being processed
-long int q_no = 0;
+long int q_no;
 
 FILE *ifp;
 FILE *inverted_index_fp;
@@ -97,7 +97,7 @@ Result *subquery_results;
 
 int *total_tf_per_doc;
 double avg_total_tf;
-int REMAINING_DOC_NUM = 0;
+int REMAINING_DOC_NUM;
 
 
 char subqueries[NOF_Q][MAX_SQ_PER_Q][MAX_SQ_LENGTH];
