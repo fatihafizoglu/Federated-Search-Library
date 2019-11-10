@@ -712,6 +712,11 @@ void loadPreresults () {
 #endif
         }
 
+        // Log pollution for big preresults file
+        if (rank_counter > config->number_of_preresults) {
+            continue;
+        }
+
         if ((query_counter > config->number_of_query) ||
             (rank_counter > config->number_of_preresults) ||
             (query_counter != query_id) ||
