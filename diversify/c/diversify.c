@@ -490,6 +490,11 @@ void cleanAllResults () {
     cleanResults();
 }
 
+/*
+ * XXX Potential bug:
+ * numer of preresults from qp code 1000, so subquery_results file includes more than
+ * number_of_preresults document per subquery, since we read all them line by line, this can lead a problem
+*/
 int initloadSubqueryResults() {
     /* Initialize variables for Subqueries */
     int i, j;

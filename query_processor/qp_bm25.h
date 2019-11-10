@@ -16,7 +16,7 @@
 #define DOC_NUM 50220539 /* exact number: 50220538 */
 // get 1 more than exact value, so is word no
 
-#define BEST_DOCS 1000
+#define BEST_DOCS 100
 
 #define MAX_NOF_QUERY 200
 #define MAX_QUERY_LENGTH 1000 // as a character, total of all words, apply also subqueries
