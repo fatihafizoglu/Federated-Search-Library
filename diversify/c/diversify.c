@@ -73,6 +73,7 @@ void getQueryScores(int q_no, int number_of_results, double *max_score, double *
 
 double getSubqueryResult (int q_no, int subquery_index, int doc_id, int preresults_index) {
     double score = 0.0;
+    int i = 0;
 
     /* Preresult index is -1 when caller is not traversing over preresults */
     if (preresults_index != -1 &&
@@ -88,7 +89,7 @@ double getSubqueryResult (int q_no, int subquery_index, int doc_id, int preresul
     }
 #endif
 
-    for (int i = 0; i < config->number_of_preresults; i++) {
+    for (i = 0; i < config->number_of_preresults; i++) {
         if (doc_id == subquery_results[q_no][subquery_index][i].doc_id) {
             score = subquery_results[q_no][subquery_index][i].score;
         }
@@ -118,7 +119,9 @@ double getSubqueryNovelty (int q_no, int subquery_index, int result_size) {
 }
 
 int getNumberOfSubqueries (int q_no) {
-    for (int i = 0; i < config->max_possible_number_of_subquery; i++) {
+    int i = 0;
+
+    for (i = 0; i < config->max_possible_number_of_subquery; i++) {
         /* Check only first result */
         if (subquery_results[q_no][i][0].doc_id == 0 &&
             subquery_results[q_no][i][0].score == 0.0) {
