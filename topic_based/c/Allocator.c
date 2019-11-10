@@ -1,7 +1,7 @@
 #include "Allocator.h"
 
 void endProgram () {
-    int i;
+    int i, j;
 
     if (document_vectors_files != NULL)
         closeDocumentVectorsFiles();
@@ -53,7 +53,7 @@ void endProgram () {
         if (subquery_results != NULL) {
 
             for (i = 0; i < config->number_of_query; i++) {
-                for (int j = 0; j < config->max_possible_number_of_subquery; j++) {
+                for (j = 0; j < config->max_possible_number_of_subquery; j++) {
                     if (subquery_results[i][j] != NULL) {
                         free(subquery_results[i][j]);
                     }
