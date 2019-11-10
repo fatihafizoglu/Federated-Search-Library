@@ -494,9 +494,67 @@ void cleanAllResults () {
  * XXX Potential bug:
  * numer of preresults from qp code 1000, so subquery_results file includes more than
  * number_of_preresults document per subquery, since we read all them line by line, this can lead a problem
+ * Solve by smart reader like preresults
 */
-int initloadSubqueryResults() {
-    /* Initialize variables for Subqueries */
+int loadSubqueryResults() {
+    FILE *fp;
+    unsigned int query_id, subquery_id, doc_id;
+    double score;
+
+    unsigned int sresult_counter = 1;
+
+    if (!(fp = fopen(config->subqueryresults_path, "r"))) {
+        return -1;
+    }
+
+    while (!feof(fp)) {
+        fscanf (fp, "%u\t%u\t%u\t%lf\n", &(query_id), &(subquery_id),
+            &(doc_id), &(score));
+
+#ifdef DEBUG
+        printf("query_id:%u, subquery_id:%u, doc_id:%u, score:%lf\n", query_id, subquery_id, doc_id, score);
+        printf("Preresults[%u][%u].doc(%u) ?= Subquery[%u][%u][%u].doc(%u)\n",
+            (query_id-1), (sresult_counter), (preresults[query_id-1][sresult_counter].doc_id),
+            (query_id-1), (subquery_id-1), (sresult_counter), doc_id);
+        fflush(stdout);
+#endif
+
+        // detect and set sresult_counter
+        // either query id or sq id is updated then reset rank counter
+        if () {
+
+            sresult_counter = 1;
+        }
+
+        if ( (query_id > config->number_of_query) ||
+             (subquery_id >= config->max_possible_number_of_subquery) ||
+             (sresult_counter > config->number_of_preresults) ||
+             (doc_id != preresults[query_id-1][sresult_counter-1].doc_id) ) {
+
+             printf("!!! THIS SHOULD NOT HAPPEN! 1=(%d)||(%d)||(%d)||(%d)\n",
+                 (query_id > config->number_of_query),
+                 (subquery_id >= config->max_possible_number_of_subquery),
+                 (sresult_counter > config->number_of_preresults),
+                 (doc_id != preresults[query_id-1][sresult_counter-1].doc_id) );
+
+             printf("query_id:%u, subquery_id:%u, doc_id:%u, score:%lf\n", query_id, subquery_id, doc_id, score);
+             printf("Preresults[%u][%u].doc(%u) ?= Subquery[%u][%u][%u].doc(%u)\n",
+                 (query_id-1), (sresult_counter-1), (preresults[query_id-1][sresult_counter-1].doc_id),
+                 (query_id-1), (subquery_id-1), (sresult_counter-1), doc_id);
+             fflush(stdout);
+             continue;
+        }
+
+        subquery_results[query_id-1][subquery_id-1][sresult_counter-1].doc_id = doc_id;
+        subquery_results[query_id-1][subquery_id-1][sresult_counter-1].score = score;
+
+        sresult_counter++;
+    }
+
+    return 0;
+}
+
+int initSubqueryResults() {
     int i, j;
     long subquery_results_per_query_alloc_size = config->number_of_query * sizeof(SResult **);
     long subquery_results_per_subquery_alloc_size = config->max_possible_number_of_subquery * sizeof(SResult *);
@@ -518,36 +576,18 @@ int initloadSubqueryResults() {
         }
     }
 
-    cleanSubqueryResults();
+    return 0;
+}
 
-    /* Load Subquery results */
-    FILE *fp;
-    unsigned int query_id, subquery_id, doc_id;
-    double score;
-
-    unsigned int sresult_counter = 0;
-
-    if (!(fp = fopen(config->subqueryresults_path, "r"))) {
+int initloadSubqueryResults() {
+    if (initSubqueryResults() != 0) {
         return -1;
     }
 
-    while (!feof(fp)) {
-        fscanf (fp, "%u\t%u\t%u\t%lf\n", &(query_id), &(subquery_id),
-            &(doc_id), &(score));
+    cleanSubqueryResults();
 
-#ifdef DEBUG
-        if (doc_id != preresults[query_id-1][sresult_counter].doc_id) {
-            printf("Preresults[%u][%u].doc(%u) \nSubquery[%u][%u].doc(%u) Index Mismatch!\n",
-            (query_id-1), (sresult_counter), (preresults[query_id-1][sresult_counter].doc_id),
-            (subquery_id-1), (sresult_counter), doc_id);
-            fflush(stdout);
-        }
-#endif
-
-        subquery_results[query_id-1][subquery_id-1][sresult_counter].doc_id = doc_id;
-        subquery_results[query_id-1][subquery_id-1][sresult_counter].score = score;
-
-        sresult_counter++;
+    if (loadSubqueryResults() != 0) {
+        return -1;
     }
 
     return 0;

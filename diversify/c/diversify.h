@@ -37,6 +37,8 @@ void cleanPreresults();
 void cleanResults();
 void cleanAllResults ();
 
+int loadSubqueryResults(); /* xQuad */
+int initSubqueryResults(); /* xQuad */
 int initloadSubqueryResults(); /* xQuad */
 void loadPreresults_forCDIV();
 void loadPreresults ();
