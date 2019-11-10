@@ -305,7 +305,7 @@ void run_ranking_query(long int *q_vec, int q_size) {
         /* <query_id subquery_id doc_id score>\n */
         for (j = 0; j < WRITE_BEST_N; j++) {
             fprintf(subquery_output_fp, "%lu\t%u\t%u\t%lf\n",
-                    q_no + 1, subquery_index, results[j].doc_index, accumulator[results[j].doc_index].sim_rank);
+                    q_no + 1, subquery_index + 1, results[j].doc_index, accumulator[results[j].doc_index].sim_rank);
         }
     }
 

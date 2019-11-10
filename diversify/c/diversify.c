@@ -490,18 +490,13 @@ void cleanAllResults () {
     cleanResults();
 }
 
-/*
- * XXX Potential bug:
- * numer of preresults from qp code 1000, so subquery_results file includes more than
- * number_of_preresults document per subquery, since we read all them line by line, this can lead a problem
- * Solve by smart reader like preresults
-*/
 int loadSubqueryResults() {
     FILE *fp;
     unsigned int query_id, subquery_id, doc_id;
-    double score;
-
+    unsigned int  prev_query_id = -1;
+    unsigned int  prev_subquery_id = -1;
     unsigned int sresult_counter = 1;
+    double score;
 
     if (!(fp = fopen(config->subqueryresults_path, "r"))) {
         return -1;
@@ -516,24 +511,30 @@ int loadSubqueryResults() {
         printf("Preresults[%u][%u].doc(%u) ?= Subquery[%u][%u][%u].doc(%u)\n",
             (query_id-1), (sresult_counter), (preresults[query_id-1][sresult_counter].doc_id),
             (query_id-1), (subquery_id-1), (sresult_counter), doc_id);
+        printf("prev_query_id:%u, prev_subquery_id:%u\n", prev_query_id, prev_subquery_id);
         fflush(stdout);
 #endif
 
         // detect and set sresult_counter
         // either query id or sq id is updated then reset rank counter
-        if () {
+        if ( ((prev_subquery_id != subquery_id) && (prev_subquery_id != -1)) ||
+             ( (prev_query_id != query_id) && (prev_query_id != -1)) ) {
 
             sresult_counter = 1;
+#ifdef DEBUG
+            printf("New list detected\n");
+            fflush(stdout);
+#endif
         }
 
         if ( (query_id > config->number_of_query) ||
-             (subquery_id >= config->max_possible_number_of_subquery) ||
+             (subquery_id > config->max_possible_number_of_subquery) ||
              (sresult_counter > config->number_of_preresults) ||
              (doc_id != preresults[query_id-1][sresult_counter-1].doc_id) ) {
 
              printf("!!! THIS SHOULD NOT HAPPEN! 1=(%d)||(%d)||(%d)||(%d)\n",
                  (query_id > config->number_of_query),
-                 (subquery_id >= config->max_possible_number_of_subquery),
+                 (subquery_id > config->max_possible_number_of_subquery),
                  (sresult_counter > config->number_of_preresults),
                  (doc_id != preresults[query_id-1][sresult_counter-1].doc_id) );
 
@@ -548,6 +549,9 @@ int loadSubqueryResults() {
         subquery_results[query_id-1][subquery_id-1][sresult_counter-1].doc_id = doc_id;
         subquery_results[query_id-1][subquery_id-1][sresult_counter-1].score = score;
 
+
+        prev_query_id = query_id;
+        prev_subquery_id = subquery_id;
         sresult_counter++;
     }
 
