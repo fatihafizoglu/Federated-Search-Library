@@ -137,6 +137,7 @@ int xquad_diverse (int q_no, int number_of_preresults, int number_of_results) {
     int result_size = 0;
     double sum_score = 0.0, max_score = 0.0, local_score = 0.0;
     int number_of_subqueries = 0;
+    int common_sense = 20; // or do you completely lose your mind to print n million times
 
     // calculate sum of scores for preresults, it is needed for normalization
     for (i = 0; i < number_of_preresults; i++) {
@@ -180,6 +181,15 @@ int xquad_diverse (int q_no, int number_of_preresults, int number_of_results) {
                     novelty = getSubqueryNovelty(q_no, j, result_size);
 
                     diverse_score = diverse_score + (likelihood * relevance * novelty);
+#ifdef DEBUG
+                    if (common_sense-- > 0) {
+                        printf("i-j=%d-%d | local_score:%lf, likelihood:%lf, \
+                                relevance:%lf, novelty:%lf, diverse_score:%lf, max_score:%lf\n",
+                            i, j, local_score, likelihood, relevance, novelty, diverse_score,
+                            max_score);
+                        fflush(stdout);
+                    }
+#endif
                 }
 
                 local_score = local_score + ((config->lambda) * (diverse_score));
@@ -506,14 +516,14 @@ int loadSubqueryResults() {
         fscanf (fp, "%u\t%u\t%u\t%lf\n", &(query_id), &(subquery_id),
             &(doc_id), &(score));
 
-#ifdef DEBUG
-        printf("query_id:%u, subquery_id:%u, doc_id:%u, score:%lf\n", query_id, subquery_id, doc_id, score);
-        printf("Preresults[%u][%u].doc(%u) ?= Subquery[%u][%u][%u].doc(%u)\n",
-            (query_id-1), (sresult_counter), (preresults[query_id-1][sresult_counter].doc_id),
-            (query_id-1), (subquery_id-1), (sresult_counter), doc_id);
-        printf("prev_query_id:%u, prev_subquery_id:%u\n", prev_query_id, prev_subquery_id);
-        fflush(stdout);
-#endif
+// #ifdef DEBUG
+//         printf("query_id:%u, subquery_id:%u, doc_id:%u, score:%lf\n", query_id, subquery_id, doc_id, score);
+//         printf("Preresults[%u][%u].doc(%u) ?= Subquery[%u][%u][%u].doc(%u)\n",
+//             (query_id-1), (sresult_counter), (preresults[query_id-1][sresult_counter].doc_id),
+//             (query_id-1), (subquery_id-1), (sresult_counter), doc_id);
+//         printf("prev_query_id:%u, prev_subquery_id:%u\n", prev_query_id, prev_subquery_id);
+//         fflush(stdout);
+// #endif
 
         // detect and set sresult_counter
         // either query id or sq id is updated then reset rank counter
@@ -521,10 +531,10 @@ int loadSubqueryResults() {
              ( (prev_query_id != query_id) && (prev_query_id != -1)) ) {
 
             sresult_counter = 1;
-#ifdef DEBUG
-            printf("New list detected\n");
-            fflush(stdout);
-#endif
+// #ifdef DEBUG
+//             printf("New list detected\n");
+//             fflush(stdout);
+// #endif
         }
 
         // Log pollution for big preresults file
@@ -721,12 +731,12 @@ void loadPreresults () {
         fscanf (fp, "%u %s %u %u %lf %s\n", &(query_id), temp, &(document_id),
                                             &(rank), &(score), temp);
 
-#ifdef DEBUG
-        printf("query_id:%u, doc_id:%u, rank:%u, score:%lf\n", query_id, document_id, rank, score);
-        printf("prev_rank:%u, query_counter:%u, rank_counter:%u, prev_query_id:%u\n",
-                previous_rank, query_counter, rank_counter, prev_query_id);
-        fflush(stdout);
-#endif
+// #ifdef DEBUG
+//         printf("query_id:%u, doc_id:%u, rank:%u, score:%lf\n", query_id, document_id, rank, score);
+//         printf("prev_rank:%u, query_counter:%u, rank_counter:%u, prev_query_id:%u\n",
+//                 previous_rank, query_counter, rank_counter, prev_query_id);
+//         fflush(stdout);
+// #endif
 
         // smart query list detection
         if ( (  previous_rank > rank) ||
@@ -734,10 +744,10 @@ void loadPreresults () {
             query_counter++;
             rank_counter = 1;
 
-#ifdef DEBUG
-            printf("New query list detected\n");
-            fflush(stdout);
-#endif
+// #ifdef DEBUG
+//             printf("New query list detected\n");
+//             fflush(stdout);
+// #endif
         }
 
         // Log pollution for big preresults file

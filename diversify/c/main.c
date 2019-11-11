@@ -89,8 +89,6 @@ int main (int argc, char *argv[]) {
                 fflush(stdout);
             }
 
-            // XXX fcoursnt
-            break;
         }
 
         for (j = 0; j < lambda_len; j++) {
