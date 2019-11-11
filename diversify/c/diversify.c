@@ -84,7 +84,7 @@ double getSubqueryResult (int q_no, int subquery_index, int doc_id, int preresul
     }
 #ifdef DEBUG
     else if (preresults_index != -1) {
-        printf("Unexpected Index MISMatch: %s\n", __FUNCTION__);
+        printf("Unexpected Index MISMatch\n");
         fflush(stdout);
     }
 #endif
@@ -95,17 +95,10 @@ double getSubqueryResult (int q_no, int subquery_index, int doc_id, int preresul
         }
     }
 
-#ifdef DEBUG
-    if (score == 0.0) {
-        printf("Score 0.0 for Q#%d SQ#%d DOC#%d INDEX#%d FNC:%s\n",
-            q_no, subquery_index, doc_id, preresults_index, __FUNCTION__);
-        fflush(stdout);
-    }
-#endif
-
     return score;
 }
 
+// XXX buggy
 double getSubqueryNovelty (int q_no, int subquery_index, int result_size) {
     int i;
     double novelty = 1.0;
@@ -114,6 +107,15 @@ double getSubqueryNovelty (int q_no, int subquery_index, int result_size) {
         novelty = novelty *
             (1 - getSubqueryResult(q_no, subquery_index, results[q_no][i].doc_id, -1));
     }
+
+#ifdef DEBUG
+    if (novelty == 1.0) {
+        printf("novelty 1.0 for Q# %d SQ# %d sampleDOCs# %d %d %d\n",
+            q_no, subquery_index, results[q_no][0].doc_id,
+            results[q_no][4].doc_id, results[q_no][9].doc_id);
+        fflush(stdout);
+    }
+#endif
 
     return novelty;
 }
@@ -153,7 +155,7 @@ int xquad_diverse (int q_no, int number_of_preresults, int number_of_results) {
 
 #ifdef DEBUG
     printf("#Subqueries: %d\n", number_of_subqueries);
-    printf("Sum of scores: %lf (for normalization)\n", sum_score);
+    printf("Sum of scores: %lf\n", sum_score);
     fflush(stdout);
 #endif
 
@@ -183,8 +185,8 @@ int xquad_diverse (int q_no, int number_of_preresults, int number_of_results) {
                     diverse_score = diverse_score + (likelihood * relevance * novelty);
 #ifdef DEBUG
                     if (common_sense-- > 0) {
-                        printf("i-j=%d-%d | local_score:%lf, likelihood:%lf, \
-                                relevance:%lf, novelty:%lf, diverse_score:%lf, max_score:%lf\n",
+                        printf("i-j=%d-%d | local_score:%lf, likelihood:%lf, "
+                                "relevance:%lf, novelty:%lf, diverse_score:%lf, max_score:%lf\n",
                             i, j, local_score, likelihood, relevance, novelty, diverse_score,
                             max_score);
                         fflush(stdout);
@@ -205,6 +207,12 @@ int xquad_diverse (int q_no, int number_of_preresults, int number_of_results) {
         if (index < 0) {
             break;
         }
+
+#ifdef DEBUG
+        printf("result_size:%d, index:%d, doc_id:%d\n",
+            result_size, index, preresults[q_no][index].doc_id);
+        fflush(stdout);
+#endif
 
         results[q_no][result_size].doc_id = preresults[q_no][index].doc_id;
         results[q_no][result_size].score = preresults[q_no][index].score;
