@@ -578,31 +578,43 @@ void free_subquery_results() {
 
 int initSubqueryResults() {
     int i, j;
-    /*
-    long subquery_results_per_query_alloc_size = config->number_of_query * sizeof(*subquery_results);
-    long subquery_results_per_subquery_alloc_size = config->max_possible_number_of_subquery * sizeof(*subquery_results[]);
+    long subquery_results_per_query_alloc_size = config->number_of_query * sizeof(SResult **);
+    long subquery_results_per_subquery_alloc_size = config->max_possible_number_of_subquery * sizeof(SResult *);
     long subquery_results_per_preresults_alloc_size = config->number_of_preresults * sizeof(SResult);
 
     if (!(subquery_results = malloc(subquery_results_per_query_alloc_size))) {
         return -1;
     }
 
+    for (i = 0; i < config->number_of_query; ++i) {
+        subquery_results[i] = NULL;
+    }
+
     for (i = 0; i < config->number_of_query; i++) {
         if (!(subquery_results[i] = malloc(subquery_results_per_subquery_alloc_size))) {
+            free_subquery_results();
             return -1;
         }
+    }
 
+    for (i = 0; i < config->number_of_query; ++i) {
+        for (j = 0; j < config->max_possible_number_of_subquery; ++j) {
+            subquery_results[i][j] = NULL;
+        }
+    }
+
+    for (i = 0; i < config->number_of_query; i++) {
         for (j = 0; j < config->max_possible_number_of_subquery; i++) {
             if (!(subquery_results[i][j] = malloc(subquery_results_per_preresults_alloc_size))) {
+                free_subquery_results();
                 return -1;
             }
         }
     }
 
-    */
 
+/*
     if ((subquery_results = malloc(config->number_of_query * sizeof(*subquery_results))) == NULL) {
-        perror("malloc 1");
         return -1;
     }
 
@@ -612,14 +624,13 @@ int initSubqueryResults() {
 
     for (i = 0; i < config->number_of_query; ++i) {
         if ((subquery_results[i] = malloc(config->max_possible_number_of_subquery * sizeof(*subquery_results[i]))) == NULL) {
-            perror("malloc 2");
             free_subquery_results();
             return -1;
         }
     }
 
     for (i = 0; i < config->number_of_query; ++i) {
-        for (j=0; j < config->max_possible_number_of_subquery; ++j) {
+        for (j = 0; j < config->max_possible_number_of_subquery; ++j) {
             subquery_results[i][j] = NULL;
         }
     }
@@ -627,13 +638,12 @@ int initSubqueryResults() {
     for (i = 0; i < config->number_of_query; ++i) {
         for (j = 0; j < config->max_possible_number_of_subquery; ++j) {
             if ((subquery_results[i][j] = malloc(config->number_of_preresults * sizeof(*subquery_results[i][j]))) == NULL) {
-                perror("malloc 3");
                 free_subquery_results();
                 return -1;
             }
         }
     }
-
+*/
     return 0;
 }
 
