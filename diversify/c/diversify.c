@@ -527,6 +527,11 @@ int loadSubqueryResults() {
 #endif
         }
 
+        // Log pollution for big preresults file
+        if (sresult_counter > config->number_of_preresults) {
+            continue;
+        }
+
         if ( (query_id > config->number_of_query) ||
              (subquery_id > config->max_possible_number_of_subquery) ||
              (sresult_counter > config->number_of_preresults) ||
@@ -558,10 +563,24 @@ int loadSubqueryResults() {
     return 0;
 }
 
+void free_subquery_results() {
+    size_t i, j;
+
+    for (i = 0; i < config->number_of_query; ++i) {
+        if (subquery_results[i] != NULL) {
+            for (j = 0; j < config->max_possible_number_of_subquery; ++j)
+                free(subquery_results[i][j]);
+            free(subquery_results[i]);
+        }
+    }
+    free(subquery_results);
+}
+
 int initSubqueryResults() {
     int i, j;
-    long subquery_results_per_query_alloc_size = config->number_of_query * sizeof(SResult **);
-    long subquery_results_per_subquery_alloc_size = config->max_possible_number_of_subquery * sizeof(SResult *);
+    /*
+    long subquery_results_per_query_alloc_size = config->number_of_query * sizeof(*subquery_results);
+    long subquery_results_per_subquery_alloc_size = config->max_possible_number_of_subquery * sizeof(*subquery_results[]);
     long subquery_results_per_preresults_alloc_size = config->number_of_preresults * sizeof(SResult);
 
     if (!(subquery_results = malloc(subquery_results_per_query_alloc_size))) {
@@ -575,6 +594,41 @@ int initSubqueryResults() {
 
         for (j = 0; j < config->max_possible_number_of_subquery; i++) {
             if (!(subquery_results[i][j] = malloc(subquery_results_per_preresults_alloc_size))) {
+                return -1;
+            }
+        }
+    }
+
+    */
+
+    if ((subquery_results = malloc(config->number_of_query * sizeof(*subquery_results))) == NULL) {
+        perror("malloc 1");
+        return -1;
+    }
+
+    for (i = 0; i < config->number_of_query; ++i) {
+        subquery_results[i] = NULL;
+    }
+
+    for (i = 0; i < config->number_of_query; ++i) {
+        if ((subquery_results[i] = malloc(config->max_possible_number_of_subquery * sizeof(*subquery_results[i]))) == NULL) {
+            perror("malloc 2");
+            free_subquery_results();
+            return -1;
+        }
+    }
+
+    for (i = 0; i < config->number_of_query; ++i) {
+        for (j=0; j < config->max_possible_number_of_subquery; ++j) {
+            subquery_results[i][j] = NULL;
+        }
+    }
+
+    for (i = 0; i < config->number_of_query; ++i) {
+        for (j = 0; j < config->max_possible_number_of_subquery; ++j) {
+            if ((subquery_results[i][j] = malloc(config->number_of_preresults * sizeof(*subquery_results[i][j]))) == NULL) {
+                perror("malloc 3");
+                free_subquery_results();
                 return -1;
             }
         }
