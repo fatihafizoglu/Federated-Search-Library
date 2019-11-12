@@ -6,7 +6,9 @@ int main (int argc, char *argv[]) {
     double time_spent = 0.0;
     clock_t begin = clock();
 
-    char wordlist_path[FILEPATH_LENGTH] = "/home1/grupef/ecank/data/wordlist_ACCESS_CSI"; // CHANGE?
+    char wordlist_path[FILEPATH_LENGTH] = "/home1/grupef/ecank/data/wordlist_IDF"; // DONTCHANGE
+    // We assume that wordlist information tfidf has been shared over clusters and also broker. So,
+    // please don't change it next time ecank.
     char document_info_path[FILEPATH_LENGTH] = "/home1/grupef/ecank/data/doc_lengths"; // DONTCHANGE
     char dvectors_folder_path[FILEPATH_LENGTH] = "/home1/grupef/ecank/data/document_vectors"; // DONTCHANGE
     char preresults_path[FILEPATH_LENGTH] = ""; // CHANGE -> GET FROM ARGUMENTS
