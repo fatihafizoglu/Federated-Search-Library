@@ -75,12 +75,13 @@ double getSubqueryResult (int q_no, int subquery_index, int doc_id, int preresul
     double score = 0.0;
     int i = 0;
 
-    /* Preresult index is -1 when caller is not traversing over preresults */
+    /* Preresult index is -1 when caller is not traversing over 'preresults' but 'results' */
     if (preresults_index != -1 &&
         doc_id == subquery_results[q_no][subquery_index][preresults_index].doc_id) {
         score = subquery_results[q_no][subquery_index][preresults_index].score;
     }
     else if (preresults_index != -1) {
+        printf("ERROR: THIS SHOULD NOT HAPPEN!\n");
         printf("Unexpected Index MISMatch\n");
         fflush(stdout);
     }
@@ -98,7 +99,6 @@ double getSubqueryResult (int q_no, int subquery_index, int doc_id, int preresul
     return score;
 }
 
-// XXX buggy
 double getSubqueryNovelty (int q_no, int subquery_index, int result_size, double normalization) {
     if (result_size == 0) {
         return 1.0;
@@ -172,6 +172,11 @@ int xquad_diverse (int q_no, int number_of_preresults, int number_of_results) {
         for (doc_i = 0; doc_i < number_of_preresults; doc_i++) {
             // calculate Fxquad(doc)
 
+            // use 'mark', as an indication of being added.
+            if (preresults[q_no][doc_i].mark) {
+                continue;
+            }
+
             // relevance(query-doc) part
             local_score = (1.0 - (config->lambda)) * (preresults[q_no][doc_i].score / sum_score);
 
@@ -208,7 +213,7 @@ int xquad_diverse (int q_no, int number_of_preresults, int number_of_results) {
                 index = doc_i;
             }
         }
-        // XXX i think thisisWRONGWROOONG
+
         if (index < 0) {
 #ifdef DEBUG
             printf("BREAK! result_size:%d, index:%d\n", result_size, index);
@@ -226,6 +231,7 @@ int xquad_diverse (int q_no, int number_of_preresults, int number_of_results) {
         results[q_no][result_size].doc_id = preresults[q_no][index].doc_id;
         results[q_no][result_size].score = preresults[q_no][index].score;
         results[q_no][result_size].query_id = preresults[q_no][index].query_id;
+        preresults[q_no][index].mark = true;
         result_size++;
         common_sense=20;
     }
