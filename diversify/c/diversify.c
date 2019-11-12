@@ -110,7 +110,7 @@ double getSubqueryNovelty (int q_no, int subquery_index, int result_size) {
 
 #ifdef DEBUG
     if (novelty == 1.0) {
-        printf("novelty 1.0 for Q# %d SQ# %d sampleDOCs# %d %d %d\n",
+        printf("novelty 1.0 Q# %d SQ# %d sampleDOCs# %d %d %d\n",
             q_no, subquery_index, results[q_no][0].doc_id,
             results[q_no][4].doc_id, results[q_no][9].doc_id);
         fflush(stdout);
@@ -135,15 +135,19 @@ int getNumberOfSubqueries (int q_no) {
 }
 
 int xquad_diverse (int q_no, int number_of_preresults, int number_of_results) {
-    int i, j, index = -1;
+#ifdef DEBUG
+    printf("XQ q: %d, nof_pr: %d, nof_r: %d\n", q_no, number_of_preresults, number_of_results);
+    fflush(stdout);
+#endif
+    int doc_i = 0, subquery_i = 0, index = -1;
     int result_size = 0;
     double sum_score = 0.0, max_score = 0.0, local_score = 0.0;
     int number_of_subqueries = 0;
     int common_sense = 20; // or do you completely lose your mind to print n million times
 
     // calculate sum of scores for preresults, it is needed for normalization
-    for (i = 0; i < number_of_preresults; i++) {
-        sum_score = sum_score + preresults[q_no][i].score;
+    for (doc_i = 0; doc_i < number_of_preresults; doc_i++) {
+        sum_score = sum_score + preresults[q_no][doc_i].score;
     }
 
     if (sum_score == 0.0) {
@@ -165,30 +169,32 @@ int xquad_diverse (int q_no, int number_of_preresults, int number_of_results) {
         index = -1;
 
         // find document that maximize Fxquad(doc)
-        for (i = 0; i < number_of_preresults; i++) {
+        for (doc_i = 0; doc_i < number_of_preresults; doc_i++) {
             // calculate Fxquad(doc)
 
             // relevance(query-doc) part
-            local_score = (1.0 - (config->lambda)) * (preresults[q_no][i].score / sum_score);
+            local_score = (1.0 - (config->lambda)) * (preresults[q_no][doc_i].score / sum_score);
 
             // diverse part
             if (config->lambda != 0.0) {
                 double diverse_score = 0.0;
 
-                for (j = 0; j < number_of_subqueries; j++) {
+                for (subquery_i = 0; subquery_i < number_of_subqueries; subquery_i++) {
                     double likelihood, relevance, novelty;
                     likelihood = 1.0 / number_of_subqueries;
-                    relevance = getSubqueryResult(q_no, j, preresults[q_no][i].doc_id, i);
+                    relevance = getSubqueryResult(q_no, subquery_i, preresults[q_no][doc_i].doc_id, doc_i);
                     relevance = relevance / sum_score;
-                    novelty = getSubqueryNovelty(q_no, j, result_size);
+                    novelty = getSubqueryNovelty(q_no, subquery_i, result_size);
 
                     diverse_score = diverse_score + (likelihood * relevance * novelty);
 #ifdef DEBUG
                     if (common_sense-- > 0) {
-                        printf("i-j=%d-%d | local_score:%lf, likelihood:%lf, "
-                                "relevance:%lf, novelty:%lf, diverse_score:%lf, max_score:%lf\n",
-                            i, j, local_score, likelihood, relevance, novelty, diverse_score,
-                            max_score);
+                        printf("doc_i-sq_i=%d-%d | local_score:%lf, likelihood:%lf, "
+                                "relevance:%lf, novelty:%lf, diverse_score:%lf, "
+                                "max_score:%lf, index:%d\n",
+                            doc_i, subquery_i, local_score, likelihood,
+                            relevance, novelty, diverse_score,
+                            max_score, index);
                         fflush(stdout);
                     }
 #endif
@@ -200,11 +206,15 @@ int xquad_diverse (int q_no, int number_of_preresults, int number_of_results) {
 
             if (local_score > max_score) {
                 max_score = local_score;
-                index = i;
+                index = doc_i;
             }
         }
-
+        // XXX i think thisisWRONGWROOONG
         if (index < 0) {
+#ifdef DEBUG
+            printf("BREAK! result_size:%d, index:%d\n", result_size, index);
+            fflush(stdout);
+#endif
             break;
         }
 
