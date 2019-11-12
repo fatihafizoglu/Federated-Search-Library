@@ -71,35 +71,35 @@ void getQueryScores(int q_no, int number_of_results, double *max_score, double *
     }
 }
 
-double getSubqueryResult (int q_no, int subquery_index, int doc_id, int preresults_index) {
+double getSubqueryResult (int q_no, int subquery_index, int doc_id, int preresults_index, double normalization) {
     double score = 0.0;
     int i = 0;
 
     /* Preresult index is -1 when caller is not traversing over preresults */
     if (preresults_index != -1 &&
         doc_id == subquery_results[q_no][subquery_index][preresults_index].doc_id) {
-
         score = subquery_results[q_no][subquery_index][preresults_index].score;
-        return score;
     }
-#ifdef DEBUG
     else if (preresults_index != -1) {
         printf("Unexpected Index MISMatch\n");
         fflush(stdout);
     }
-#endif
-
-    for (i = 0; i < config->number_of_preresults; i++) {
-        if (doc_id == subquery_results[q_no][subquery_index][i].doc_id) {
-            score = subquery_results[q_no][subquery_index][i].score;
+    else {
+        for (i = 0; i < config->number_of_preresults; i++) {
+            if (doc_id == subquery_results[q_no][subquery_index][i].doc_id) {
+                score = subquery_results[q_no][subquery_index][i].score;
+            }
         }
     }
+
+    // Normalize
+    score = score / normalization;
 
     return score;
 }
 
 // XXX buggy
-double getSubqueryNovelty (int q_no, int subquery_index, int result_size) {
+double getSubqueryNovelty (int q_no, int subquery_index, int result_size, double normalization) {
     if (result_size == 0) {
         return 1.0;
     }
@@ -109,7 +109,7 @@ double getSubqueryNovelty (int q_no, int subquery_index, int result_size) {
 
     for (i = 0; i < result_size; i++) {
         novelty = novelty *
-            (1 - getSubqueryResult(q_no, subquery_index, results[q_no][i].doc_id, -1));
+            (1 - getSubqueryResult(q_no, subquery_index, results[q_no][i].doc_id, -1, normalization));
     }
 
 #ifdef DEBUG
@@ -182,9 +182,8 @@ int xquad_diverse (int q_no, int number_of_preresults, int number_of_results) {
                 for (subquery_i = 0; subquery_i < number_of_subqueries; subquery_i++) {
                     double likelihood, relevance, novelty;
                     likelihood = 1.0 / number_of_subqueries;
-                    relevance = getSubqueryResult(q_no, subquery_i, preresults[q_no][doc_i].doc_id, doc_i);
-                    relevance = relevance / sum_score;
-                    novelty = getSubqueryNovelty(q_no, subquery_i, result_size);
+                    relevance = getSubqueryResult(q_no, subquery_i, preresults[q_no][doc_i].doc_id, doc_i, sum_score);
+                    novelty = getSubqueryNovelty(q_no, subquery_i, result_size, sum_score);
 
                     diverse_score = diverse_score + (likelihood * relevance * novelty);
 #ifdef DEBUG
