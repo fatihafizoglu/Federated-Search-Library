@@ -16,8 +16,8 @@ double getVectorLength (int, double *);
 double cosineSimilarity (int, int);
 void getQueryScores(int, int, double *, double *);
 
-double getSubqueryResult (int, int, int, int); /* xQuad */
-double getSubqueryNovelty (int, int, int); /* xQuad */
+double getSubqueryResult (int, int, int, int, double); /* xQuad */
+double getSubqueryNovelty (int, int, int, double); /* xQuad */
 int getNumberOfSubqueries (int); /* xQuad */
 
 int xquad_diverse (int, int, int); /* xQuad */
