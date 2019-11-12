@@ -110,8 +110,8 @@ double getSubqueryNovelty (int q_no, int subquery_index, int result_size) {
 
 #ifdef DEBUG
     if (novelty == 1.0) {
-        printf("novelty 1.0 Q# %d SQ# %d sampleDOCs# %d %d %d\n",
-            q_no, subquery_index, results[q_no][0].doc_id,
+        printf("NOVELTY=1 Q:%d SQ:%d rsize:%d, sampleDOCs# %d %d %d\n",
+            q_no, subquery_index, result_size, results[q_no][0].doc_id,
             results[q_no][4].doc_id, results[q_no][9].doc_id);
         fflush(stdout);
     }
@@ -135,10 +135,6 @@ int getNumberOfSubqueries (int q_no) {
 }
 
 int xquad_diverse (int q_no, int number_of_preresults, int number_of_results) {
-#ifdef DEBUG
-    printf("XQ q: %d, nof_pr: %d, nof_r: %d\n", q_no, number_of_preresults, number_of_results);
-    fflush(stdout);
-#endif
     int doc_i = 0, subquery_i = 0, index = -1;
     int result_size = 0;
     double sum_score = 0.0, max_score = 0.0, local_score = 0.0;
@@ -228,6 +224,7 @@ int xquad_diverse (int q_no, int number_of_preresults, int number_of_results) {
         results[q_no][result_size].score = preresults[q_no][index].score;
         results[q_no][result_size].query_id = preresults[q_no][index].query_id;
         result_size++;
+        common_sense=20;
     }
 
     return result_size;
