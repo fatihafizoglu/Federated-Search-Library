@@ -112,14 +112,14 @@ double getSubqueryNovelty (int q_no, int subquery_index, int result_size, double
             (1 - getSubqueryResult(q_no, subquery_index, results[q_no][i].doc_id, -1, normalization));
     }
 
-#ifdef DEBUG
-    if (novelty == 1.0) {
-        printf("NOVELTY=1 Q:%d SQ:%d rsize:%d, sampleDOCs# %d %d %d\n",
-            q_no, subquery_index, result_size, results[q_no][0].doc_id,
-            results[q_no][4].doc_id, results[q_no][9].doc_id);
-        fflush(stdout);
-    }
-#endif
+// #ifdef DEBUG
+//     if (novelty == 1.0) {
+//         printf("NOVELTY=1 Q:%d SQ:%d rsize:%d, sampleDOCs# %d %d %d\n",
+//             q_no, subquery_index, result_size, results[q_no][0].doc_id,
+//             results[q_no][1].doc_id, results[q_no][2].doc_id);
+//         fflush(stdout);
+//     }
+// #endif
 
     return novelty;
 }
@@ -143,7 +143,7 @@ int xquad_diverse (int q_no, int number_of_preresults, int number_of_results) {
     int result_size = 0;
     double sum_score = 0.0, max_score = 0.0, local_score = 0.0;
     int number_of_subqueries = 0;
-    int common_sense = 20; // or do you completely lose your mind to print n million times
+    int common_sense = 5; // or do you completely lose your mind to print n million times
 
     // calculate sum of scores for preresults, it is needed for normalization
     for (doc_i = 0; doc_i < number_of_preresults; doc_i++) {
@@ -233,7 +233,7 @@ int xquad_diverse (int q_no, int number_of_preresults, int number_of_results) {
         results[q_no][result_size].query_id = preresults[q_no][index].query_id;
         preresults[q_no][index].mark = true;
         result_size++;
-        common_sense=20;
+        // common_sense=20;
     }
 
     return result_size;
@@ -319,6 +319,7 @@ int sy_diverse (int q_no, int number_of_preresults, int number_of_results) {
     int i = 0, j = 0;
     int result_size = 0;
 
+    // I Think, below line is unnecessary.
     cleanPreresultsMarks();
 
     while (result_size < number_of_results && i < number_of_preresults) {
