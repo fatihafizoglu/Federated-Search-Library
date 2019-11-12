@@ -100,6 +100,10 @@ double getSubqueryResult (int q_no, int subquery_index, int doc_id, int preresul
 
 // XXX buggy
 double getSubqueryNovelty (int q_no, int subquery_index, int result_size) {
+    if (result_size == 0) {
+        return 1.0;
+    }
+
     int i;
     double novelty = 1.0;
 
