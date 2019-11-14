@@ -577,13 +577,13 @@ int loadSubqueryResults() {
         if ( (query_counter > config->number_of_query) ||
              (subquery_id > config->max_possible_number_of_subquery) ||
              (sresult_counter > config->number_of_preresults) ||
-             (preresults[query_counter-1][sresult_counter-1] != doc_id) ) {
+             (preresults[query_counter-1][sresult_counter-1].doc_id != doc_id) ) {
 
              printf("ERROR: THIS SHOULD NOT HAPPEN! 1=(%d)||(%d)||(%d)||(%d)\n",
                  (query_counter > config->number_of_query),
                  (subquery_id > config->max_possible_number_of_subquery),
                  (sresult_counter > config->number_of_preresults),
-                 (preresults[query_counter-1][sresult_counter-1] != doc_id));
+                 (preresults[query_counter-1][sresult_counter-1].doc_id != doc_id));
 
              printf("READ: query_id:%u, subquery_id:%u, doc_id:%u, score:%lf\n",
                  query_id, subquery_id, doc_id, score);
