@@ -578,7 +578,7 @@ int loadSubqueryResults() {
              (subquery_id > config->max_possible_number_of_subquery) ||
              (sresult_counter > config->number_of_preresults) ) {
 
-             printf("ERROR: THIS SHOULD NOT HAPPEN! 1=(%d)||(%d)||(%d)||(%d)\n",
+             printf("ERROR: THIS SHOULD NOT HAPPEN! 1=(%d)||(%d)||(%d)\n",
                  (query_counter > config->number_of_query),
                  (subquery_id > config->max_possible_number_of_subquery),
                  (sresult_counter > config->number_of_preresults));
