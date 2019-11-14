@@ -82,20 +82,20 @@ int main (int argc, char *argv[]) {
 #endif
 
     for (i = 0; i < div_len; i++) {
+        if (div_algorithms[i] == XQUAD) {
+            if (initloadSubqueryResults() != 0) {
+                printf("XQUAD initloadSubqueryResults Failure!\n");
+                fflush(stdout);
+                break;
+            } else {
+                printf("XQUAD Initialized!\n");
+                fflush(stdout);
+            }
+        }
+
         for (j = 0; j < lambda_len; j++) {
             conf.diversification_algorithm = div_algorithms[i];
             conf.lambda = div_lambdas[j];
-
-            if (div_algorithms[i] == XQUAD) {
-                if (initloadSubqueryResults() != 0) {
-                    printf("XQUAD initloadSubqueryResults Failure!\n");
-                    fflush(stdout);
-                    break;
-                } else {
-                    printf("XQUAD Initialized!\n");
-                    fflush(stdout);
-                }
-            }
 
             cleanResults();
 
