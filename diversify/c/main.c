@@ -18,7 +18,7 @@ int main (int argc, char *argv[]) {
     unsigned int number_of_results = 0;//20; // CHANGE -> GET FROM ARGUMENTS
     unsigned int number_of_query = 0;//198; // CHANGE -> GET FROM ARGUMENTS
     unsigned int div_algorithms[] = {XQUAD}; // DONTCHANGE XXX
-    double div_lambdas[] = { /*0.25, 0.5,*/ 0.75, 0.6, 0.65, 0.7, 0.8 }; // DONTCHANGE XXX
+    double div_lambdas[] = { 0.75, 0.5, 0.25 }; // DONTCHANGE XXX
 
     // XQUAD
     unsigned int max_possible_number_of_subquery = 10; // DONTCHANGE [09->12 Max is 8]
