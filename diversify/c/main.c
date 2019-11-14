@@ -35,7 +35,7 @@ int main (int argc, char *argv[]) {
     sscanf(argv[4], "%d", &number_of_query);
     strcpy(subqueryresults_path, argv[5]);
 
-#ifdef DEBUG
+
     printf("Wordlist: %s\n", wordlist_path);
     printf("Preresults: %s\n", preresults_path);
     printf("Subqueryresults: %s\n", subqueryresults_path);
@@ -44,7 +44,7 @@ int main (int argc, char *argv[]) {
     printf("Number of preresults: %d\n", number_of_preresults);
     printf("Number of results: %d\n", number_of_results);
     printf("Number of query: %d\n", number_of_query);
-
+#ifdef DEBUG
     printf("Now, you have 10 seconds to send SIGINT...\n");
     fflush(stdout);
     sleep(10);
