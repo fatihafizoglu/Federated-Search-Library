@@ -145,6 +145,8 @@ int xquad_diverse (int q_no, int number_of_preresults, int number_of_results) {
     int number_of_subqueries = 0;
     int common_sense = 5; // or do you completely lose your mind to print n million times
 
+    cleanPreresultsMarks();
+
     // calculate sum of scores for preresults, it is needed for normalization
     for (doc_i = 0; doc_i < number_of_preresults; doc_i++) {
         sum_score = sum_score + preresults[q_no][doc_i].score;
@@ -181,7 +183,7 @@ int xquad_diverse (int q_no, int number_of_preresults, int number_of_results) {
             local_score = (1.0 - (config->lambda)) * (preresults[q_no][doc_i].score / sum_score);
 
             // diverse part
-            if (config->lambda != 0.0) {
+            if ((config->lambda) != 0.0) {
                 double diverse_score = 0.0;
 
                 for (subquery_i = 0; subquery_i < number_of_subqueries; subquery_i++) {
@@ -320,6 +322,8 @@ int sy_diverse (int q_no, int number_of_preresults, int number_of_results) {
     int result_size = 0;
 
     // I Think, below line is unnecessary.
+    // to above line: FUCK you ecank!
+    // if you don't clean marks; it will effect next runs.
     cleanPreresultsMarks();
 
     while (result_size < number_of_results && i < number_of_preresults) {
