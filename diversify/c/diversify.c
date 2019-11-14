@@ -143,7 +143,7 @@ int xquad_diverse (int q_no, int number_of_preresults, int number_of_results) {
     int result_size = 0;
     double sum_score = 0.0, max_score = 0.0, local_score = 0.0;
     int number_of_subqueries = 0;
-    int common_sense = 20; // or do you completely lose your mind to print n million times
+    int common_sense = 5; // or do you completely lose your mind to print n million times
 
     // calculate sum of scores for preresults, it is needed for normalization
     for (doc_i = 0; doc_i < number_of_preresults; doc_i++) {
@@ -233,7 +233,7 @@ int xquad_diverse (int q_no, int number_of_preresults, int number_of_results) {
         results[q_no][result_size].query_id = preresults[q_no][index].query_id;
         preresults[q_no][index].mark = true;
         result_size++;
-        common_sense=20;
+        // common_sense=20;
     }
 
     return result_size;
@@ -543,20 +543,20 @@ int loadSubqueryResults() {
             &(doc_id), &(score));
 
         if ( (prev_subquery_id != subquery_id) && (prev_subquery_id != -1) ) {
-// #ifdef DEBUG
-//             printf("New SQ-list detected.\n");
-//             printf("prev_subquery_id:%u, sresult_counter:%u\n",
-//                     prev_subquery_id, sresult_counter);
-// #endif
+#ifdef DEBUG
+            printf("New SQ-list detected.\n");
+            printf("prev_subquery_id:%u, sresult_counter:%u\n",
+                    prev_subquery_id, sresult_counter);
+#endif
             sresult_counter = 1;
         }
 
         if ( (prev_query_id != query_id) && (prev_query_id != -1) ) {
-// #ifdef DEBUG
-//             printf("New Q-list detected.\n");
-//             printf("prev_query_id:%u, sresult_counter:%u, query_counter:%u\n",
-//                     prev_query_id, sresult_counter, query_counter);
-// #endif
+#ifdef DEBUG
+            printf("New Q-list detected.\n");
+            printf("prev_query_id:%u, sresult_counter:%u, query_counter:%u\n",
+                    prev_query_id, sresult_counter, query_counter);
+#endif
            query_counter++;
            sresult_counter = 1;
         }
@@ -564,10 +564,10 @@ int loadSubqueryResults() {
         prev_query_id = query_id;
         prev_subquery_id = subquery_id;
 
-// #ifdef DEBUG
-//         printf("READ: query_id:%u, subquery_id:%u, doc_id:%u, score:%lf\n",
-//             query_id, subquery_id, doc_id, score);
-// #endif
+#ifdef DEBUG
+        printf("READ: query_id:%u, subquery_id:%u, doc_id:%u, score:%lf\n",
+            query_id, subquery_id, doc_id, score);
+#endif
 
         // Prevent log pollution for big preresults file
         if (sresult_counter > config->number_of_preresults) {
@@ -591,10 +591,10 @@ int loadSubqueryResults() {
              continue;
         }
 
-// #ifdef DEBUG
-//         printf("WRITE: subquery_results[%u][%u][%u] doc_id:%u score:%lf\n",
-//             (query_counter-1), (subquery_id-1), (sresult_counter-1), doc_id, score);
-// #endif
+#ifdef DEBUG
+        printf("WRITE: subquery_results[%u][%u][%u] doc_id:%u score:%lf\n",
+            (query_counter-1), (subquery_id-1), (sresult_counter-1), doc_id, score);
+#endif
 
         subquery_results[query_counter-1][subquery_id-1][sresult_counter-1].doc_id = doc_id;
         subquery_results[query_counter-1][subquery_id-1][sresult_counter-1].score = score;
@@ -764,11 +764,11 @@ void loadPreresults () {
         // smart query list detection
         if ( (  previous_rank > rank) ||
              ( (prev_query_id != query_id) && (prev_query_id != -1)) ) {
-// #ifdef DEBUG
-//             printf("New query list detected.\n");
-//             printf("previous_rank:%u, prev_query_id:%u, rank_counter:%u, query_counter:%u\n",
-//                     previous_rank, prev_query_id, rank_counter, query_counter);
-// #endif
+#ifdef DEBUG
+            printf("New query list detected.\n");
+            printf("previous_rank:%u, prev_query_id:%u, rank_counter:%u, query_counter:%u\n",
+                    previous_rank, prev_query_id, rank_counter, query_counter);
+#endif
             rank_counter = 1;
             query_counter++;
         }
@@ -776,10 +776,10 @@ void loadPreresults () {
         previous_rank = rank;
         prev_query_id = query_id;
 
-// #ifdef DEBUG
-//         printf("READ: query_id:%u, doc_id:%u, rank:%u, score:%lf\n",
-//             query_id, document_id, rank, score);
-// #endif
+#ifdef DEBUG
+        printf("READ: query_id:%u, doc_id:%u, rank:%u, score:%lf\n",
+            query_id, document_id, rank, score);
+#endif
 
         // Prevent log pollution for big preresults file
         if (rank_counter > config->number_of_preresults) {
@@ -799,10 +799,10 @@ void loadPreresults () {
             continue;
         }
 
-// #ifdef DEBUG
-//         printf("WRITE: preresults[%u][%u] doc_id:%u  score:%lf query_id:%u\n",
-//             (query_counter-1), (rank_counter-1), document_id, score, query_id);
-// #endif
+#ifdef DEBUG
+        printf("WRITE: preresults[%u][%u] doc_id:%u  score:%lf query_id:%u\n",
+            (query_counter-1), (rank_counter-1), document_id, score, query_id);
+#endif
         preresults[query_counter-1][rank_counter-1].doc_id = document_id;
         preresults[query_counter-1][rank_counter-1].score = score;
         preresults[query_counter-1][rank_counter-1].query_id = query_id;
