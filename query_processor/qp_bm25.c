@@ -261,8 +261,12 @@ void run_ranking_query(long int *q_vec, int q_size) {
             break;
 
     WRITE_BEST_N = j;
+    int spamfree_rank = 0;
     for (j = 0; j < WRITE_BEST_N; j++) {
-        fprintf(output_fp, "%lu\tQ0\t%d\t%d\t%lf\tfs\n", q_no + 1, results[j].doc_index, j + 1, results[j].sim_rank);
+        if (spam_scores[results[j].doc_index] >= SPAM_SCORE) {
+            fprintf(output_fp, "%lu\tQ0\t%d\t%d\t%lf\tfs\n", q_no + 1, results[j].doc_index, spamfree_rank + 1, results[j].sim_rank);
+            spamfree_rank++;
+        }
     }
 
 
@@ -304,8 +308,10 @@ void run_ranking_query(long int *q_vec, int q_size) {
         /* Write collected subquery results as: */
         /* <query_id subquery_id doc_id score>\n */
         for (j = 0; j < WRITE_BEST_N; j++) {
-            fprintf(subquery_output_fp, "%lu\t%u\t%u\t%lf\n",
-                    q_no + 1, subquery_index + 1, results[j].doc_index, accumulator[results[j].doc_index].sim_rank);
+            if (spam_scores[results[j].doc_index] >= SPAM_SCORE) {
+                fprintf(subquery_output_fp, "%lu\t%u\t%u\t%lf\n",
+                        q_no + 1, subquery_index + 1, results[j].doc_index, accumulator[results[j].doc_index].sim_rank);
+            }
         }
     }
 
@@ -404,7 +410,7 @@ int main(int argc,char *argv[]) {
     char str[MAX_TOKEN_SIZE];
     int check_doc_num = 0;
 
-    if (argc < 6) {
+    if (argc < 7) {
         printf("missing arg\n");
         exit(1);
     }
@@ -413,6 +419,7 @@ int main(int argc,char *argv[]) {
     accumulator = (Result*) malloc(sizeof(Result) * DOC_NUM);
     QueryWordsIndexes = (long int*) malloc(sizeof(long int) * MAX_WORD_PER_QUERY);
     results = (Result*) malloc(sizeof(Result)* BEST_DOCS);
+    spam_scores = (unsigned char*)malloc(DOC_NUM);
 
     if (!WordList)
         printf("could not allocate???\n");
@@ -422,11 +429,23 @@ int main(int argc,char *argv[]) {
 
     strcpy(query_file, argv[4]);
 
-    output_fp = fopen(argv[5], "wt");
+    output_fp = fopen(argv[6], "wt");
     ifp = fopen("stopword.lst","rt");
 
     for (i = 0; i < NOSTOPWORD; i++)
         fscanf(ifp,"%s\n", stopwords[i]);
+
+    fclose(ifp);
+
+    if (!(ifp = fopen(argv[5], "r"))) {
+        printf("spam file error fopen :%s!\n", argv[5]);
+        exit(1);
+    }
+
+    if (fread(spam_scores, 1, DOC_NUM, ifp) != DOC_NUM) {
+        printf("spam file error fread :%s!\n", argv[5]);
+        exit(1);
+    }
 
     fclose(ifp);
 
@@ -502,7 +521,7 @@ int main(int argc,char *argv[]) {
 
 #ifdef XQUAD
     /* For xQuad, read subqueries. */
-    if (load_subqueries(argv[6]) != 0) {
+    if (load_subqueries(argv[7]) != 0) {
         printf("load_subqueries failed.\n");
         exit(1);
     }
@@ -523,6 +542,7 @@ int main(int argc,char *argv[]) {
     free(QueryWordsIndexes);
     free(results);
     free(total_tf_per_doc);
+    free(spam_scores);
 
     return 0;
 }

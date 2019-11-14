@@ -17,6 +17,7 @@
 // get 1 more than exact value, so is word no
 
 #define BEST_DOCS 1000
+#define SPAM_SCORE 60
 
 #define MAX_NOF_QUERY 200
 #define MAX_QUERY_LENGTH 1000 // as a character, total of all words, apply also subqueries
@@ -90,6 +91,7 @@ FILE *output_fp;
 FILE *subquery_output_fp;
 
 char rest_of_query[MAX_QUERY_LENGTH];
+unsigned char *spam_scores;
 
 Result *accumulator;
 Result *results;
