@@ -18,7 +18,7 @@ int main (int argc, char *argv[]) {
     unsigned int number_of_results = 0;//20; // CHANGE -> GET FROM ARGUMENTS
     unsigned int number_of_query = 0;//198; // CHANGE -> GET FROM ARGUMENTS
     unsigned int div_algorithms[] = {XQUAD}; // DONTCHANGE XXX
-    double div_lambdas[] = { 0.75, 0.5, 0.25 }; // DONTCHANGE XXX
+    double div_lambdas[] = { 0.25, 0.75, 0.5 }; // DONTCHANGE XXX
 
     // XQUAD
     unsigned int max_possible_number_of_subquery = 10; // DONTCHANGE [09->12 Max is 8]
@@ -82,20 +82,20 @@ int main (int argc, char *argv[]) {
 #endif
 
     for (i = 0; i < div_len; i++) {
-        if (div_algorithms[i] == XQUAD) {
-            if (initloadSubqueryResults() != 0) {
-                printf("XQUAD initloadSubqueryResults Failure!\n");
-                fflush(stdout);
-                break;
-            } else {
-                printf("XQUAD Initialized!\n");
-                fflush(stdout);
-            }
-        }
-
         for (j = 0; j < lambda_len; j++) {
             conf.diversification_algorithm = div_algorithms[i];
             conf.lambda = div_lambdas[j];
+
+            if (div_algorithms[i] == XQUAD) {
+                if (initloadSubqueryResults() != 0) {
+                    printf("XQUAD initloadSubqueryResults Failure!\n");
+                    fflush(stdout);
+                    break;
+                } else {
+                    printf("XQUAD Initialized!\n");
+                    fflush(stdout);
+                }
+            }
 
             cleanResults();
 
