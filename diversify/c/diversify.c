@@ -530,29 +530,16 @@ int loadSubqueryResults() {
     unsigned int query_id, subquery_id, doc_id;
     double score;
 
-    if (!(fp = fopen(config->subqueryresults_path, "r"))) {
-        return -1;
-    }
-
-    int query_i;
-    for (query_i = 0; query_i < config->real_number_of_query; query_i++) {
-        int squery_i;
-        for (squery_i = 0; squery_i < config->max_possible_number_of_subquery; squery_i++) {
-            if () {
-                // query id updated means no more sq, skip.
-            }
-        }
-    }
-
-
-/*
     unsigned int  prev_query_id = -1;
     unsigned int  prev_subquery_id = -1;
     unsigned int sresult_counter = 1, query_counter = 1;
 
+    if (!(fp = fopen(config->subqueryresults_path, "r"))) {
+        return -1;
+    }
 
     while (!feof(fp)) {
-        fscanf (fp, "%u\t%u\t%u\t%lf\n", &(query_id), &(subquery_id),
+        fscanf(fp, "%u\t%u\t%u\t%lf\n", &(query_id), &(subquery_id),
             &(doc_id), &(score));
 
         if ( (prev_subquery_id != subquery_id) && (prev_subquery_id != -1) ) {
@@ -602,27 +589,6 @@ int loadSubqueryResults() {
              continue;
         }
 
-        // XXX
-        // Don't read the value and continue with next one whenever:
-        // c1:spam document eleminated from preresults OR
-        // c2:preresults has no results for that query at all OR (means query_id jumped)
-        // c3:preresults has less results than need for that query OR (again qid wll jump)
-        if ( (  (query_id == preresults[query_id-1][sresult_counter-1].query_id) &&
-                (doc_id != preresults[query_id-1][sresult_counter-1].doc_id) ) || // c1
-
-             (  (query_id != preresults[query_id-1][sresult_counter-1].query_id) &&
-                (query_id ) )) || // c2
-
-             (  ) // c3
-         ) {
- #ifdef DEBUG
-             printf();
- #endif
-             continue;
-         }
-
-
-
 #ifdef DEBUG
         printf("WRITE: subquery_results[%u][%u][%u] doc_id:%u score:%lf\n",
             (query_counter-1), (subquery_id-1), (sresult_counter-1), doc_id, score);
@@ -633,7 +599,7 @@ int loadSubqueryResults() {
 
         sresult_counter++;
     }
-*/
+
     return 0;
 }
 
