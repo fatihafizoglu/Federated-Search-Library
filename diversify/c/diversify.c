@@ -543,20 +543,20 @@ int loadSubqueryResults() {
             &(doc_id), &(score));
 
         if ( (prev_subquery_id != subquery_id) && (prev_subquery_id != -1) ) {
-#ifdef DEBUG
-            printf("New SQ-list detected.\n");
-            printf("prev_subquery_id:%u, sresult_counter:%u\n",
-                    prev_subquery_id, sresult_counter);
-#endif
+// #ifdef DEBUG
+//             printf("New SQ-list detected.\n");
+//             printf("prev_subquery_id:%u, sresult_counter:%u\n",
+//                     prev_subquery_id, sresult_counter);
+// #endif
             sresult_counter = 1;
         }
 
         if ( (prev_query_id != query_id) && (prev_query_id != -1) ) {
-#ifdef DEBUG
-            printf("New Q-list detected.\n");
-            printf("prev_query_id:%u, sresult_counter:%u, query_counter:%u\n",
-                    prev_query_id, sresult_counter, query_counter);
-#endif
+// #ifdef DEBUG
+//             printf("New Q-list detected.\n");
+//             printf("prev_query_id:%u, sresult_counter:%u, query_counter:%u\n",
+//                     prev_query_id, sresult_counter, query_counter);
+// #endif
            query_counter++;
            sresult_counter = 1;
         }
@@ -564,10 +564,10 @@ int loadSubqueryResults() {
         prev_query_id = query_id;
         prev_subquery_id = subquery_id;
 
-#ifdef DEBUG
-        printf("READ: query_id:%u, subquery_id:%u, doc_id:%u, score:%lf\n",
-            query_id, subquery_id, doc_id, score);
-#endif
+// #ifdef DEBUG
+//         printf("READ: query_id:%u, subquery_id:%u, doc_id:%u, score:%lf\n",
+//             query_id, subquery_id, doc_id, score);
+// #endif
 
         // Prevent log pollution for big preresults file
         if (sresult_counter > config->number_of_preresults) {
@@ -591,10 +591,10 @@ int loadSubqueryResults() {
              continue;
         }
 
-#ifdef DEBUG
-        printf("WRITE: subquery_results[%u][%u][%u] doc_id:%u score:%lf\n",
-            (query_counter-1), (subquery_id-1), (sresult_counter-1), doc_id, score);
-#endif
+// #ifdef DEBUG
+//         printf("WRITE: subquery_results[%u][%u][%u] doc_id:%u score:%lf\n",
+//             (query_counter-1), (subquery_id-1), (sresult_counter-1), doc_id, score);
+// #endif
 
         subquery_results[query_counter-1][subquery_id-1][sresult_counter-1].doc_id = doc_id;
         subquery_results[query_counter-1][subquery_id-1][sresult_counter-1].score = score;
