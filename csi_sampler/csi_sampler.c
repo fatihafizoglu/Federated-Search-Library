@@ -2,13 +2,15 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdarg.h>
+#include <time.h>
 #include <math.h>
+#include <sys/time.h>
 
 /*******************/
 /***** CONFIGS *****/
 /*******************/
 #define ACCESS_INFO "/home1/grupef/ecank/data/CSI/desc_access_counts"
-#define PR_INFO "/home1/grupef/ecank/data/CSI/doc-PR-map2019.txt"
+#define PR_INFO "/home1/grupef/ecank/data/CSI/doc-PR-map2019.txt_PRsorted"
 #define SPAMSMAP_FILE_FOLDER "/home1/grupef/ecank/data/spamsMap.bin"
 #define RANDOM_OUT "/home1/grupef/ecank/data/CSI/nospam_random_csi_docids"
 #define ACCESS_OUT "/home1/grupef/ecank/data/CSI/nospam_access_topk_csi_docids"
@@ -25,14 +27,14 @@
 /***** GLOBALS ******/
 /********************/
 unsigned char spam_scores[NOF_DOCS];
-unsigned char random_docs[NOF_SAMPLED_DOCS];
-unsigned char access_docs[NOF_SAMPLED_DOCS];
-unsigned char rp_docs[NOF_SAMPLED_DOCS];
+unsigned int random_docs[NOF_SAMPLED_DOCS];
+unsigned int access_docs[NOF_SAMPLED_DOCS];
+unsigned int rp_docs[NOF_SAMPLED_DOCS];
 
 /*********************/
 /***** FUNCTIONS *****/
 /*********************/
-int write(char *output_path, unsigned char *docs) {
+int write(char *output_path, unsigned int *docs) {
     int i = 0;
     FILE *fp = fopen(output_path, "w");
     if (fp == NULL) {
@@ -80,80 +82,112 @@ void sort_all () {
     qsort(rp_docs, NOF_SAMPLED_DOCS, sizeof(unsigned int), cmpfunc);
 }
 
-/* Input file format:
+/* Input file format: (pr desc-sorted)
  * <doc_id> <pr>
- * 1 0.15
+ * 42722787 1080.163861
  */
 int load_pr () {
     unsigned int doc_id;
     double pagerank;
-    double pageranks[NOF_DOCS];
+    unsigned int count = 0;
     FILE *fp = fopen(PR_INFO, "r");
+
     if (fp == NULL) {
         printf("%s fopen failed\n", PR_INFO);
         return -1;
     }
 
-    while (!feof(fp)) {
+    while ((count < NOF_SAMPLED_DOCS) && !feof(fp)) {
         fscanf (fp, "%u %lf\n", &(doc_id), &(pagerank));
 
-        // new query list
-        if (prev_query_id != query_id) {
-            rank_counter = 1;
-        }
-
-        if (rank_counter > config->number_of_preresults) {
-            printf("!!! THIS SHOULD NOT HAPPEN!\n");
-            printf("!!! query_id:%u, doc_id:%u, rank:%u, score:%lf\n", query_id, document_id, rank_counter, score);
-            fflush(stdout);
+        if (spam_scores[doc_id] < SPAM_THRESHOLD)
             continue;
-        }
 
-        results[query_id-1][rank_counter-1].doc_id = document_id;
-        results[query_id-1][rank_counter-1].score = score;
-
-        rank_counter++;
-        prev_query_id = query_id;
+        rp_docs[count++] = doc_id;
     }
 
-    /*
-    if (spamScores[docId] >= SPAM_THRESHOLD) {
-        // GOOD!
-    }
-    */
+    printf("%s: count:%u\n", __FUNCTION__, count);
 
     fclose(fp);
     return 0;
 }
 
-/* Input file format:
+/* Input file format: (count desc-sorted)
  * <count> <doc_id> <doc_name>
  * 57207 42710475 clueweb09-en0011-58-19250
  */
 int load_access () {
+    unsigned int doc_id;
+    char doc_name[255];
+    unsigned int occ_count;
+    unsigned int count = 0;
     FILE *fp = fopen(ACCESS_INFO, "r");
+
     if (fp == NULL) {
         printf("%s fopen failed\n", ACCESS_INFO);
         return -1;
     }
 
-    /*
-    if (spamScores[docId] >= SPAM_THRESHOLD) {
-        // GOOD!
+    while ((count < NOF_SAMPLED_DOCS) && !feof(fp)) {
+        fscanf (fp, "%u %u %s\n", &(occ_count), &(doc_id), doc_name);
+
+        if (spam_scores[doc_id] < SPAM_THRESHOLD)
+            continue;
+
+        access_docs[count++] = doc_id;
     }
-    */
+
+    printf("%s: count:%u\n", __FUNCTION__, count);
 
     fclose(fp);
     return 0;
 }
 
-int load_random () {
+// Assumes 0 <= max <= RAND_MAX
+// Returns in the closed interval [0, max]
+long random_at_most(long max) {
+    unsigned long
+        // max <= RAND_MAX < ULONG_MAX, so this is okay.
+        num_bins = (unsigned long) max + 1,
+        num_rand = (unsigned long) RAND_MAX + 1,
+        bin_size = num_rand / num_bins,
+        defect   = num_rand % num_bins;
 
-    /*
-    if (spamScores[docId] >= SPAM_THRESHOLD) {
-        // GOOD!
+    long x;
+    do {
+        x = random();
     }
-    */
+    // This is carefully written not to overflow
+    while (num_rand - defect <= (unsigned long)x);
+
+    // Truncated division is intentional
+    return x/bin_size;
+}
+
+int load_random () {
+    unsigned int count = 0;
+    char marks[NOF_DOCS] = "";
+
+    struct timeval tm;
+    gettimeofday(&tm, NULL);
+    srandom(tm.tv_sec + tm.tv_usec * 1000000ul);
+
+    marks[0] = '.';
+    while (count < NOF_SAMPLED_DOCS) {
+
+        long number = random_at_most(NOF_DOCS-1);
+        if (marks[number] == '.') {
+            continue;
+        }
+
+        if (spam_scores[number] < SPAM_THRESHOLD)
+            continue;
+
+        random_docs[count++] = number;
+        marks[number] = '.';
+    }
+
+    printf("%s: count:%u\n", __FUNCTION__, count);
 
     return 0;
 }
