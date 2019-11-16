@@ -56,9 +56,7 @@ def read_sampled_document_ids():
 
 	to_return = []
 	for index in xrange(len(sampled_docs_ids_file_read)):
-        to_return.append(int(sampled_docs_ids_file_read[index]))
-	# 	line_splitted = sampled_docs_ids_file_read[index].split(" ")
-	# 	to_return.append(int(line_splitted[0]))
+		to_return.append(int(sampled_docs_ids_file_read[index]))
 
 	return to_return
 # #
