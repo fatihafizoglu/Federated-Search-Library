@@ -166,7 +166,9 @@ long random_at_most(long max) {
 
 int load_random () {
     unsigned int count = 0;
-    char marks[NOF_DOCS] = "";
+    char *marks;
+
+    marks = malloc(NOF_DOCS * sizeof(char));
 
     struct timeval tm;
     gettimeofday(&tm, NULL);
@@ -189,6 +191,7 @@ int load_random () {
 
     printf("%s: count:%u\n", __FUNCTION__, count);
 
+    free(marks);
     return 0;
 }
 

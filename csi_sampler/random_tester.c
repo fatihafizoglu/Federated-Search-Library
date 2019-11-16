@@ -3,7 +3,7 @@
 #include <time.h>
 #include <sys/time.h>
 
-#define NOF_DOCS 5000000
+#define NOF_DOCS 50220539
 
 unsigned int rand_interval(unsigned int min, unsigned int max) {
     int r;
@@ -44,9 +44,10 @@ long random_at_most(long max) {
 }
 
 int main(int argc, char** argv) {
-    char marks[NOF_DOCS] = "";
+    char *marks;
     int count = 0;
 
+    marks = malloc(sizeof(char)*NOF_DOCS);
     struct timeval tm;
     gettimeofday(&tm, NULL);
     srandom(tm.tv_sec + tm.tv_usec * 1000000ul);
@@ -69,5 +70,6 @@ int main(int argc, char** argv) {
     }
 
     printf("\n");
+    free(marks);
     return 0;
 }
