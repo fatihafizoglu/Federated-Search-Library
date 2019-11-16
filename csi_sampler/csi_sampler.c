@@ -76,8 +76,8 @@ int cmpfunc (const void *a, const void *b) {
 
 void sort_all () {
     qsort(random_docs, NOF_SAMPLED_DOCS, sizeof(unsigned int), cmpfunc);
-    qsort(random_docs, NOF_SAMPLED_DOCS, sizeof(unsigned int), cmpfunc);
-    qsort(random_docs, NOF_SAMPLED_DOCS, sizeof(unsigned int), cmpfunc);
+    qsort(access_docs, NOF_SAMPLED_DOCS, sizeof(unsigned int), cmpfunc);
+    qsort(rp_docs, NOF_SAMPLED_DOCS, sizeof(unsigned int), cmpfunc);
 }
 
 /* Input file format:
@@ -85,13 +85,36 @@ void sort_all () {
  * 1 0.15
  */
 int load_pr () {
+    unsigned int doc_id;
+    double pagerank;
+    double pageranks[NOF_DOCS];
     FILE *fp = fopen(PR_INFO, "r");
     if (fp == NULL) {
         printf("%s fopen failed\n", PR_INFO);
         return -1;
     }
 
+    while (!feof(fp)) {
+        fscanf (fp, "%u %lf\n", &(doc_id), &(pagerank));
 
+        // new query list
+        if (prev_query_id != query_id) {
+            rank_counter = 1;
+        }
+
+        if (rank_counter > config->number_of_preresults) {
+            printf("!!! THIS SHOULD NOT HAPPEN!\n");
+            printf("!!! query_id:%u, doc_id:%u, rank:%u, score:%lf\n", query_id, document_id, rank_counter, score);
+            fflush(stdout);
+            continue;
+        }
+
+        results[query_id-1][rank_counter-1].doc_id = document_id;
+        results[query_id-1][rank_counter-1].score = score;
+
+        rank_counter++;
+        prev_query_id = query_id;
+    }
 
     /*
     if (spamScores[docId] >= SPAM_THRESHOLD) {
