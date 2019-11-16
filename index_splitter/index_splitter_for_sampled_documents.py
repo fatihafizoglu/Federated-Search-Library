@@ -8,9 +8,11 @@ import time
 __MAX_MEMORY_READ__ = 10 # In GB
 __MAX_MEMORY_WRITE__ = 5 # In GB
 __INTEGER_SIZE__ = 4
-sampled_docs_ids_file_path				= "/home1/grupef/TopicBasedClusters_100_sampled_doc_ids_sorted"
-sampled_docs_index_file_create_path		= "/home1/grupef/TopicBasedClusters_100_CSI_merged_entry.txt"
-sampled_docs_wordlist_create_path		= "/home1/grupef/TopicBasedClusters_100_CSI_merged_wordlist.txt"
+sampled_docs_ids_file_path				= "/home1/grupef/ecank/data/CSI/nospam_access_topk_csi_docids"
+#sampled_docs_ids_file_path				= "/home1/grupef/ecank/data/CSI/nospam_pr_topk_csi_docids"
+#sampled_docs_ids_file_path				= "/home1/grupef/ecank/data/CSI/nospam_random_csi_docids"
+sampled_docs_index_file_create_path		= "/home1/grupef/ecank/data/temp/inverted_index"
+sampled_docs_wordlist_create_path		= "/home1/grupef/ecank/data/temp/wordlist"
 index_file								= "/home1/sengor/CLUEWEB/createIIS/merged_entry.txt"
 word_list_file							= "/home1/sengor/CLUEWEB/createIIS/merged_wordlist.txt"
 
@@ -47,18 +49,18 @@ def bytes_from_file(filename, chunksize=8192):
 # #
 # This function returns an array: Sampled documents array. Sorted.
 def read_sampled_document_ids():
-	
-	sampled_docs_ids_file = open(sampled_docs_ids_file_path) 
+
+	sampled_docs_ids_file = open(sampled_docs_ids_file_path)
 	sampled_docs_ids_file_read = sampled_docs_ids_file.readlines()
 	sampled_docs_ids_file.close()
 
 	to_return = []
 	for index in xrange(len(sampled_docs_ids_file_read)):
-		line_splitted = sampled_docs_ids_file_read[index].split(" ")
-		to_return.append(int(line_splitted[0]))
+        to_return.append(int(sampled_docs_ids_file_read[index]))
+	# 	line_splitted = sampled_docs_ids_file_read[index].split(" ")
+	# 	to_return.append(int(line_splitted[0]))
 
 	return to_return
-
 # #
 # Binary search function: This function search a document id in sampled documents array.
 def binary_search_document_ids(item):
@@ -93,7 +95,7 @@ sampled_docs_word_occurance = 0
 (latest_word,posting_list_length) = next_word_posting_list_length_getter.next()
 total_size_of_posting_lists_in_memory = posting_list_length
 for (doc_id,occurance_count,byte_string) in bytes_from_file(index_file,__MAX_MEMORY_READ__*1024*1024*1024): # 10GB per read!
-	
+
 	if posting_list_length == 0:
 		# if sampled_docs_word_occurance > 0:
 		# Non existing words will be on wordlist file with no of occurance as 0
@@ -115,7 +117,7 @@ for (doc_id,occurance_count,byte_string) in bytes_from_file(index_file,__MAX_MEM
 
 		(latest_word,posting_list_length) = next_word_posting_list_length_getter.next()
 		total_size_of_posting_lists_in_memory += posting_list_length
-		
+
 
 	posting_list_length = posting_list_length - 1
 

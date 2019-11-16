@@ -17,8 +17,9 @@ debug: CFLAGS += $(DEBUG)
 debug: all
 
 tester: random_tester.c
-	$(CC) random_tester.c -g -Wall -o tester 
+	$(CC) random_tester.c -g -Wall -o tester
 
 clean:
 	rm -f *.o
 	rm -f $(BIN_NAME)
+	rm -f tester
