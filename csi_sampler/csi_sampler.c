@@ -21,7 +21,7 @@
 /*********************/
 #define SPAM_THRESHOLD 60
 #define NOF_DOCS 50220539 // actually +1 to be able to use doc_id as an index
-#define NOF_SAMPLED_DOCS 502205
+#define NOF_SAMPLED_DOCS 502204
 
 /********************/
 /***** GLOBALS ******/
