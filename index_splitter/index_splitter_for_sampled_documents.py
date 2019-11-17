@@ -3,6 +3,8 @@ import sys
 import struct
 import time
 
+## DONT USE THIS! check msworks proj
+
 # #
 # Globals
 __MAX_MEMORY_READ__ = 10 # In GB

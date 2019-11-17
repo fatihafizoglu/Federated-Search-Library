@@ -7,7 +7,7 @@ DEBUG = -g -DDEBUG
 BIN_NAME = csi_sampler
 
 # RELATIVE_ALLOCATOR_PATH
-RAP = ../../topic_based/c/
+RAP = ../topic_based/c/
 # ****************************************************
 
 all: csi_sampler.c
