@@ -3,9 +3,11 @@
 
 int main (int argc, char** argv) {
     int q_index = 0;
+    int ret = 0;
 
-    if (load_dictionary() != 0) {
-        printf("load_dictionary failed\n");
+    ret = load_dictionary();
+    if (ret != GLOVE_DICT_SIZE) {
+        printf("load_dictionary failed ret:%d\n", ret);
         exit(1);
     }
 
@@ -40,5 +42,5 @@ int main (int argc, char** argv) {
 
     fclose(qout_fp);
     fclose(qdout_fp);
-    return 0;
+    return ret;
 }

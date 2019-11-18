@@ -70,11 +70,33 @@ void init_dictionary () {
 
 int load_dictionary () {
     init_dictionary();
+    FILE *fp;
+    char word[MAX_WORD_SIZE];
+    double score;
+    int d_index = 0, v_index = 0;
 
-    // XXXread glove datafile
-    // XXXload dictionary
+    if (!(fp = fopen(GLOVE_DATA_PATH, "r"))) {
+        return -1;
+    }
 
-    return 0;
+    while (!feof(fp)) {
+        if (d_index >= GLOVE_DICT_SIZE) {
+            printf("ERROR: THIS SHOULD NOT HAPPEN!\n");
+            break;
+        }
+
+        fscanf(fp, "%s ", word);
+        strcpy(dictionary[d_index].word, word);
+        for (v_index = 0; v_index+1 < GLOVE_VECTOR_SIZE; v_index++) {
+            fscanf (fp, "%lf ", &(score));
+            dictionary[d_index].vector[v_index] = score;
+        }
+        fscanf (fp, "%lf \n", &(score));
+        dictionary[d_index].vector[v_index] = score;
+        d_index++;
+    }
+
+    return d_index;
 }
 
 int load_queries () {
