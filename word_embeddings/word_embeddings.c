@@ -81,7 +81,7 @@ int load_dictionary () {
 
     while (!feof(fp)) {
         if (d_index >= GLOVE_DICT_SIZE) {
-            printf("ERROR: THIS SHOULD NOT HAPPEN!\n");
+            printf("ERROR: THIS SHOULD NOT HAPPEN! %s\n", __FUNCTION__);
             break;
         }
 
@@ -96,21 +96,78 @@ int load_dictionary () {
         d_index++;
     }
 
+    fclose(fp);
+    return d_index;
+}
+
+int find_we (char *word) {
+    int d_index;
+
+    for (d_index = 0; d_index < GLOVE_DICT_SIZE; d_index++) {
+        if (strcmp(word, dictionary[d_index].word) == 0) {
+            break;
+        }
+    }
+
     return d_index;
 }
 
 int load_queries () {
-    int nof_queries = 0;
     init_queries();
+    FILE *fp;
+    int q_index = 0, v_index = 0;
+    int nof_words_in_query = 0;
+    char line[MAX_WORD_SIZE+2] = "";
+    char *c_ptr;
 
-    // XXXread query file
+    if (!(fp = fopen(QUERIES_PATH_IN, "r"))) {
+        return -1;
+    }
 
-    // XXXfor each word in query find we
-    // and then birlestir them
+    do {
+        if (q_index >= MAX_NOF_QUERIES) {
+            printf("ERROR: THIS SHOULD NOT HAPPEN! %s q_index\n",
+                __FUNCTION__);
+            break;
+        }
 
-    // XXXthen store birlestirilmis we in queries we
+        if (fgets(line, MAX_WORD_SIZE+2, fp) == NULL) {
+            break;
+        }
+        line[strlen(line)-1] = '\0';
+        strcpy(queries[q_index].word, line);
+        nof_words_in_query = 0;
+        c_ptr = strtok(line, " ");
 
-    return nof_queries;
+        double vector[GLOVE_VECTOR_SIZE] = {};
+        while (c_ptr != NULL) {
+            int d_index = find_we(c_ptr);
+            if (d_index < GLOVE_DICT_SIZE) {
+                nof_words_in_query++;
+                for (v_index = 0; v_index < GLOVE_VECTOR_SIZE; v_index++) {
+                    vector[v_index] = vector[v_index] +
+                        (dictionary[d_index].vector[v_index]);
+                }
+            }
+
+            c_ptr = strtok (NULL, " ");
+        }
+
+        for (v_index = 0; v_index < GLOVE_VECTOR_SIZE; v_index++) {
+            if (nof_words_in_query == 0) {
+                printf("WARNING: 0 word found in dict for query: %s\n",
+                    queries[q_index].word);
+                break;
+            }
+            queries[q_index].vector[v_index] = vector[v_index] / nof_words_in_query;
+        }
+
+        q_index++;
+    } while (!feof(fp));
+
+
+    fclose(fp);
+    return q_index;
 }
 
 double cosine_similarity (We we1, We we2) {
@@ -121,10 +178,6 @@ double cosine_similarity (We we1, We we2) {
     return score;
 }
 
-int write_all () {
-
-    return 0;
-}
 
 int expand_query (int q_index) {
     double *query_word_similarities;
@@ -136,8 +189,6 @@ int expand_query (int q_index) {
         exit(1);
     }
     memset(query_word_similarities, 0, GLOVE_DICT_SIZE * sizeof(double));
-    printf("Check %lf, %lf\n", query_word_similarities[0],
-        query_word_similarities[50]);
 
     for (w_index = 0; w_index < GLOVE_DICT_SIZE; w_index++) {
         query_word_similarities[w_index] =
@@ -147,7 +198,7 @@ int expand_query (int q_index) {
     // XXXfirst find the top k scores indexes from query_word_similarities
     // XXXthen, write the orig query to fp w/new k words from dictionary
 
-    // XXX1 Change algo w/diversified expansion
+    // XXX1st Change ABOVE algo w/diversified expansion
 
     free(query_word_similarities);
     return 0;
