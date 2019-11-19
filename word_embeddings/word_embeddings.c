@@ -84,6 +84,7 @@ int load_queries () {
     double norm = 0.0;
 
     if (!(fp = fopen(QUERIES_PATH_IN, "r"))) {
+        printf("fopen %s failed.\n", QUERIES_PATH_IN);
         return -1;
     }
 
@@ -133,6 +134,11 @@ int load_queries () {
         q_index++;
     } while (!feof(fp));
 
+    real_nof_queries = q_index;
+    if (real_nof_queries > MAX_NOF_QUERIES) {
+        printf("ERROR: THIS SHOULD NOT HAPPEN! #queries:%d\n", real_nof_queries);
+        return -1;
+    }
 
     fclose(fp);
     return q_index;
@@ -176,6 +182,32 @@ double cosine_similarity (We we1, We we2) {
     return score;
 }
 
+int write_query (FILE *fp, int q_index, Sim *sims) {
+    int s_index;
+    int counter = 0;
+
+    fprintf(fp, "%s ", queries[q_index].word);
+
+    for (s_index = 0; (s_index < GLOVE_DICT_SIZE) && (counter < NOF_WORDS_TO_EXPAND); s_index++) {
+        if (sims[s_index].index < 0) {
+            printf("ERROR: THIS SHOULD NOT HAPPEN. sim-index:%d\n", sims[s_index].index);
+            return -1;
+        }
+
+        if (sims[s_index].score == 1.0) {
+            printf("WARNING: Possible 1-word query:%s. Skipping word:%s.\n",
+                queries[q_index].word, dictionary[sims[s_index].index].word);
+            continue;
+        }
+
+        fprintf(fp, "%s ", dictionary[sims[s_index].index].word);
+        counter++;
+    }
+    fprintf(fp, "\n");
+
+    return 0;
+}
+
 int expand_query (int q_index) {
     Similarity *query_word_similarities;
     int w_index = 0;
@@ -196,14 +228,12 @@ int expand_query (int q_index) {
 
     qsort (query_word_similarities, GLOVE_DICT_SIZE, sizeof(Sim), cmpsim);
 
-    // XXXthen, write the orig query to fp w/new k words from dictionary
-    // WRITE: dont forget to skip 1word queries
-    /*
-    if (query_word_similarities[0].score == 1.0)
-        printf("WARNING: Possible 1-word query. Skipping.\n");
-    */
+    if (write_query(qout_fp, q_index, query_word_similarities) != 0) {
+        printf("writing q:%d failed\n", q_index);
+        return -1;
+    }
 
-    // XXX1st Change ABOVE algo w/diversified expansion
+    // XXX diversified expansion
 
     free(query_word_similarities);
     return 0;
