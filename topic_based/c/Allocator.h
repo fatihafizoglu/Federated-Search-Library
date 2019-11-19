@@ -8,6 +8,8 @@
 #include <time.h>
 #include <sys/time.h>
 #include <errno.h>
+
+/* Own Library Includes */
 #include "constants.h"
 #include "dictionary.h"
 
@@ -60,7 +62,11 @@ typedef struct AllocatorConfiguration {
     unsigned int diversification_algorithm;
     /* Diversification lambda value */
     double lambda;
-    /* ___END___ */
+    /* XQUAD Explicit diversification subquery results. */
+    char *subqueryresults_path;
+    unsigned int max_possible_number_of_subquery;
+
+    /* ___END_DIVERSIFICATION___ */
 
     /* ___CLUSTER_OCCURENCE_COMPARATOR___ */
     /* Files */
@@ -69,7 +75,7 @@ typedef struct AllocatorConfiguration {
     /* Number of clusters for both clusters {c1, c2}. */
     unsigned int number_of_clusters_for_c1;
     unsigned int number_of_clusters_for_c2;
-    /* ___END___ */
+    /* ___END_CLUSTER_OCCURENCE_COMPARATOR___ */
 } Conf;
 
 typedef struct Cluster {
@@ -108,6 +114,11 @@ typedef struct TermVector {
     unsigned int term_id;
     unsigned int term_frequency;
 } TermVector, *TermVectors;
+
+typedef struct SubqueryResult {
+    int doc_id;
+    double score;
+} SResult;
 
 typedef struct QueryResult {
     int doc_id;
@@ -287,5 +298,8 @@ FILE *doc_to_cluster_map_for_c1_file;
 FILE *doc_to_cluster_map_for_c2_file;
 int *doc_to_cluster_map_for_c1;
 int *doc_to_cluster_map_for_c2;
+
+/* xQuad diversification algorithm */
+SResult ***subquery_results;
 
 #endif  /* not defined _ALLOCATOR_H_ */

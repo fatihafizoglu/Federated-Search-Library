@@ -4,7 +4,6 @@
 typedef struct res {
     int doc_index;
     double sim_rank;
-    int last_updated_by;
 } Result, *RP;
 
 struct staticMaxHeapStruct {

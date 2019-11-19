@@ -1,3 +1,10 @@
+CSI inverted_index ve wordlist'lerini cikartmak icin
+msworks projesindeki index_splitter_for_sampled_documents kodunu kullaniyoruz.
+muazzam calisiyor, fatihe saygilar, seygiler.
+
+burdaki python kodu bugli ve her seferinde unutup calistiriyorum, yapma etme.
+
+
 Index splitter'in dogru calisabilmesi icin gerekli dosyalar:
 1 - Index dosyasi
 	Ex: merged_entry.txt // Binary dosya, <doc_id,occurance_count> pairleri

@@ -1,7 +1,7 @@
 #include "Allocator.h"
 
 void endProgram () {
-    int i;
+    int i, j;
 
     if (document_vectors_files != NULL)
         closeDocumentVectorsFiles();
@@ -48,6 +48,24 @@ void endProgram () {
 
         if (results != NULL)
             free(results);
+
+        /* Free xquad variables */
+        if (subquery_results != NULL) {
+
+            for (i = 0; i < config->number_of_query; i++) {
+                for (j = 0; j < config->max_possible_number_of_subquery; j++) {
+                    if (subquery_results[i][j] != NULL) {
+                        free(subquery_results[i][j]);
+                    }
+                }
+
+                if (subquery_results[i] != NULL) {
+                    free(subquery_results[i]);
+                }
+            }
+
+            free(subquery_results);
+        }
     }
     state = SUCCESS;
 }

@@ -5,17 +5,24 @@
 int main (int argc, char *argv[]) {
     double time_spent = 0.0;
     clock_t begin = clock();
+
     char wordlist_path[FILEPATH_LENGTH] = "/home1/grupef/ecank/data/wordlist_IDF"; // DONTCHANGE
+    // We assume that wordlist information tfidf has been shared over clusters and also broker. So,
+    // please don't change it next time ecank.
     char document_info_path[FILEPATH_LENGTH] = "/home1/grupef/ecank/data/doc_lengths"; // DONTCHANGE
-    char document_vectors_folder_path[FILEPATH_LENGTH] = "/home1/grupef/ecank/data/document_vectors"; // DONTCHANGE
+    char dvectors_folder_path[FILEPATH_LENGTH] = "/home1/grupef/ecank/data/document_vectors"; // DONTCHANGE
     char preresults_path[FILEPATH_LENGTH] = ""; // CHANGE -> GET FROM ARGUMENTS
     unsigned int number_of_documents = 50220538; // DONTCHANGE
     unsigned int number_of_terms = 163629158; // DONTCHANGE
     unsigned int number_of_preresults = 0;//100; // CHANGE -> GET FROM ARGUMENTS
     unsigned int number_of_results = 0;//20; // CHANGE -> GET FROM ARGUMENTS
     unsigned int number_of_query = 0;//198; // CHANGE -> GET FROM ARGUMENTS
-    unsigned int div_algorithms[] = {MAX_SUM, SY}; // DONTCHANGE
-    double div_lambdas[] = { 0.25, 0.5, 0.75 }; // DONTCHANGE
+    unsigned int div_algorithms[] = {SY, XQUAD}; // DONTCHANGE XXX
+    double div_lambdas[] = { 0.25, 0.5, 0.75 }; // DONTCHANGE XXX
+
+    // XQUAD
+    unsigned int max_possible_number_of_subquery = 10; // DONTCHANGE [09->12 Max is 8]
+    char subqueryresults_path[FILEPATH_LENGTH] = ""; // CHANGE -> GET FROM ARGUMENTS
 
     int i, j;
     int div_len = sizeof(div_algorithms) / sizeof(unsigned int);
@@ -26,16 +33,19 @@ int main (int argc, char *argv[]) {
     sscanf(argv[2], "%d", &number_of_preresults);
     sscanf(argv[3], "%d", &number_of_results);
     sscanf(argv[4], "%d", &number_of_query);
+    strcpy(subqueryresults_path, argv[5]);
 
-#ifdef DEBUG
+
     printf("Wordlist: %s\n", wordlist_path);
     printf("Preresults: %s\n", preresults_path);
+    printf("Subqueryresults: %s\n", subqueryresults_path);
     printf("Document info path (doc lengths): %s\n", document_info_path);
-    printf("Document vectors folder: %s\n", document_vectors_folder_path);
+    printf("Document vectors folder: %s\n", dvectors_folder_path);
     printf("Number of preresults: %d\n", number_of_preresults);
     printf("Number of results: %d\n", number_of_results);
     printf("Number of query: %d\n", number_of_query);
-
+    fflush(stdout);
+#ifdef DEBUG
     printf("Now, you have 10 seconds to send SIGINT...\n");
     fflush(stdout);
     sleep(10);
@@ -44,7 +54,7 @@ int main (int argc, char *argv[]) {
     Conf conf = {
         .wordlist_path = wordlist_path,
         .document_info_path = document_info_path,
-        .document_vectors_folder_path = document_vectors_folder_path,
+        .document_vectors_folder_path = dvectors_folder_path,
         .preresults_path = preresults_path,
         .number_of_documents = number_of_documents,
         .number_of_terms = number_of_terms,
@@ -53,7 +63,11 @@ int main (int argc, char *argv[]) {
         .number_of_preresults = number_of_preresults,
         .number_of_results = number_of_results,
         .number_of_query = number_of_query,
-        .real_number_of_query = 0
+        .real_number_of_query = 0,
+
+        /* xQuad */
+        .subqueryresults_path = subqueryresults_path,
+        .max_possible_number_of_subquery = max_possible_number_of_subquery
     };
 
     initDiversify(&conf);
@@ -68,11 +82,23 @@ int main (int argc, char *argv[]) {
 #endif
 
     for (i = 0; i < div_len; i++) {
+        if (div_algorithms[i] == XQUAD) {
+            if (initloadSubqueryResults() != 0) {
+                printf("XQUAD initloadSubqueryResults Failure!\n");
+                fflush(stdout);
+                break;
+            } else {
+                printf("XQUAD Initialized!\n");
+                fflush(stdout);
+            }
+        }
+
         for (j = 0; j < lambda_len; j++) {
             conf.diversification_algorithm = div_algorithms[i];
             conf.lambda = div_lambdas[j];
 
             cleanResults();
+
             diversify();
             writeResults();
         }
