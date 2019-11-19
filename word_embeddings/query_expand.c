@@ -11,18 +11,6 @@ int main (int argc, char** argv) {
         exit(1);
     }
 
-    // test area ///////////////////
-    printf("%lf\n", dictionary[2].norm); // XXX check norm cacltd suclfly
-    We wetest1;
-    strcpy(wetest1.word, "wetest");
-    int testi = 0;
-    for (;testi < 100; testi++) {
-        wetest1.vector[testi] = testi+1;
-    }
-    wetest1.norm = 100;
-    printf("%lf\n", cosine_similarity(wetest1, wetest1)); // XXX check cs calc is correct
-    /////////////////////////////////
-
     real_nof_queries = load_queries();
     if (real_nof_queries <= 0) {
         printf("load_queries failed: %d\n", real_nof_queries);

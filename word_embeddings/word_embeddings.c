@@ -118,8 +118,6 @@ int load_queries () {
             c_ptr = strtok (NULL, " ");
         }
 
-        // XXX check loaded query we -> check norm / vector / word.
-
         for (v_index = 0; v_index < GLOVE_VECTOR_SIZE; v_index++) {
             if (nof_words_in_query == 0) {
                 printf("WARNING: 0 word found in dict for query: %s\n",
@@ -158,24 +156,22 @@ double cosine_similarity (We we1, We we2) {
     int v_index;
     double temp = 1;
 
-    // XXX check calc score and norm values
-    printf("|%s|%s|\t", we1.word, we2.word);
-    printf("|%lf|%lf|\t", we1.vector[0], we2.vector[0]);
+    // If query word is not exists in dictionary, then we1 norm is 0
+    if (we1.norm == 0)
+        return 0;
+
     for(v_index = 0; v_index < GLOVE_VECTOR_SIZE; v_index++) {
         score += (we1.vector[v_index] * we2.vector[v_index]);
     }
 
-    printf("|b:%lf|", score);
-    printf("|n:%lf,%lf|", we1.norm, we2.norm);
     temp = (we1.norm * we2.norm);
     if (temp != 0) {
         score = score / temp;
-    } else { // XXX see below comment for unknows words
+    } else {
         printf("WARNING: POSSIBLE UNKNOWN WORD |%s|%s|\n",
             we1.word, we2.word);
         return 0;
     }
-    printf("a:%lf|\n", score);
 
     return score;
 }
@@ -198,15 +194,14 @@ int expand_query (int q_index) {
             cosine_similarity(queries[q_index], dictionary[w_index]);
     }
 
-    // XXX make sure qsort sorted sucfly
-    printf("before: %d %lf\n",
-        query_word_similarities[0].index, query_word_similarities[0].score);
     qsort (query_word_similarities, GLOVE_DICT_SIZE, sizeof(Sim), cmpsim);
-    printf("after: %d %lf\n",
-        query_word_similarities[0].index, query_word_similarities[0].score);
 
-    // XXXfirst find the top k scores indexes from query_word_similarities
     // XXXthen, write the orig query to fp w/new k words from dictionary
+    // WRITE: dont forget to skip 1word queries
+    /*
+    if (query_word_similarities[0].score == 1.0)
+        printf("WARNING: Possible 1-word query. Skipping.\n");
+    */
 
     // XXX1st Change ABOVE algo w/diversified expansion
 
