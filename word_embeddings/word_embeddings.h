@@ -29,19 +29,30 @@
 #define NOF_WORDS_TO_EXPAND 5
 #define MAX_NOF_QUERIES 1020 // 1012 = 814 subquery + 198 query
 
+/*  */
+#define DIVERSIFY_CANDIDATE_SET_LENGTH 50
+
+
 /************************/
 /***** DEFINITIONS ******/
 /************************/
 typedef struct word_embedding {
     char word[MAX_WORD_SIZE];
     double vector[GLOVE_VECTOR_SIZE];
+    double norm;
 } We;
+
+typedef struct similarity_score_accumulator {
+    double score;
+    int index;
+} Similarity, Sim;
 
 /*********************/
 /***** FUNCTIONS *****/
 /*********************/
 int load_dictionary();
 int load_queries();
+double cosine_similarity (We, We);
 int expand_query(int);
 
 /********************/

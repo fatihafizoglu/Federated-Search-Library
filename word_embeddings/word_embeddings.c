@@ -1,57 +1,10 @@
 #include "word_embeddings.h"
 
-// double dotProduct (TermVectors v1, int len1, double *tf_idf1, TermVectors v2, int len2, double *tf_idf2) {
-//     double ret = 0.0;
-//     int i = 0, j = 0;
-//
-//     while (i < len1 && j < len2) {
-//         if (v1[i].term_id == v2[j].term_id) {
-//             ret += tf_idf1[i] * tf_idf2[j];
-//             i++;
-//             j++;
-//         } else if (v1[i].term_id < v2[j].term_id)
-//             i++;
-//         else if (v1[i].term_id > v2[j].term_id)
-//             j++;
-//     }
-//
-//     return ret;
-// }
-//
-// double getVectorLength (int length, double *tf_idf) {
-//     double ret = 0.0;
-//     int i;
-//
-//     for (i = 0; i < length; i++)
-//         ret += tf_idf[i] * tf_idf[i];
-//
-//     ret = sqrt(ret);
-//     return ret;
-// }
-//
-// double cosineSimilarity (int doc1_id, int doc2_id) {
-//     double ret = 0.0;
-//     Document *doc1 = getDocument(doc1_id);
-//     Document *doc2 = getDocument(doc2_id);
-//     double tf_idf1[doc1->uterm_count];
-//     double tf_idf2[doc2->uterm_count];
-//     TermVectors doc1_term_vectors = getTermVectors(doc1, tf_idf1);
-//     TermVectors doc2_term_vectors = getTermVectors(doc2, tf_idf2);
-//
-//     ret = dotProduct(doc1_term_vectors, doc1->uterm_count, tf_idf1,
-//                      doc2_term_vectors, doc2->uterm_count, tf_idf2);
-//
-//     ret = ret / (getVectorLength(doc1->uterm_count, tf_idf1) * getVectorLength(doc2->uterm_count, tf_idf2));
-//
-//     free(doc1_term_vectors);
-//     free(doc2_term_vectors);
-//     return ret;
-// }
-
 void init_queries () {
     int i, j;
     for (i = 0; i < MAX_NOF_QUERIES; i++) {
         strcpy(queries[i].word, "");
+        queries[i].norm = 0.0;
         for (j = 0; j < GLOVE_VECTOR_SIZE; j++) {
             queries[i].vector[j] = 0.0;
         }
@@ -62,6 +15,7 @@ void init_dictionary () {
     int i, j;
     for (i = 0; i < GLOVE_DICT_SIZE; i++) {
         strcpy(dictionary[i].word, "");
+        dictionary[i].norm = 0.0;
         for (j = 0; j < GLOVE_VECTOR_SIZE; j++) {
             dictionary[i].vector[j] = 0.0;
         }
@@ -73,6 +27,7 @@ int load_dictionary () {
     FILE *fp;
     char word[MAX_WORD_SIZE];
     double score;
+    double norm = 0.0;
     int d_index = 0, v_index = 0;
 
     if (!(fp = fopen(GLOVE_DATA_PATH, "r"))) {
@@ -80,6 +35,8 @@ int load_dictionary () {
     }
 
     while (!feof(fp)) {
+        norm = 0.0;
+
         if (d_index >= GLOVE_DICT_SIZE) {
             printf("ERROR: THIS SHOULD NOT HAPPEN! %s\n", __FUNCTION__);
             break;
@@ -90,9 +47,14 @@ int load_dictionary () {
         for (v_index = 0; v_index+1 < GLOVE_VECTOR_SIZE; v_index++) {
             fscanf (fp, "%lf ", &(score));
             dictionary[d_index].vector[v_index] = score;
+            norm += (score * score);
         }
-        fscanf (fp, "%lf \n", &(score));
+        fscanf(fp, "%lf\n", &(score));
         dictionary[d_index].vector[v_index] = score;
+        norm += (score * score);
+
+        norm = sqrt(norm);
+        dictionary[d_index].norm = norm;
         d_index++;
     }
 
@@ -119,12 +81,15 @@ int load_queries () {
     int nof_words_in_query = 0;
     char line[MAX_WORD_SIZE+2] = "";
     char *c_ptr;
+    double norm = 0.0;
 
     if (!(fp = fopen(QUERIES_PATH_IN, "r"))) {
         return -1;
     }
 
     do {
+        norm = 0.0;
+
         if (q_index >= MAX_NOF_QUERIES) {
             printf("ERROR: THIS SHOULD NOT HAPPEN! %s q_index\n",
                 __FUNCTION__);
@@ -153,6 +118,8 @@ int load_queries () {
             c_ptr = strtok (NULL, " ");
         }
 
+        // XXX check loaded query we -> check norm / vector / word.
+
         for (v_index = 0; v_index < GLOVE_VECTOR_SIZE; v_index++) {
             if (nof_words_in_query == 0) {
                 printf("WARNING: 0 word found in dict for query: %s\n",
@@ -160,7 +127,10 @@ int load_queries () {
                 break;
             }
             queries[q_index].vector[v_index] = vector[v_index] / nof_words_in_query;
+            norm += (queries[q_index].vector[v_index] * queries[q_index].vector[v_index]);
         }
+        norm = sqrt(norm);
+        queries[q_index].norm = norm;
 
         q_index++;
     } while (!feof(fp));
@@ -170,30 +140,70 @@ int load_queries () {
     return q_index;
 }
 
+int cmpsim (const void *a, const void *b) {
+    Sim *simA = (Sim *)a;
+    Sim *simB = (Sim *)b;
+    double diff = simA->score - simB->score;
+
+    if (diff > 0)
+        return -1;
+    else if (diff < 0)
+        return 1;
+    else
+        return 0;
+}
+
 double cosine_similarity (We we1, We we2) {
     double score = 0.0;
+    int v_index;
+    double temp = 1;
 
-    // XXXboth we has same #nof vector compute score
+    // XXX check calc score and norm values
+    printf("|%s|%s|\t", we1.word, we2.word);
+    printf("|%lf|%lf|\t", we1.vector[0], we2.vector[0]);
+    for(v_index = 0; v_index < GLOVE_VECTOR_SIZE; v_index++) {
+        score += (we1.vector[v_index] * we2.vector[v_index]);
+    }
+
+    printf("|b:%lf|", score);
+    printf("|n:%lf,%lf|", we1.norm, we2.norm);
+    temp = (we1.norm * we2.norm);
+    if (temp != 0) {
+        score = score / temp;
+    } else { // XXX see below comment for unknows words
+        printf("WARNING: POSSIBLE UNKNOWN WORD |%s|%s|\n",
+            we1.word, we2.word);
+        return 0;
+    }
+    printf("a:%lf|\n", score);
 
     return score;
 }
 
-
 int expand_query (int q_index) {
-    double *query_word_similarities;
+    Similarity *query_word_similarities;
     int w_index = 0;
 
-    query_word_similarities = malloc(GLOVE_DICT_SIZE * sizeof(double));
+    size_t size = GLOVE_DICT_SIZE * sizeof(Sim);
+    query_word_similarities = malloc(size);
     if (!query_word_similarities) {
         printf("query_word_similarities malloc failed\n");
-        exit(1);
+        return -1;
     }
-    memset(query_word_similarities, 0, GLOVE_DICT_SIZE * sizeof(double));
+    memset(query_word_similarities, 0, size);
 
     for (w_index = 0; w_index < GLOVE_DICT_SIZE; w_index++) {
-        query_word_similarities[w_index] =
+        query_word_similarities[w_index].index = w_index;
+        query_word_similarities[w_index].score =
             cosine_similarity(queries[q_index], dictionary[w_index]);
     }
+
+    // XXX make sure qsort sorted sucfly
+    printf("before: %d %lf\n",
+        query_word_similarities[0].index, query_word_similarities[0].score);
+    qsort (query_word_similarities, GLOVE_DICT_SIZE, sizeof(Sim), cmpsim);
+    printf("after: %d %lf\n",
+        query_word_similarities[0].index, query_word_similarities[0].score);
 
     // XXXfirst find the top k scores indexes from query_word_similarities
     // XXXthen, write the orig query to fp w/new k words from dictionary
