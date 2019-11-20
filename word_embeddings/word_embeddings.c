@@ -114,6 +114,9 @@ int load_queries () {
                     vector[v_index] = vector[v_index] +
                         (dictionary[d_index].vector[v_index]);
                 }
+            } else {
+                printf("WARNING: UNFOUND WORD: '%s' in q[%d]:%s\n",
+                    c_ptr, q_index, queries[q_index].word);
             }
 
             c_ptr = strtok (NULL, " ");
@@ -208,6 +211,26 @@ int write_query (FILE *fp, int q_index, Sim *sims) {
     return 0;
 }
 
+int is_word_exist (const char *search_word, const char *source) {
+    char word[MAX_WORD_SIZE];
+    char dict[MAX_WORD_SIZE];
+
+    strcpy(word, search_word);
+    strcpy(dict, source);
+
+    char *c_ptr = strtok(dict, " ");
+
+    while (c_ptr != NULL) {
+        if (strcmp(word, c_ptr) == 0) {
+            return 1;
+        }
+
+        c_ptr = strtok (NULL, " ");
+    }
+
+    return 0;
+}
+
 int expand_query (int q_index) {
     Similarity *query_word_similarities;
     int w_index = 0;
@@ -222,18 +245,33 @@ int expand_query (int q_index) {
 
     for (w_index = 0; w_index < GLOVE_DICT_SIZE; w_index++) {
         query_word_similarities[w_index].index = w_index;
+
+        if (is_word_exist(dictionary[w_index].word, queries[q_index].word)) {
+            query_word_similarities[w_index].score = 0.0;
+            // printf("WARNING: '%s' in q[%d]'%s', skipping...\n",
+            //     dictionary[w_index].word, q_index, queries[q_index].word);
+            continue;
+        }
+
         query_word_similarities[w_index].score =
             cosine_similarity(queries[q_index], dictionary[w_index]);
     }
 
-    qsort (query_word_similarities, GLOVE_DICT_SIZE, sizeof(Sim), cmpsim);
+    qsort(query_word_similarities, GLOVE_DICT_SIZE, sizeof(Sim), cmpsim);
+    // I already got the result
+    // if (write_query(qout_fp, q_index, query_word_similarities) != 0) {
+    //     printf("writing q:%d failed\n", q_index);
+    //     return -1;
+    // }
 
-    if (write_query(qout_fp, q_index, query_word_similarities) != 0) {
+    // XXX diversified expansion
+
+
+    qsort(query_word_similarities, GLOVE_DICT_SIZE, sizeof(Sim), cmpsim);
+    if (write_query(qdout_fp, q_index, query_word_similarities) != 0) {
         printf("writing q:%d failed\n", q_index);
         return -1;
     }
-
-    // XXX diversified expansion
 
     free(query_word_similarities);
     return 0;

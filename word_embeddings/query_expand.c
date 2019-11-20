@@ -14,16 +14,16 @@ int main (int argc, char** argv) {
         exit(1);
     }
 
-    if (!(qout_fp = fopen(QUERIES_PATH_OUT, "w"))) {
-        printf("fopen failed: %s\n", QUERIES_PATH_OUT);
-        exit(1);
-    }
+    // I already got the result
+    // if (!(qout_fp = fopen(QUERIES_PATH_OUT, "w"))) {
+    //     printf("fopen failed: %s\n", QUERIES_PATH_OUT);
+    //     exit(1);
+    // }
 
     if (!(qdout_fp = fopen(QUERIES_DIVED_PATH_OUT, "w"))) {
         printf("fopen failed: %s\n", QUERIES_DIVED_PATH_OUT);
         exit(1);
     }
-    // XXXBUG bi yerlerde hesaplamalar yaparken kendiyle ayniysa yapma giibb bisiplss
 
     // dictionary and query word embeddings are ready.
     // time to find words to expand
@@ -38,7 +38,8 @@ int main (int argc, char** argv) {
         }
     }
 
-    fclose(qout_fp);
+    // I already got the result
+    // fclose(qout_fp);
     fclose(qdout_fp);
     return 0;
 }
