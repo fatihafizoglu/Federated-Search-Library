@@ -1,5 +1,14 @@
 #include "word_embeddings.h"
 
+void init_similarities () {
+    int i;
+
+    for (i = 0; i < GLOVE_DICT_SIZE; i++) {
+        query_word_similarities[i].score = 0.0;
+        query_word_similarities[i].index = -1;
+    }
+}
+
 void init_queries () {
     int i, j;
     for (i = 0; i < MAX_NOF_QUERIES; i++) {
@@ -185,13 +194,13 @@ double cosine_similarity (We we1, We we2) {
     return score;
 }
 
-int write_query (FILE *fp, int q_index, Sim *sims) {
+int write_query (FILE *fp, int q_index, Sim *sims, int length) {
     int s_index;
     int counter = 0;
 
     fprintf(fp, "%s ", queries[q_index].word);
 
-    for (s_index = 0; (s_index < GLOVE_DICT_SIZE) && (counter < NOF_WORDS_TO_EXPAND); s_index++) {
+    for (s_index = 0; (s_index < length) && (counter < NOF_WORDS_TO_EXPAND); s_index++) {
         if (sims[s_index].index < 0) {
             printf("ERROR: THIS SHOULD NOT HAPPEN. sim-index:%d\n", sims[s_index].index);
             return -1;
@@ -200,6 +209,11 @@ int write_query (FILE *fp, int q_index, Sim *sims) {
         if (sims[s_index].score == 1.0) {
             printf("WARNING: Possible 1-word query:%s. Skipping word:%s.\n",
                 queries[q_index].word, dictionary[sims[s_index].index].word);
+            continue;
+        }
+
+        if (sims[s_index].score == 0.0 && sims[s_index].index == 0) {
+            printf("ERROR: THIS CAN ONLY HAPPEN IF(%d,div).\n", length);
             continue;
         }
 
@@ -231,17 +245,33 @@ int is_word_exist (const char *search_word, const char *source) {
     return 0;
 }
 
+void gen_we (We *we, Sim *sims, int length) {
+    char word[MAX_WORD_SIZE] = "";
+    double vector[GLOVE_VECTOR_SIZE] = { 0 };
+    double norm = 0.0;
+    int s_index, v_index;
+
+    for (s_index = 0; s_index < length; s_index++) {
+        if (sims[s_index].score == 0.0 && sims[s_index].index == 0) {
+            continue;
+        }
+
+        // XXXcalculate vector word norm
+
+    }
+
+    // Put results into we
+    strcpy(we->word, word);
+    we->norm = norm;
+    for (v_index = 0; v_index < GLOVE_VECTOR_SIZE; v_index++) {
+        we->vector[v_index] = vector[v_index];
+    }
+}
+
 int expand_query (int q_index) {
-    Similarity *query_word_similarities;
     int w_index = 0;
 
-    size_t size = GLOVE_DICT_SIZE * sizeof(Sim);
-    query_word_similarities = malloc(size);
-    if (!query_word_similarities) {
-        printf("query_word_similarities malloc failed\n");
-        return -1;
-    }
-    memset(query_word_similarities, 0, size);
+    init_similarities();
 
     for (w_index = 0; w_index < GLOVE_DICT_SIZE; w_index++) {
         query_word_similarities[w_index].index = w_index;
@@ -258,21 +288,75 @@ int expand_query (int q_index) {
     }
 
     qsort(query_word_similarities, GLOVE_DICT_SIZE, sizeof(Sim), cmpsim);
-    // I already got the result
-    // if (write_query(qout_fp, q_index, query_word_similarities) != 0) {
-    //     printf("writing q:%d failed\n", q_index);
-    //     return -1;
-    // }
-
-    // XXX diversified expansion
-
-
-    qsort(query_word_similarities, GLOVE_DICT_SIZE, sizeof(Sim), cmpsim);
-    if (write_query(qdout_fp, q_index, query_word_similarities) != 0) {
+    if (write_query(qout_fp, q_index, query_word_similarities, GLOVE_DICT_SIZE) != 0) {
         printf("writing q:%d failed\n", q_index);
         return -1;
     }
 
-    free(query_word_similarities);
+    Sim selected_words[NOF_WORDS_TO_EXPAND] = {};
+    selected_words[0].index = query_word_similarities[0].index;
+    selected_words[0].score = query_word_similarities[0].score;
+
+    int i, j;
+    for (i = 1; i < NOF_WORDS_TO_EXPAND; i++) {
+        int best_index = -1;
+        double max_mmr_score = -1;
+        for (j = 0; j < DIVERSIFY_CAND_SET_LENGTH; j++) {
+            int cand_index = query_word_similarities[j].index;
+            double cand_sim = query_word_similarities[j].score;
+
+            int found = 0;
+            int temp_index;
+            for (temp_index = 0; temp_index < NOF_WORDS_TO_EXPAND; temp_index++) {
+                if (selected_words[temp_index].index == cand_index) {
+                    found = 1;
+                    break;
+                }
+            }
+
+            if (found) {
+                printf("WARNING: Word '%s' is already selected.\n",
+                    dictionary[cand_index].word);
+                continue;
+            }
+
+            double mmr_score = 0.0;
+            double query_similarity = cand_sim;
+            double sim_amongst_selected = 0.0;
+            We selected_words_we;
+
+            gen_we(&selected_words_we, selected_words, NOF_WORDS_TO_EXPAND);
+            // XXXtest corectnss
+            printf("gen_we: word:%s norm:%lf v[0]:%lf\n",
+                selected_words_we.word, selected_words_we.norm,
+                selected_words_we.vector[0]);
+            sim_amongst_selected =
+                cosine_similarity(selected_words_we, dictionary[cand_index]);
+
+            mmr_score = ((1-LAMBDA) * query_similarity) +
+                (LAMBDA * (1-sim_amongst_selected));
+
+            printf("cand:'%s' qsim:%lf, dsim:%lf, overall:%lf\n",
+                dictionary[cand_index].word, query_similarity,
+                (1-sim_amongst_selected), mmr_score); // XXXtest scores
+
+            if (mmr_score > max_mmr_score) {
+                max_mmr_score = mmr_score;
+                best_index = cand_index;
+            }
+        }
+
+        if (best_index != -1) {
+            selected_words[i].index = best_index;
+            selected_words[i].score = max_mmr_score;
+        }
+    }
+
+    qsort(selected_words, NOF_WORDS_TO_EXPAND, sizeof(Sim), cmpsim);
+    if (write_query(qdout_fp, q_index, selected_words, NOF_WORDS_TO_EXPAND) != 0) {
+        printf("writing qd:%d failed\n", q_index);
+        return -1;
+    }
+
     return 0;
 }

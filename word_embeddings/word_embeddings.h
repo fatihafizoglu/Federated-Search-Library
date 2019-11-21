@@ -30,8 +30,8 @@
 #define MAX_NOF_QUERIES 1020 // 1012 = 814 subquery + 198 query
 
 /*  */
-#define DIVERSIFY_CANDIDATE_SET_LENGTH 50
-
+#define DIVERSIFY_CAND_SET_LENGTH 50
+#define LAMBDA 0.5
 
 /************************/
 /***** DEFINITIONS ******/
@@ -64,5 +64,6 @@ We queries[MAX_NOF_QUERIES];
 FILE *qout_fp, *qdout_fp;
 int real_nof_queries;
 
+Similarity query_word_similarities[GLOVE_DICT_SIZE];
 
 #endif /* not defined _WORD_EMBEDDINGS_H_ */
