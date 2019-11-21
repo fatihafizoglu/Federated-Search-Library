@@ -132,7 +132,7 @@ int load_queries () {
         }
 
         for (v_index = 0; v_index < GLOVE_VECTOR_SIZE; v_index++) {
-            if (nof_words_in_query == 0) {
+            if (nof_words_in_query == 0) { // XXXdoesn't make sense check this outside
                 printf("WARNING: 0 word found in dict for query: %s\n",
                     queries[q_index].word);
                 break;
@@ -247,25 +247,39 @@ int is_word_exist (const char *search_word, const char *source) {
 
 void gen_we (We *we, Sim *sims, int length) {
     char word[MAX_WORD_SIZE] = "";
-    double vector[GLOVE_VECTOR_SIZE] = { 0 };
+    double vector[GLOVE_VECTOR_SIZE] = {};
     double norm = 0.0;
     int s_index, v_index;
+    int nof_words = 0;
 
     for (s_index = 0; s_index < length; s_index++) {
-        if (sims[s_index].score == 0.0 && sims[s_index].index == 0) {
+        int index_to_add = sims[s_index].index;
+        if (sims[s_index].score == 0.0 && index_to_add == 0) {
             continue;
         }
 
-        // XXXcalculate vector word norm
+        nof_words++;
+        for (v_index = 0; v_index < GLOVE_VECTOR_SIZE; v_index++) {
+            vector[v_index] = vector[v_index] +
+                (dictionary[index_to_add].vector[v_index]);
+        }
 
+        strcat(word, dictionary[index_to_add].word);
+        strcat(word, " ");
     }
 
-    // Put results into we
-    strcpy(we->word, word);
-    we->norm = norm;
+    if (nof_words == 0) {
+        printf("ERROR: THIS SHOULD NOT HAPPEN!\n");
+    }
+
     for (v_index = 0; v_index < GLOVE_VECTOR_SIZE; v_index++) {
-        we->vector[v_index] = vector[v_index];
+        we->vector[v_index] = vector[v_index] / nof_words;
+        norm += (we->vector[v_index] * we->vector[v_index]);
     }
+    norm = sqrt(norm);
+    we->norm = norm;
+    strcpy(we->word, word);
+    // XXXtest word norm vector
 }
 
 int expand_query (int q_index) {
