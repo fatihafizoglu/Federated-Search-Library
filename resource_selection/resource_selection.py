@@ -200,7 +200,7 @@ class ResultProducer:
                 result_index += 1
                 cluster_result_counter[cluster_id] += 1
 
-    def write_cinfo(output_file_cinfo):
+    def write_cinfo(self, output_file_cinfo):
         output_file_cinfo.write("{}\t".format(self.query_id))
         for (cluster) in self.cluster_list:
             output_file_cinfo.write("{} ".format(cluster))
