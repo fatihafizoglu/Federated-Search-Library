@@ -174,16 +174,13 @@ class ResourceSelectionGAVG:
         return [x[0] for x in self.sorted_clusters[0:k]]
 
 class ResultProducer:
-
     def __init__(self, query_id, cluster_list, query_results, clustertop):
-
         self.query_id = query_id
         self.cluster_list = cluster_list
         self.query_results = query_results
         self.clustertop = clustertop
 
     def produce_output(self, output_file, cinfo):
-
         cluster_result_counter = {}
         result_index = 1
         for (doc_id,doc_score) in self.query_results:
@@ -203,6 +200,12 @@ class ResultProducer:
                 result_index += 1
                 cluster_result_counter[cluster_id] += 1
 
+    def write_cinfo(output_file_cinfo):
+        output_file_cinfo.write("{}\t".format(self.query_id))
+        for (cluster) in self.cluster_list:
+            output_file_cinfo.write("{} ".format(cluster))
+        output_file_cinfo.write("\n")
+
 
 parser = argparse.ArgumentParser(description='Resource Selection Algorithms')
 # INPUT FILES
@@ -213,11 +216,11 @@ parser.add_argument('cluster_concat_file', type=argparse.FileType('r'), help='fi
 # OPTIONAL PARAMETERS
 parser.add_argument('-method', action="store",help='resource selection method.',default='Redde',
     choices=['Redde', 'Redde.top', 'CRCSExp', 'CRCSLin', 'GAVG'])
-parser.add_argument('-csitop', type=int, action="store", help='no of CSI result for resource selection.', default=100, # 200 BASELINE,BDIV,CDIV / 100 DDIV, CDDIV
+parser.add_argument('-csitop', type=int, action="store", help='no of CSI result for resource selection.', default=200, # 200 BASELINE,BDIV,CDIV / 100 DDIV, CDDIV
     choices=[50,100,150,200,250,300,350,400,450,500,550,600,650,700,750,800,850,900,950,1000])
 parser.add_argument('-nclusters', type=int, action="store", help='no of resource to select.', default=10, # DONTCHANGE
     choices=[1,3,5,10,20,30,40,50,60,70,80,90,100])
-parser.add_argument('-clustertop', type=int, action="store", help='no of results from each chosen cluster.', default=100, # 10 ALL / 100 CDIV. CDDIV
+parser.add_argument('-clustertop', type=int, action="store", help='no of results from each chosen cluster.', default=10, # 10 ALL / 100 CDIV. CDDIV
     choices=[10,20,100])
 parser.add_argument('-cinfo', type=bool, action="store", help='append cluster info to results file', default=True) # False ALL / True CDIV, CDDIV
 
@@ -235,7 +238,9 @@ if query_results_on_original_index.get_query_count() != query_results_on_CSI.get
     print "Query Counts Does Not Match!"
 
 filename = ARGUMENTS.result_2.name + "_" + ARGUMENTS.method
+filename_cinfo = filename + "_cinfo"
 output_file = open(filename, "w")
+output_file_cinfo = open(filename_cinfo, "w")
 
 for query_index in range(query_results_on_original_index.get_query_count()):
 
@@ -260,5 +265,7 @@ for query_index in range(query_results_on_original_index.get_query_count()):
 
     result_producer =  ResultProducer(query_index+1, cluster_list, query_results, ARGUMENTS.clustertop)
     result_producer.produce_output(output_file, ARGUMENTS.cinfo)
+    result_producer.write_cinfo(output_file_cinfo)
 
 output_file.close()
+output_file_cinfo.close()
