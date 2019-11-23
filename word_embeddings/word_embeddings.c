@@ -213,7 +213,7 @@ int write_query (FILE *fp, int q_index, Sim *sims, int length) {
         }
 
         if (sims[s_index].score == 0.0 && sims[s_index].index == 0) {
-            printf("ERROR: THIS CAN ONLY HAPPEN IF(%d,div).\n", length);
+            printf("ERROR: THIS CAN ONLY HAPPEN IF(%d,div).q#%d\n", length, q_index);
             continue;
         }
 
@@ -334,8 +334,8 @@ int expand_query (int q_index) {
             }
 
             if (found) {
-                printf("WARNING: Word '%s' is already selected.\n",
-                    dictionary[cand_index].word);
+                // printf("WARNING: Word '%s' is already selected.\n",
+                //     dictionary[cand_index].word);
                 continue;
             }
 
