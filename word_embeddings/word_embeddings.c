@@ -131,19 +131,19 @@ int load_queries () {
             c_ptr = strtok (NULL, " ");
         }
 
-        for (v_index = 0; v_index < GLOVE_VECTOR_SIZE; v_index++) {
-            if (nof_words_in_query == 0) { // XXXdoesn't make sense check this outside
-                printf("WARNING: 0 word found in dict for query: %s\n",
-                    queries[q_index].word);
-                break;
+        if (nof_words_in_query == 0) {
+            printf("WARNING: 0 word found in dict for query: %s\n", queries[q_index].word);
+        } else {
+            for (v_index = 0; v_index < GLOVE_VECTOR_SIZE; v_index++) {
+                queries[q_index].vector[v_index] = vector[v_index] / nof_words_in_query;
+                norm += (queries[q_index].vector[v_index] * queries[q_index].vector[v_index]);
             }
-            queries[q_index].vector[v_index] = vector[v_index] / nof_words_in_query;
-            norm += (queries[q_index].vector[v_index] * queries[q_index].vector[v_index]);
+            norm = sqrt(norm);
         }
-        norm = sqrt(norm);
-        queries[q_index].norm = norm;
 
+        queries[q_index].norm = norm;
         q_index++;
+
     } while (!feof(fp));
 
     real_nof_queries = q_index;
@@ -213,7 +213,7 @@ int write_query (FILE *fp, int q_index, Sim *sims, int length) {
         }
 
         if (sims[s_index].score == 0.0 && sims[s_index].index == 0) {
-            printf("ERROR: THIS CAN ONLY HAPPEN IF(%d,div).\n", length);
+            printf("ERROR: THIS CAN ONLY HAPPEN IF(%d,div).q#%d\n", length, q_index);
             continue;
         }
 
@@ -254,7 +254,7 @@ void gen_we (We *we, Sim *sims, int length) {
 
     for (s_index = 0; s_index < length; s_index++) {
         int index_to_add = sims[s_index].index;
-        if (sims[s_index].score == 0.0 && index_to_add == 0) {
+        if (sims[s_index].score == 0.0 && index_to_add == -1) {
             continue;
         }
 
@@ -279,7 +279,6 @@ void gen_we (We *we, Sim *sims, int length) {
     norm = sqrt(norm);
     we->norm = norm;
     strcpy(we->word, word);
-    // XXXtest word norm vector
 }
 
 int expand_query (int q_index) {
@@ -307,7 +306,13 @@ int expand_query (int q_index) {
         return -1;
     }
 
+    // DIVERSIFY
     Sim selected_words[NOF_WORDS_TO_EXPAND] = {};
+    int tmp_i;
+    for (tmp_i = 0; tmp_i < NOF_WORDS_TO_EXPAND; tmp_i++) {
+        selected_words[tmp_i].index = -1;
+        selected_words[tmp_i].score = 0.0;
+    }
     selected_words[0].index = query_word_similarities[0].index;
     selected_words[0].score = query_word_similarities[0].score;
 
@@ -329,8 +334,8 @@ int expand_query (int q_index) {
             }
 
             if (found) {
-                printf("WARNING: Word '%s' is already selected.\n",
-                    dictionary[cand_index].word);
+                // printf("WARNING: Word '%s' is already selected.\n",
+                //     dictionary[cand_index].word);
                 continue;
             }
 
@@ -340,19 +345,11 @@ int expand_query (int q_index) {
             We selected_words_we;
 
             gen_we(&selected_words_we, selected_words, NOF_WORDS_TO_EXPAND);
-            // XXXtest corectnss
-            printf("gen_we: word:%s norm:%lf v[0]:%lf\n",
-                selected_words_we.word, selected_words_we.norm,
-                selected_words_we.vector[0]);
             sim_amongst_selected =
                 cosine_similarity(selected_words_we, dictionary[cand_index]);
 
             mmr_score = ((1-LAMBDA) * query_similarity) +
                 (LAMBDA * (1-sim_amongst_selected));
-
-            printf("cand:'%s' qsim:%lf, dsim:%lf, overall:%lf\n",
-                dictionary[cand_index].word, query_similarity,
-                (1-sim_amongst_selected), mmr_score); // XXXtest scores
 
             if (mmr_score > max_mmr_score) {
                 max_mmr_score = mmr_score;
