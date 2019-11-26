@@ -564,9 +564,6 @@ int loadSubqueryResults() {
 
             if (query_id != preresults[query_counter-1][0].query_id) {
                 query_counter++;
-            } else {
-                // XXX remove if works
-                printf("XXX: qc:%d qid:%d=pr\n", query_counter, query_id);
             }
             sresult_counter = 1;
         }
@@ -579,10 +576,6 @@ int loadSubqueryResults() {
         }
 
         if (query_id != preresults[query_counter-1][sresult_counter-1].query_id) {
-            // XXX remove if works
-            printf("XXX: qc:%d qid:%d != pr:%d\n", 
-                query_counter, query_id,
-                preresults[query_counter-1][sresult_counter-1].query_id);
             continue;
         }
 
