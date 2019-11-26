@@ -561,36 +561,43 @@ int loadSubqueryResults() {
             printf("prev_query_id:%u, sresult_counter:%u, query_counter:%u\n",
                     prev_query_id, sresult_counter, query_counter);
 #endif
-           query_counter++;
-           sresult_counter = 1;
+
+            if (query_id != preresults[query_counter-1][0].query_id) {
+                query_counter++;
+            } else {
+                // XXX remove if works
+                printf("XXX: qc:%d qid:%d=pr\n", query_counter, query_id);
+            }
+            sresult_counter = 1;
         }
 
         prev_query_id = query_id;
         prev_subquery_id = subquery_id;
 
-        // Prevent log pollution for big preresults file
         if (sresult_counter > config->number_of_preresults) {
             continue;
         }
 
-        // Prevent log pollution for CSI results
-        // They don't have seperete subquery lists, therefore
+        if (query_id != preresults[query_counter-1][sresult_counter-1].query_id) {
+            // XXX remove if works
+            printf("XXX: qc:%d qid:%d != pr:%d\n", 
+                query_counter, query_id,
+                preresults[query_counter-1][sresult_counter-1].query_id);
+            continue;
+        }
+
+        // CSI results don't have seperete subquery lists, therefore
         // mainindex subquery lists should be loaded,
         // which will miss indexes with CSI results
-        if (preresults[query_counter-1][sresult_counter-1].doc_id != doc_id) {
+        if (doc_id != preresults[query_counter-1][sresult_counter-1].doc_id) {
             continue;
         }
 
         if ( (query_counter > config->number_of_query) ||
-             (subquery_id > config->max_possible_number_of_subquery) ||
-             (sresult_counter > config->number_of_preresults) ||
-             (preresults[query_counter-1][sresult_counter-1].doc_id != doc_id) ) {
-
-             printf("ERROR: THIS SHOULD NOT HAPPEN! 1=(%d)||(%d)||(%d)||(%d)\n",
+             (subquery_id > config->max_possible_number_of_subquery)) {
+             printf("ERROR: THIS SHOULD NOT HAPPEN! 1=(%d)||(%d)\n",
                  (query_counter > config->number_of_query),
-                 (subquery_id > config->max_possible_number_of_subquery),
-                 (sresult_counter > config->number_of_preresults),
-                 (preresults[query_counter-1][sresult_counter-1].doc_id != doc_id));
+                 (subquery_id > config->max_possible_number_of_subquery));
 
              printf("READ: query_id:%u, subquery_id:%u, doc_id:%u, score:%lf\n",
                  query_id, subquery_id, doc_id, score);
