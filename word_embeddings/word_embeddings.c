@@ -301,6 +301,10 @@ int expand_query (int q_index) {
     }
 
     qsort(query_word_similarities, GLOVE_DICT_SIZE, sizeof(Sim), cmpsim);
+    printf("S! %d:'%s', Best:%lf the:%lf\n", q_index+1,
+        queries[q_index].word, query_word_similarities[0].score,
+        cosine_similarity(queries[q_index], dictionary[0]));
+
     if (write_query(qout_fp, q_index, query_word_similarities, GLOVE_DICT_SIZE) != 0) {
         printf("writing q:%d failed\n", q_index);
         return -1;
@@ -315,7 +319,9 @@ int expand_query (int q_index) {
     }
     selected_words[0].index = query_word_similarities[0].index;
     selected_words[0].score = query_word_similarities[0].score;
-
+    // XXX: bug buldum: bu score qwsim, asagida mmr skoruyla compare ediyosun.
+    // fakat bu secilen kelimeleri degistirmeyecektir. sadece printf
+    // sirasi degisecek ki o np.
     int i, j;
     for (i = 1; i < NOF_WORDS_TO_EXPAND; i++) {
         int best_index = -1;
@@ -364,6 +370,9 @@ int expand_query (int q_index) {
     }
 
     qsort(selected_words, NOF_WORDS_TO_EXPAND, sizeof(Sim), cmpsim);
+    printf("D! %d:'%s', Best:%lf\n", q_index+1,
+        queries[q_index].word, selected_words[0].score);
+
     if (write_query(qdout_fp, q_index, selected_words, NOF_WORDS_TO_EXPAND) != 0) {
         printf("writing qd:%d failed\n", q_index);
         return -1;

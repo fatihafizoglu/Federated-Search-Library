@@ -568,11 +568,6 @@ int loadSubqueryResults() {
         prev_query_id = query_id;
         prev_subquery_id = subquery_id;
 
-#ifdef DEBUG
-        printf("READ: query_id:%u, subquery_id:%u, doc_id:%u, score:%lf\n",
-            query_id, subquery_id, doc_id, score);
-#endif
-
         // Prevent log pollution for big preresults file
         if (sresult_counter > config->number_of_preresults) {
             continue;
@@ -779,11 +774,6 @@ void loadPreresults () {
 
         previous_rank = rank;
         prev_query_id = query_id;
-
-#ifdef DEBUG
-        printf("READ: query_id:%u, doc_id:%u, rank:%u, score:%lf\n",
-            query_id, document_id, rank, score);
-#endif
 
         // Prevent log pollution for big preresults file
         if (rank_counter > config->number_of_preresults) {
