@@ -222,7 +222,7 @@ parser.add_argument('-nclusters', type=int, action="store", help='no of resource
     choices=[1,3,5,10,20,30,40,50,60,70,80,90,100])
 parser.add_argument('-clustertop', type=int, action="store", help='no of results from each chosen cluster.', default=20, # 10 ALL / 100 CDIV. CDDIV
     choices=[10,20,100])
-parser.add_argument('-cinfo', type=bool, action="store", help='append cluster info to results file', default=True) # False ALL / True CDIV, CDDIV
+parser.add_argument('-cinfo', type=bool, action="store", help='append cluster info to results file', default=False) # False ALL / True CDIV, CDDIV
 
 # ALGORITHM CONSTANTS
 parser.add_argument('-crcs_alpha', type=float, action="store", help='alpha component of CRCS Exp Formula (default:1.2)',default=1.2)
