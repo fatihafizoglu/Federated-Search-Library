@@ -573,6 +573,14 @@ int loadSubqueryResults() {
             continue;
         }
 
+        // Prevent log pollution for CSI results
+        // They don't have seperete subquery lists, therefore
+        // mainindex subquery lists should be loaded,
+        // which will miss indexes with CSI results
+        if (preresults[query_counter-1][sresult_counter-1].doc_id != doc_id) {
+            continue;
+        }
+
         if ( (query_counter > config->number_of_query) ||
              (subquery_id > config->max_possible_number_of_subquery) ||
              (sresult_counter > config->number_of_preresults) ||
