@@ -58,21 +58,50 @@ int loadCDIV_allSQ () {
         sresult_counter++;
     }
 
+    fclose(fp);
+    return 0;
+}
+
+double find_score_in_sq (int query_id, int sq_counter, int doc_id) {
+    int i;
+    for (i = 0; i < CDIV_RN; i++) {
+        if (doc_id == CDIV_allSQ[query_id-1][sq_counter][i].doc_id) {
+            return CDIV_allSQ[query_id-1][sq_counter][i].score;
+        }
+    }
+
+    printf("ERROR: CDIV: THIS IS IMPOSSIBLE!\n");
+    printf("q_id:%d sq_id:%d doc_id:%d\n", query_id, sq_counter, doc_id);
+
     return 0;
 }
 
 int loadSubqueryResults_forCDIV() {
     cleanCDIV_allSQ();
-    loadCDIV_allSQ();
-    // XXX randomly test CDIV_allSQ
-    printf("doc:%d score:%lf\ndoc:%d score:%lf\ndoc:%d score:%lf\n",
-        CDIV_allSQ[196][0][0].doc_id, CDIV_allSQ[196][0][0].score,
-        CDIV_allSQ[39][1][0].doc_id, CDIV_allSQ[39][1][0].score,
-        CDIV_allSQ[20][0][5000].doc_id, CDIV_allSQ[20][0][5000].score);
+    if (loadCDIV_allSQ() != 0) {
+        return -1;
+    }
 
-    // XXX load subqueries use CDIV_allSQ
+    int q_counter, pr_counter, sq_counter;
+    for (q_counter = 0; q_counter > config->number_of_query; q_counter++) {
+        for (pr_counter = 0; pr_counter < config->number_of_preresults; pr_counter++) {
+            int doc_id = preresults[q_counter][pr_counter].doc_id;
+            int query_id = preresults[q_counter][pr_counter].query_id;
 
-    return -1;
+            for (sq_counter = 0; sq_counter < config->max_possible_number_of_subquery; sq_counter++) {
+                // first check if sq exist in CDIV_allSQ for this query.
+                if ( (CDIV_allSQ[query_id-1][sq_counter][0].doc_id == 0) &&
+                     (CDIV_allSQ[query_id-1][sq_counter][0].score == 0.0) )
+                    break;
+
+                subquery_results[q_counter][sq_counter][pr_counter].doc_id = doc_id;
+                subquery_results[q_counter][sq_counter][pr_counter].score =
+                    find_score_in_sq(query_id, sq_counter, doc_id);
+            }
+        }
+    }
+
+    return 0;
 }
 
 void loadPreresults_forCDIV () {
@@ -756,6 +785,7 @@ int loadSubqueryResults () {
         sresult_counter++;
     }
 
+    fclose(fp);
     return 0;
 #endif
 }
