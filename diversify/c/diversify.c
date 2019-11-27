@@ -83,7 +83,7 @@ int loadSubqueryResults_forCDIV() {
     }
 
     int q_counter, pr_counter, sq_counter;
-    for (q_counter = 0; q_counter > config->number_of_query; q_counter++) {
+    for (q_counter = 0; q_counter < config->number_of_query; q_counter++) {
         for (pr_counter = 0; pr_counter < config->number_of_preresults; pr_counter++) {
             int doc_id = preresults[q_counter][pr_counter].doc_id;
             int query_id = preresults[q_counter][pr_counter].query_id;
