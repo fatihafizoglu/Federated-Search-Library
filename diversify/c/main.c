@@ -91,6 +91,9 @@ int main (int argc, char *argv[]) {
                 printf("XQUAD Initialized!\n");
                 fflush(stdout);
             }
+
+            // XXX fcornot
+            break;
         }
 
         for (j = 0; j < lambda_len; j++) {

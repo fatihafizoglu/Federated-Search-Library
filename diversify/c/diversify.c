@@ -849,6 +849,30 @@ int initloadSubqueryResults() {
         return -1;
     }
 
+    // XXX test sqr
+    int test_qid = 0;
+    int test_sqid = 0;
+    int test_rank = 0;
+    printf("%d %lf\n",
+        subquery_results[test_qid][test_sqid][test_rank].doc_id,
+        subquery_results[test_qid][test_sqid][test_rank].score);
+    printf("%d %lf %d\n",
+        preresults[test_qid][test_rank].doc_id,
+        preresults[test_qid][test_rank].score,
+        preresults[test_qid][test_rank].query_id);
+
+    test_qid = 999;
+    test_sqid = 1;
+    test_rank = 49;
+    printf("%d %lf\n",
+        subquery_results[test_qid][test_sqid][test_rank].doc_id,
+        subquery_results[test_qid][test_sqid][test_rank].score);
+    printf("%d %lf %d\n",
+        preresults[test_qid][test_rank].doc_id,
+        preresults[test_qid][test_rank].score,
+        preresults[test_qid][test_rank].query_id);
+
+
     return 0;
 }
 
