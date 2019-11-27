@@ -17,7 +17,7 @@ int main (int argc, char *argv[]) {
     unsigned int number_of_preresults = 0;//100; // CHANGE -> GET FROM ARGUMENTS
     unsigned int number_of_results = 0;//20; // CHANGE -> GET FROM ARGUMENTS
     unsigned int number_of_query = 0;//198; // CHANGE -> GET FROM ARGUMENTS
-    unsigned int div_algorithms[] = {/*SY, */XQUAD}; // DONTCHANGE XXX
+    unsigned int div_algorithms[] = {SY, XQUAD}; // DONTCHANGE XXX
     double div_lambdas[] = { 0.25, 0.5, 0.75 }; // DONTCHANGE XXX
 
     // XQUAD
@@ -91,9 +91,6 @@ int main (int argc, char *argv[]) {
                 printf("XQUAD Initialized!\n");
                 fflush(stdout);
             }
-
-            // XXX fcornot
-            break;
         }
 
         for (j = 0; j < lambda_len; j++) {
