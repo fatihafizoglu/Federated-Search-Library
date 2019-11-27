@@ -643,7 +643,10 @@ void writeResults () {
         for (j = 0; j < config->number_of_results; j++) {
             if (results[q_no][j].doc_id != 0 && results[q_no][j].score != 0) {
                 fprintf(fp, "%d\tQ0\t%d\t%d\t%lf\tfs\n",
-                results[q_no][j].query_id, results[q_no][j].doc_id, j + 1, results[q_no][j].score);
+                    results[q_no][j].query_id,
+                    results[q_no][j].doc_id,
+                    j + 1,
+                    results[q_no][j].score);
             }
         }
     }
