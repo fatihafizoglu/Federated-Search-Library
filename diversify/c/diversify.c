@@ -88,6 +88,10 @@ int loadSubqueryResults_forCDIV() {
             int doc_id = preresults[q_counter][pr_counter].doc_id;
             int query_id = preresults[q_counter][pr_counter].query_id;
 
+            // means we dont have that number of results for this query
+            if (doc_id == 0 && query_id == 0)
+                break;
+
             for (sq_counter = 0; sq_counter < config->max_possible_number_of_subquery; sq_counter++) {
                 // first check if sq exist in CDIV_allSQ for this query.
                 if ( (CDIV_allSQ[query_id-1][sq_counter][0].doc_id == 0) &&
