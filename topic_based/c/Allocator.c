@@ -423,11 +423,11 @@ char *getClusterDocumentIdsFilepath (unsigned int index) {
     char str[10];
     sprintf(str, "%d", index);
 
-    size_t len1 = strlen(config->document_vectors_folder_path);
+    size_t len1 = strlen(config->clusters_path);
     size_t len2 = strlen(cluster);
     size_t len3 = strlen(str);
     cluster_document_ids_files = malloc(len1+len2+len3+1+1);
-    memcpy(cluster_document_ids_files, config->document_vectors_folder_path, len1);
+    memcpy(cluster_document_ids_files, config->clusters_path, len1);
     memcpy(cluster_document_ids_files+len1, "/", 1);
     memcpy(cluster_document_ids_files+len1+1, cluster, len2);
     memcpy(cluster_document_ids_files+len1+1+len2, str, len3+1);

@@ -6,6 +6,8 @@ int main (int argc, char *argv[]) {
     char wordlist_path[FILEPATH_LENGTH] = "/home1/grupef/ecank/data/wordlist";
     char document_lengths[FILEPATH_LENGTH] = "/home1/grupef/ecank/data/doc_lengths";
     char document_vectors_folder_path[FILEPATH_LENGTH] = "/home1/grupef/ecank/data/document_vectors";
+    char clusters_path[FILEPATH_LENGTH] = "/home1/grupef/ecank/results/topic100k";
+
     unsigned int number_of_documents = 50220538;
     unsigned int number_of_terms = 163629158;
 
@@ -13,6 +15,7 @@ int main (int argc, char *argv[]) {
         .wordlist_path = wordlist_path,
         .document_info_path = document_lengths,
         .document_vectors_folder_path = document_vectors_folder_path,
+        .clusters_path = clusters_path,
         .number_of_documents = number_of_documents,
         .number_of_terms = number_of_terms,
 
