@@ -24,7 +24,7 @@
 #define POSTING_SIZE 8
 
 #define PERCENTAGE_OF_SAMPLES 0.01
-#define NUMBER_OF_CLUSTERS 100
+#define NUMBER_OF_CLUSTERS 100000
 #define LAMBDA 0.1
 
 typedef enum { false, true } bool;

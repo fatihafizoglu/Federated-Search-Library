@@ -3,15 +3,15 @@
 
 int main (int argc, char *argv[]) {
     int i;
-    char wordlist_path[FILEPATH_LENGTH] = "/media/eckucukoglu/1000/Dropbox/projects/ms-thesis/merged_wordlist.txt";
-    char document_info_path[FILEPATH_LENGTH] = "/media/eckucukoglu/1000/Dropbox/projects/ms-thesis/merged_SMART-documents.txt";
-    char document_vectors_folder_path[FILEPATH_LENGTH] = "/media/eckucukoglu/1000/Dropbox/projects/ms-thesis";
+    char wordlist_path[FILEPATH_LENGTH] = "/home1/grupef/ecank/data/wordlist";
+    char document_lengths[FILEPATH_LENGTH] = "/home1/grupef/ecank/data/doc_lengths";
+    char document_vectors_folder_path[FILEPATH_LENGTH] = "/home1/grupef/ecank/data/document_vectors";
     unsigned int number_of_documents = 50220538;
     unsigned int number_of_terms = 163629158;
 
     Conf conf = {
         .wordlist_path = wordlist_path,
-        .document_info_path = document_info_path,
+        .document_info_path = document_lengths,
         .document_vectors_folder_path = document_vectors_folder_path,
         .number_of_documents = number_of_documents,
         .number_of_terms = number_of_terms,
