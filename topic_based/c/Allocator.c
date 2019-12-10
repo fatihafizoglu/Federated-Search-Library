@@ -420,7 +420,7 @@ char *getDocumentVectorsFilepath (unsigned int index) {
 char *getClusterDocumentIdsFilepath (unsigned int index) {
     char *cluster_document_ids_files;
     char *cluster = CLUSTER_DOCUMENT_IDS_VECTOR_FILE_PREFIX;
-    char str[3];
+    char str[10];
     sprintf(str, "%d", index);
 
     size_t len1 = strlen(config->document_vectors_folder_path);
