@@ -441,6 +441,8 @@ int openClusterDocumentIdsFiles () {
 
     for (i = 0; i < NUMBER_OF_CLUSTERS; i++) {
         char *cluster_document_ids_filepath = getClusterDocumentIdsFilepath(i);
+        printf("Path: %s\n", cluster_document_ids_filepath);
+        fflush(stdout);
         if (!(cluster_document_ids_files[i] = fopen(cluster_document_ids_filepath, "w"))) {
             state = COULD_NOT_OPEN_CLUSTER_DOCUMENT_IDS_FILE;
             return -1;
