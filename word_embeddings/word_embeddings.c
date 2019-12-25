@@ -319,9 +319,11 @@ int expand_query (int q_index) {
     }
     selected_words[0].index = query_word_similarities[0].index;
     selected_words[0].score = query_word_similarities[0].score;
-    // XXX: bug buldum: bu score qwsim, asagida mmr skoruyla compare ediyosun.
-    // fakat bu secilen kelimeleri degistirmeyecektir. sadece printf
-    // sirasi degisecek ki o np.
+    // XXX: BUG: Ilk document q-w sim scorunu baz alirken, selected_words
+    // icerisindeki diger words mmr scorunu baz alacak.
+    // Daha sonrasinda bu comparisona sokulacagi icin hatali sonuc uretecek.
+    // Fakat, zaten cand_sim scorun buyuk agirligini icerdigi icin (oracle)
+    // bu yalnizca print sirasini degistirecek. Fakat uzun vadede fixlenmeli.
     int i, j;
     for (i = 1; i < NOF_WORDS_TO_EXPAND; i++) {
         int best_index = -1;
