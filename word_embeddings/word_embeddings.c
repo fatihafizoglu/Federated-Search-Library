@@ -86,16 +86,40 @@ int find_we (char *word) {
 void comb_find_we (word* qwords, word* temp_data,
     int start, int end, int current_index, int comb_r) {
 
+    int i, v_index = 0;
+
     if (current_index == comb_r) {
-        int i;
+        We combined;
+        int nof_words_in_query_in_dictionary = 0;
+
         for (i = 0; i < comb_r; i++) {
-            printf("%s ", temp_data[i].word);
+            int d_index = find_we(temp_data[i].word);
+            if (d_index < GLOVE_DICT_SIZE) {
+                nof_words_in_query_in_dictionary++;
+                for (v_index = 0; v_index < GLOVE_VECTOR_SIZE; v_index++) {
+                    combined.vector[v_index] = combined.vector[v_index] +
+                        (dictionary[d_index].vector[v_index]);
+                }
+
+            } else {
+                printf("WARNING: UNFOUND WORD: '%s'\n", temp_data[i].word);
+            }
         }
-        printf(".\n");
+
+        for (v_index = 0; v_index < GLOVE_VECTOR_SIZE; v_index++) {
+            combined.vector[v_index] = combined.vector[v_index] / nof_words_in_query_in_dictionary;
+            combined.norm += (combined.vector[v_index] * combined.vector[v_index]);
+        }
+        combined.norm = sqrt(combined.norm);
+
+
+
+        // XXX: ustte combined ile benzerlik bak, en yakin 10 taneyi kaydet
+
+
         return;
     }
 
-    int i;
     for (i = start; (i <= end) && (end-i+1 >= comb_r-current_index); i++) {
         strcpy(temp_data[current_index].word, qwords[i].word);
         comb_find_we(qwords, temp_data, i+1, end, current_index+1, comb_r);
@@ -149,6 +173,10 @@ int load_comb () {
             word temp_data[MAX_NOF_WORD_FOREACH_QUERY];
             comb_find_we(qwords, temp_data, 0, nof_words_in_query-1, 0, comb_r);
         }
+
+        // XXX: simdi bu query icin butun combinationlar run edildi
+        // her comb icin toplanan expandwordlerden en populer top 5i
+        // dosyaya yaz direkt
 
         q_index++;
     } while (!feof(fp));
