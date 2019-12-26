@@ -28,6 +28,7 @@
 /* Each query are expanded this nof words */
 #define NOF_WORDS_TO_EXPAND 5
 #define MAX_NOF_QUERIES 1020 // 1012 = 814 subquery + 198 query
+#define MAX_NOF_WORD_FOREACH_QUERY 50
 
 /*  */
 #define DIVERSIFY_CAND_SET_LENGTH 50
@@ -47,12 +48,16 @@ typedef struct similarity_score_accumulator {
     int index;
 } Similarity, Sim;
 
+typedef struct word {
+    char word[MAX_WORD_SIZE];
+} word;
+
 /*********************/
 /***** FUNCTIONS *****/
 /*********************/
 int load_dictionary();
 int load_queries();
-double cosine_similarity (We, We);
+int load_comb();
 int expand_query(int);
 
 /********************/

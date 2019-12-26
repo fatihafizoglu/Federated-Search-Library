@@ -83,6 +83,86 @@ int find_we (char *word) {
     return d_index;
 }
 
+void comb_find_we (word* qwords, word* temp_data,
+    int start, int end, int current_index, int comb_r) {
+
+    if (current_index == comb_r) {
+        int i;
+        for (i = 0; i < comb_r; i++) {
+            printf("%s ", temp_data[i].word);
+        }
+        printf(".\n");
+        return;
+    }
+
+    int i;
+    for (i = start; (i <= end) && (end-i+1 >= comb_r-current_index); i++) {
+        strcpy(temp_data[current_index].word, qwords[i].word);
+        comb_find_we(qwords, temp_data, i+1, end, current_index+1, comb_r);
+    }
+}
+
+int load_comb () {
+    FILE *fp;
+    int q_index = 0;
+    int nof_words_in_query = 0;
+    char line[MAX_WORD_SIZE+2] = "";
+    char *c_ptr;
+
+    if (!(fp = fopen(QUERIES_PATH_IN, "r"))) {
+        printf("fopen %s failed.\n", QUERIES_PATH_IN);
+        return -1;
+    }
+
+    do {
+        if (q_index >= MAX_NOF_QUERIES) {
+            printf("ERROR: THIS SHOULD NOT HAPPEN! %s q_index\n", __FUNCTION__);
+            break;
+        }
+
+        if (fgets(line, MAX_WORD_SIZE+2, fp) == NULL) {
+            break;
+        }
+        line[strlen(line)-1] = '\0';
+        nof_words_in_query = 0;
+        c_ptr = strtok(line, " ");
+        word qwords[MAX_NOF_WORD_FOREACH_QUERY];
+
+        while (c_ptr != NULL) {
+            strcpy(qwords[nof_words_in_query].word, c_ptr);
+            nof_words_in_query++;
+            c_ptr = strtok (NULL, " ");
+
+            if (nof_words_in_query > MAX_NOF_WORD_FOREACH_QUERY) {
+                printf("ERROR: THIS SHOULD NOT HAPPEN! %s nof_words_in_query:%d\n",
+                    __FUNCTION__, nof_words_in_query);
+                break;
+            }
+        }
+
+        if (nof_words_in_query == 0) {
+            printf("WARNING: 0 word found in dict for query: %s\n", line);
+        }
+
+        int comb_r;
+        for (comb_r = 1; comb_r <= nof_words_in_query; comb_r++) {
+            word temp_data[MAX_NOF_WORD_FOREACH_QUERY];
+            comb_find_we(qwords, temp_data, 0, nof_words_in_query-1, 0, comb_r);
+        }
+
+        q_index++;
+    } while (!feof(fp));
+
+    real_nof_queries = q_index;
+    if (real_nof_queries > MAX_NOF_QUERIES) {
+        printf("ERROR: THIS SHOULD NOT HAPPEN! #queries:%d\n", real_nof_queries);
+        return -1;
+    }
+
+    fclose(fp);
+    return q_index;
+}
+
 int load_queries () {
     init_queries();
     FILE *fp;
@@ -352,6 +432,7 @@ int expand_query (int q_index) {
             double sim_amongst_selected = 0.0;
             We selected_words_we;
 
+            // XXX: Insted of NOF_WORDS_TO_EXPAND, use i ?
             gen_we(&selected_words_we, selected_words, NOF_WORDS_TO_EXPAND);
             sim_amongst_selected =
                 cosine_similarity(selected_words_we, dictionary[cand_index]);
